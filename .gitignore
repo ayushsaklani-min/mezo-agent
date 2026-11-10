@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+package-lock.json
+
+# Foundry
+contracts/out/
+contracts/cache/
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
