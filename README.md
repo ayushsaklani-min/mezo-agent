@@ -19,7 +19,7 @@ Autonomous AI agents (trading bots, data collectors, oracle crawlers, automated 
 1. **Isolated Smart Account (`MezoAgentAccount`):** Holds MUSD (Mezo's Bitcoin-backed stablecoin) and native BTC gas.
 2. **Ephemeral Session Keys:** Users issue time-bound keys to AI agents with strict on-chain velocity limits (e.g. max $25 MUSD per hour, max $100 MUSD per day).
 3. **Target Contract Whitelisting:** Agents can only spend MUSD at sanctioned target contracts (e.g. specific API paymasters, compute nodes, or DEX routers).
-4. **Cross-Chain Inbound Liquidity:** Deposit USDC from Base or Ethereum $\rightarrow$ seamlessly routes into MUSD on Mezo via `MezoBridgeRouter`.
+4. **Cross-Chain Inbound Liquidity:** Deposit USDC from Base or Ethereum → seamlessly routes into MUSD on Mezo via `MezoBridgeRouter`.
 5. **Auto-DCA & Yield Stacking:** Idle MUSD yield is automatically harvested and converted into real native Bitcoin (Satoshis).
 
 ---
