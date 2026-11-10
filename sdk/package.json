@@ -1,0 +1,28 @@
+{
+  "name": "@mezo-agent/sdk",
+  "version": "1.0.0",
+  "description": "TypeScript SDK for autonomous AI agents on the Mezo Bitcoin economic layer",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "node dist/test-run.js"
+  },
+  "keywords": [
+    "mezo",
+    "musd",
+    "ai-agent",
+    "session-keys",
+    "smart-accounts",
+    "web3"
+  ],
+  "author": "MezoAgent Team",
+  "license": "MIT",
+  "dependencies": {
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "@types/node": "^20.12.7"
+  }
+}
