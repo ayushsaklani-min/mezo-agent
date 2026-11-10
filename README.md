@@ -1,10 +1,11 @@
 # MezoAgent: Autonomous AI Agent Smart Accounts & Treasury on Mezo
 
+[![Live App](https://img.shields.io/badge/Live%20Demo-dashboard--iota--blue--90.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://dashboard-iota-blue-90.vercel.app)
 [![Mezo Network](https://img.shields.io/badge/Mezo-Testnet%20(31611)-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white)](https://mezo.org)
 [![Akindo Buildathon](https://img.shields.io/badge/Akindo-Build%20with%20MUSD%20%26%20MEZO-FF7A00?style=for-the-badge)](https://app.akindo.io)
 [![Solidity Tests](https://img.shields.io/badge/Foundry%20Tests-15%2F15%20Passing-emerald?style=for-the-badge)](contracts/)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
+> **Live Deployment:** [https://dashboard-iota-blue-90.vercel.app](https://dashboard-iota-blue-90.vercel.app)  
 > **Submission for the "Build with MUSD and MEZO" Buildathon on AKINDO.**  
 > Track: **Access & Distribution for MUSD/MEZO (Agentic Tools / AI Wallets)** and **DeFi Yield Stacking**.
 
