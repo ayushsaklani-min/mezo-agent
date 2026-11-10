@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowRight, RefreshCw, Zap, CheckCircle2, ShieldCheck } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, RefreshCw, Zap, CheckCircle2, ShieldCheck, Coins, Sparkles } from "lucide-react";
 import { MEZO_CONFIG } from "@/lib/constants";
 
 interface BridgeCardProps {
@@ -17,14 +18,13 @@ export const BridgeCard: React.FC<BridgeCardProps> = ({
   const [sourceChain, setSourceChain] = useState<string>("Base");
   const [isBridging, setIsBridging] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
-  const [lastTxHash, setLastTxHash] = useState<string | null>(null);
 
   const handleClaimFaucet = () => {
     setIsClaiming(true);
     setTimeout(() => {
       onFaucetClaim(1000);
       setIsClaiming(false);
-    }, 600);
+    }, 500);
   };
 
   const handleBridge = (e: React.FormEvent) => {
@@ -33,83 +33,89 @@ export const BridgeCard: React.FC<BridgeCardProps> = ({
     if (isNaN(numericAmount) || numericAmount <= 0) return;
 
     setIsBridging(true);
-    setLastTxHash(null);
 
     setTimeout(() => {
-      // Simulate real Mezo tx hash
       const randomHex = Array.from({ length: 64 }, () =>
         Math.floor(Math.random() * 16).toString(16)
       ).join("");
       const fakeTx = `0x${randomHex}`;
 
       onBridgeSuccess(numericAmount, numericAmount, fakeTx);
-      setLastTxHash(fakeTx);
       setIsBridging(false);
-    }, 900);
+    }, 750);
   };
 
   return (
-    <div className="p-6 rounded-2xl bg-surface border border-surface-border">
-      <div className="flex items-center justify-between mb-4">
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: 0.1 }}
+      className="p-6 sm:p-7 rounded-3xl bg-surface border border-surface-border shadow-xl relative overflow-hidden"
+    >
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div>
-          <h2 className="text-base font-semibold text-white flex items-center gap-2">
-            <span>Cross-Chain Liquidity Inbound</span>
-            <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-800/40">
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
+              Cross-Chain Liquidity Inbound
+            </h2>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-800/40">
               Wormhole NTT
             </span>
-          </h2>
+          </div>
           <p className="text-xs text-slate-400">
             Convert external USDC into native Mezo MUSD smart treasury
           </p>
         </div>
 
         {/* Faucet Helper Button */}
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleClaimFaucet}
           disabled={isClaiming}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-light border border-surface-border hover:border-mezo/40 text-xs text-slate-200 transition-colors"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-surface-light border border-surface-border hover:border-mezo/40 text-xs font-semibold text-slate-200 transition-colors shadow-sm self-start sm:self-auto"
         >
           {isClaiming ? (
             <RefreshCw className="w-3.5 h-3.5 animate-spin text-mezo" />
           ) : (
-            <Zap className="w-3.5 h-3.5 text-mezo" />
+            <Zap className="w-3.5 h-3.5 text-mezo fill-mezo/20" />
           )}
           <span>+1,000 Mock USDC</span>
-        </button>
+        </motion.button>
       </div>
 
       <form onSubmit={handleBridge} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Source Chain Selector */}
-          <div className="p-3 rounded-xl bg-surface-light border border-surface-border">
-            <label className="block text-[11px] font-medium text-slate-400 mb-1">
-              Source Chain & Asset
+          <div className="p-3.5 rounded-2xl bg-surface-card border border-surface-border/80">
+            <label className="block text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1">
+              Source Network
             </label>
             <div className="flex items-center justify-between">
               <select
                 value={sourceChain}
                 onChange={(e) => setSourceChain(e.target.value)}
-                className="bg-transparent text-sm font-semibold text-white focus:outline-none"
+                className="bg-transparent text-sm font-bold text-white focus:outline-none cursor-pointer"
               >
-                <option value="Base" className="bg-surface text-white">Base Chain</option>
-                <option value="Ethereum" className="bg-surface text-white">Ethereum Mainnet</option>
-                <option value="BNB Chain" className="bg-surface text-white">BNB Smart Chain</option>
+                <option value="Base" className="bg-[#0E111B] text-white">Base Chain</option>
+                <option value="Ethereum" className="bg-[#0E111B] text-white">Ethereum Mainnet</option>
+                <option value="BNB Chain" className="bg-[#0E111B] text-white">BNB Smart Chain</option>
               </select>
-              <span className="text-xs font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 font-bold">
-                USDC
+              <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-400 font-extrabold border border-blue-500/30">
+                USDC (6 dec)
               </span>
             </div>
           </div>
 
           {/* Destination */}
-          <div className="p-3 rounded-xl bg-surface-light border border-surface-border">
-            <label className="block text-[11px] font-medium text-slate-400 mb-1">
+          <div className="p-3.5 rounded-2xl bg-surface-card border border-surface-border/80">
+            <label className="block text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1">
               Destination Treasury
             </label>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-white">Mezo Network</span>
-              <span className="text-xs font-mono px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 font-bold">
-                MUSD (1:1)
+              <span className="text-sm font-bold text-white">Mezo Network</span>
+              <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-orange-500/15 text-orange-400 font-extrabold border border-orange-500/30">
+                MUSD (18 dec)
               </span>
             </div>
           </div>
@@ -117,9 +123,12 @@ export const BridgeCard: React.FC<BridgeCardProps> = ({
 
         {/* Amount Input */}
         <div>
-          <label className="block text-[11px] font-medium text-slate-400 mb-1.5">
-            Bridge Amount (USDC)
-          </label>
+          <div className="flex items-center justify-between mb-1.5 text-[11px]">
+            <label className="font-semibold text-slate-300">
+              Deposit Amount (USDC)
+            </label>
+            <span className="text-slate-400 font-mono">Rate: 1.0000 MUSD / USDC</span>
+          </div>
           <div className="relative">
             <input
               type="number"
@@ -127,21 +136,28 @@ export const BridgeCard: React.FC<BridgeCardProps> = ({
               step="any"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl bg-surface-light border border-surface-border focus:border-mezo focus:ring-1 focus:ring-mezo text-sm font-mono text-white placeholder-slate-500 transition-colors"
-              placeholder="Enter USDC amount..."
+              className="w-full px-4 py-3 rounded-2xl bg-surface-card border border-surface-border focus:border-mezo focus:ring-1 focus:ring-mezo text-sm font-mono text-white placeholder-slate-500 transition-colors"
+              placeholder="Enter amount..."
             />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setAmount("250")}
+                className="text-[11px] font-mono px-2 py-1 rounded-lg bg-surface-light border border-surface-border text-slate-300 hover:text-white hover:border-slate-500"
+              >
+                250
+              </button>
               <button
                 type="button"
                 onClick={() => setAmount("500")}
-                className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white"
+                className="text-[11px] font-mono px-2 py-1 rounded-lg bg-surface-light border border-surface-border text-slate-300 hover:text-white hover:border-slate-500"
               >
                 500
               </button>
               <button
                 type="button"
                 onClick={() => setAmount("1000")}
-                className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white"
+                className="text-[11px] font-mono px-2 py-1 rounded-lg bg-surface-light border border-surface-border text-slate-300 hover:text-white hover:border-slate-500"
               >
                 1000
               </button>
@@ -150,10 +166,12 @@ export const BridgeCard: React.FC<BridgeCardProps> = ({
         </div>
 
         {/* Submit */}
-        <button
+        <motion.button
           type="submit"
           disabled={isBridging}
-          className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-mezo to-orange-600 hover:from-orange-500 hover:to-orange-600 text-black font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-mezo/20 transition-all disabled:opacity-50"
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-mezo via-orange-500 to-mezo hover:from-orange-400 hover:to-orange-500 text-black font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-mezo/20 transition-all disabled:opacity-50"
         >
           {isBridging ? (
             <>
@@ -163,29 +181,11 @@ export const BridgeCard: React.FC<BridgeCardProps> = ({
           ) : (
             <>
               <span>Bridge {amount || "0"} USDC → MUSD</span>
-              <ArrowRight className="w-4 h-4 text-black" />
+              <ArrowRight className="w-4 h-4 text-black stroke-[2.5]" />
             </>
           )}
-        </button>
+        </motion.button>
       </form>
-
-      {/* Success Notification */}
-      {lastTxHash && (
-        <div className="mt-3 p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40 text-xs text-emerald-300 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>Bridged successfully into MezoAgent Treasury!</span>
-          </div>
-          <a
-            href={`${MEZO_CONFIG.explorerUrl}/tx/${lastTxHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-emerald-400 underline font-mono text-[11px]"
-          >
-            {lastTxHash.slice(0, 10)}...
-          </a>
-        </div>
-      )}
-    </div>
+    </motion.div>
   );
 };

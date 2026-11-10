@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { DollarSign, ArrowDownUp, Flame, KeyRound } from "lucide-react";
+import { motion } from "framer-motion";
+import { DollarSign, ArrowDownUp, Flame, KeyRound, TrendingUp, ShieldCheck } from "lucide-react";
 
 interface MetricsProps {
   musdBalance: number;
@@ -17,79 +18,97 @@ export const TreasuryMetrics: React.FC<MetricsProps> = ({
   stackedBtcYield,
   activeAgentsCount,
 }) => {
+  const cards = [
+    {
+      label: "Total Treasury (MUSD)",
+      value: `$${musdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      unit: "MUSD",
+      subtext: "Mezo Bitcoin-backed stablecoin",
+      icon: DollarSign,
+      color: "mezo",
+      badge: "Collateralized",
+      borderGlow: "hover:border-mezo/50 hover:shadow-mezo/15",
+      iconBg: "bg-mezo/10 text-mezo ring-1 ring-mezo/25",
+    },
+    {
+      label: "Cross-Chain Inbound",
+      value: `$${usdcBridged.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      unit: "USDC",
+      subtext: "Bridged from Base via Wormhole NTT",
+      icon: ArrowDownUp,
+      color: "cyan",
+      badge: "1:1 Routed",
+      borderGlow: "hover:border-cyan-500/50 hover:shadow-cyan-500/15",
+      iconBg: "bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/25",
+    },
+    {
+      label: "Stacked Bitcoin Yield",
+      value: stackedBtcYield.toFixed(6),
+      unit: "BTC",
+      subtext: "Auto-harvested into native Satoshis",
+      icon: Flame,
+      color: "amber",
+      badge: "Real Satoshis",
+      borderGlow: "hover:border-amber-500/50 hover:shadow-amber-500/15",
+      iconBg: "bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/25",
+    },
+    {
+      label: "Autonomous Session Keys",
+      value: activeAgentsCount.toString(),
+      unit: "Active Keys",
+      subtext: "Enforcing rolling hourly velocity caps",
+      icon: KeyRound,
+      color: "emerald",
+      badge: "ERC-4337 Scoped",
+      borderGlow: "hover:border-emerald-500/50 hover:shadow-emerald-500/15",
+      iconBg: "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/25",
+    },
+  ];
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {/* 1. MUSD Balance */}
-      <div className="p-5 rounded-2xl bg-surface border border-surface-border relative overflow-hidden group hover:border-mezo/40 transition-all shadow-sm">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-mezo/5 rounded-full blur-2xl group-hover:bg-mezo/10 transition-all pointer-events-none" />
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-medium text-slate-400">Total Treasury (MUSD)</span>
-          <div className="p-2 rounded-xl bg-mezo/10 text-mezo">
-            <DollarSign className="w-4 h-4" />
-          </div>
-        </div>
-        <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold font-mono text-white tracking-tight">
-            ${musdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </span>
-          <span className="text-xs text-mezo font-semibold">MUSD</span>
-        </div>
-        <p className="text-[11px] text-slate-400 mt-1">Mezo Bitcoin-backed stablecoin</p>
-      </div>
+      {cards.map((card, idx) => {
+        const Icon = card.icon;
 
-      {/* 2. Bridged USDC */}
-      <div className="p-5 rounded-2xl bg-surface border border-surface-border relative overflow-hidden group hover:border-cyan-500/40 transition-all shadow-sm">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-2xl group-hover:bg-cyan-500/10 transition-all pointer-events-none" />
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-medium text-slate-400">Cross-Chain USDC</span>
-          <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
-            <ArrowDownUp className="w-4 h-4" />
-          </div>
-        </div>
-        <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold font-mono text-white tracking-tight">
-            ${usdcBridged.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </span>
-          <span className="text-xs text-cyan-400 font-semibold">USDC</span>
-        </div>
-        <p className="text-[11px] text-slate-400 mt-1">Inbound from Base & Ethereum</p>
-      </div>
+        return (
+          <motion.div
+            key={card.label}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: idx * 0.08 }}
+            whileHover={{ y: -3, transition: { duration: 0.2 } }}
+            className={`p-5 rounded-3xl bg-surface border border-surface-border relative overflow-hidden transition-all shadow-lg ${card.borderGlow}`}
+          >
+            {/* Ambient Background Radial */}
+            <div className="absolute top-0 right-0 w-28 h-28 bg-white/[0.02] rounded-full blur-2xl pointer-events-none" />
 
-      {/* 3. Stacked BTC Yield */}
-      <div className="p-5 rounded-2xl bg-surface border border-surface-border relative overflow-hidden group hover:border-amber-500/40 transition-all shadow-sm">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all pointer-events-none" />
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-medium text-slate-400">Stacked Bitcoin Yield</span>
-          <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
-            <Flame className="w-4 h-4" />
-          </div>
-        </div>
-        <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold font-mono text-white tracking-tight">
-            {stackedBtcYield.toFixed(6)}
-          </span>
-          <span className="text-xs text-amber-400 font-semibold">BTC</span>
-        </div>
-        <p className="text-[11px] text-slate-400 mt-1">Auto-harvested into native Satoshis</p>
-      </div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-400 tracking-tight">
+                {card.label}
+              </span>
+              <div className={`p-2.5 rounded-2xl ${card.iconBg}`}>
+                <Icon className="w-4 h-4 stroke-[2.2]" />
+              </div>
+            </div>
 
-      {/* 4. Active Session Keys */}
-      <div className="p-5 rounded-2xl bg-surface border border-surface-border relative overflow-hidden group hover:border-emerald-500/40 transition-all shadow-sm">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all pointer-events-none" />
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-medium text-slate-400">Autonomous Agents</span>
-          <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
-            <KeyRound className="w-4 h-4" />
-          </div>
-        </div>
-        <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold font-mono text-white tracking-tight">
-            {activeAgentsCount}
-          </span>
-          <span className="text-xs text-emerald-400 font-semibold">Active Keys</span>
-        </div>
-        <p className="text-[11px] text-slate-400 mt-1">Budget-enforced smart sessions</p>
-      </div>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-2xl sm:text-3xl font-extrabold font-mono text-white tracking-tight">
+                {card.value}
+              </span>
+              <span className="text-xs font-bold text-mezo font-mono">
+                {card.unit}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-surface-border/50 text-[11px]">
+              <span className="text-slate-400 truncate max-w-[170px]">{card.subtext}</span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-surface-card border border-surface-border text-slate-300 shrink-0 font-medium">
+                {card.badge}
+              </span>
+            </div>
+          </motion.div>
+        );
+      })}
     </div>
   );
 };

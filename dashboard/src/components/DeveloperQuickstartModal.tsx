@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Code2, Copy, Check, Terminal, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Code2, Copy, Check, Terminal, Sparkles, BookOpen } from "lucide-react";
 import { MEZO_CONFIG } from "@/lib/constants";
 
 interface ModalProps {
@@ -83,83 +84,96 @@ curl -X POST https://rpc.test.mezo.org \\
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-surface border border-surface-border rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative">
-        <div className="flex items-center justify-between pb-3 border-b border-surface-border">
-          <div className="flex items-center gap-2">
-            <Code2 className="w-5 h-5 text-mezo" />
-            <h3 className="text-base font-bold text-white">Developer SDK & Agent Adapters</h3>
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 bg-black/80 backdrop-blur-md"
+        />
+
+        {/* Modal Window */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          className="bg-[#0B0F19] border border-surface-border rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl relative z-10"
+        >
+          <div className="flex items-center justify-between pb-3.5 border-b border-surface-border">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-mezo/10 text-mezo ring-1 ring-mezo/25">
+                <Code2 className="w-5 h-5 stroke-[2.2]" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-white">Developer SDK & Agent Adapters</h3>
+                <p className="text-xs text-slate-400">Plug-and-play autonomous smart account integration</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
 
-        {/* Tabs */}
-        <div className="flex items-center gap-2 mt-4 pb-2">
-          <button
-            onClick={() => setActiveTab("ts")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              activeTab === "ts" ? "bg-mezo text-black font-bold" : "bg-surface-light text-slate-400 hover:text-white"
-            }`}
-          >
-            TypeScript SDK
-          </button>
-          <button
-            onClick={() => setActiveTab("langchain")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              activeTab === "langchain" ? "bg-mezo text-black font-bold" : "bg-surface-light text-slate-400 hover:text-white"
-            }`}
-          >
-            LangChain Tool
-          </button>
-          <button
-            onClick={() => setActiveTab("eliza")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              activeTab === "eliza" ? "bg-mezo text-black font-bold" : "bg-surface-light text-slate-400 hover:text-white"
-            }`}
-          >
-            ElizaOS Action
-          </button>
-          <button
-            onClick={() => setActiveTab("curl")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              activeTab === "curl" ? "bg-mezo text-black font-bold" : "bg-surface-light text-slate-400 hover:text-white"
-            }`}
-          >
-            cURL / JSON-RPC
-          </button>
-        </div>
+          {/* Tabs */}
+          <div className="flex items-center gap-2 mt-4 pb-2">
+            {(["ts", "langchain", "eliza", "curl"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === tab
+                    ? "bg-mezo text-black shadow-md shadow-mezo/20"
+                    : "bg-surface-card text-slate-400 hover:text-white hover:bg-surface-light"
+                }`}
+              >
+                {tab === "ts" && "TypeScript SDK"}
+                {tab === "langchain" && "LangChain Tool"}
+                {tab === "eliza" && "ElizaOS Action"}
+                {tab === "curl" && "cURL RPC"}
+              </button>
+            ))}
+          </div>
 
-        {/* Code Box */}
-        <div className="mt-2 rounded-xl bg-[#06080E] border border-surface-border p-4 font-mono text-xs text-slate-300 relative">
-          <button
-            onClick={handleCopy}
-            className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface-light border border-surface-border hover:border-slate-500 text-xs text-slate-300 transition-colors"
-          >
-            {copied ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-emerald-400 text-[11px]">Copied</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3.5 h-3.5 text-slate-400" />
-                <span className="text-[11px]">Copy Code</span>
-              </>
-            )}
-          </button>
+          {/* Code Viewer Container */}
+          <div className="relative mt-2 rounded-2xl bg-[#04060A] border border-surface-border p-4 font-mono text-xs text-slate-300 overflow-x-auto shadow-inner">
+            <button
+              onClick={handleCopy}
+              className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-card border border-surface-border hover:border-slate-500 text-[11px] font-sans font-semibold text-slate-200 hover:text-white transition-colors shadow-sm"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[3]" />
+                  <span className="text-emerald-400">Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Copy Code</span>
+                </>
+              )}
+            </button>
 
-          <pre className="overflow-x-auto pr-16 leading-relaxed text-slate-300">
-            {codeSnippets[activeTab]}
-          </pre>
-        </div>
+            <pre className="pr-24 leading-relaxed font-mono">
+              <code>{codeSnippets[activeTab]}</code>
+            </pre>
+          </div>
 
-        <div className="mt-4 pt-3 border-t border-surface-border flex items-center justify-between text-xs text-slate-400">
-          <span>Target Network: {MEZO_CONFIG.name} (Chain ID {MEZO_CONFIG.chainId})</span>
-          <span className="text-mezo font-mono">npm install @mezo-agent/sdk</span>
-        </div>
+          {/* Info Footer */}
+          <div className="mt-4 pt-3 border-t border-surface-border/60 flex items-center justify-between text-xs text-slate-400">
+            <span className="flex items-center gap-1.5">
+              <BookOpen className="w-3.5 h-3.5 text-mezo" />
+              Package: <code className="text-mezo font-bold font-mono">@mezo-agent/sdk</code>
+            </span>
+            <span className="font-mono text-slate-500">Node.js 18+ / Browser</span>
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </AnimatePresence>
   );
 };

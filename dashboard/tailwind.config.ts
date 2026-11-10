@@ -9,18 +9,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#090A0F",
-        surface: "#11141F",
-        "surface-light": "#181D2D",
-        "surface-border": "#23293D",
+        background: "#07080E",
+        surface: "#0E111B",
+        "surface-light": "#151928",
+        "surface-card": "#101422",
+        "surface-border": "#1E2436",
         mezo: {
           DEFAULT: "#F7931A",
           hover: "#E8830E",
+          light: "#FFA834",
           glow: "rgba(247, 147, 26, 0.15)",
         },
       },
       fontFamily: {
-        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"],
+        sans: ['"Plus Jakarta Sans"', "system-ui", "-apple-system", "sans-serif"],
+        mono: ['"JetBrains Mono"', "ui-monospace", "SFMono-Regular", "monospace"],
+      },
+      animation: {
+        "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "glow-slow": "glow 6s ease-in-out infinite alternate",
+      },
+      keyframes: {
+        glow: {
+          "0%": { opacity: "0.4", transform: "scale(1)" },
+          "100%": { opacity: "0.8", transform: "scale(1.05)" },
+        },
       },
     },
   },
