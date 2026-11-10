@@ -162,7 +162,7 @@ export const BridgeCard: React.FC<BridgeCardProps> = ({
             </>
           ) : (
             <>
-              <span>Bridge {amount || "0"} USDC $\rightarrow$ MUSD</span>
+              <span>Bridge {amount || "0"} USDC → MUSD</span>
               <ArrowRight className="w-4 h-4 text-black" />
             </>
           )}

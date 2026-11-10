@@ -48,7 +48,7 @@ export default function Home() {
       id: `log_${Date.now()}`,
       type: "BRIDGE",
       title: "Cross-Chain Deposit",
-      description: `Bridged ${usdcAmount} USDC from Base $\\rightarrow$ Minted ${musdAmount} MUSD on Mezo`,
+      description: `Bridged ${usdcAmount} USDC from Base → Minted ${musdAmount} MUSD on Mezo`,
       amount: `+${musdAmount.toFixed(2)} MUSD`,
       txHash: txHash,
       timestamp: Date.now(),
@@ -122,16 +122,21 @@ export default function Home() {
     actionName: string,
     costMUSD: number,
     txHash: string,
-    isRevert: boolean = false
+    isRevert: boolean = false,
+    revertReason?: string
   ) => {
     const targetKey = sessionKeys.find((k) => k.id === keyId);
 
     if (isRevert) {
+      const description = revertReason
+        ? `Reverted on-chain: ${revertReason}`
+        : `Exceeded hourly budget cap ($${targetKey?.hourlyLimit} MUSD). Reverted on-chain.`;
+
       const newLog: ActivityLog = {
         id: `log_${Date.now()}`,
         type: "PAYMENT",
         title: `${actionName} (Rejected)`,
-        description: `Exceeded hourly budget cap ($${targetKey?.hourlyLimit} MUSD). Reverted on-chain.`,
+        description,
         amount: `-${costMUSD.toFixed(2)} MUSD`,
         txHash: "",
         timestamp: Date.now(),

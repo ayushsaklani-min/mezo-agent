@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Shield, Sparkles, ExternalLink, Copy, Check, Wallet, Code2, AlertCircle } from "lucide-react";
+import { Shield, Sparkles, ExternalLink, Copy, Check, Wallet, Code2, AlertCircle, X } from "lucide-react";
 import { MEZO_CONFIG } from "@/lib/constants";
 import { useMezoWallet } from "@/lib/useMezoWallet";
 import { DeveloperQuickstartModal } from "./DeveloperQuickstartModal";
@@ -111,6 +111,24 @@ export const Header: React.FC<HeaderProps> = ({ ownerAddress }) => {
           </div>
         </div>
       </header>
+
+      {wallet.error && (
+        <div className="bg-amber-950/90 border-b border-amber-800/60 px-4 py-2 text-xs text-amber-200">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>{wallet.error}</span>
+            </div>
+            <button
+              onClick={wallet.clearError}
+              className="text-amber-400 hover:text-white p-1 rounded transition-colors"
+              title="Dismiss"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       <DeveloperQuickstartModal
         isOpen={isSdkModalOpen}

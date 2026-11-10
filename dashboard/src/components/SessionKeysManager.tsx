@@ -127,15 +127,24 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                       <Key className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="font-semibold text-sm text-white">{item.label}</span>
                         {item.active ? (
-                          <span className="text-[10px] px-2 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-medium">
                             Active
                           </span>
                         ) : (
-                          <span className="text-[10px] px-2 py-0.2 rounded bg-red-500/15 text-red-400 border border-red-500/30">
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-red-500/15 text-red-400 border border-red-500/30 font-medium">
                             Revoked
+                          </span>
+                        )}
+                        {item.restrictTargets ? (
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/15 text-blue-400 border border-blue-500/30 font-medium">
+                            Whitelisted Targets
+                          </span>
+                        ) : (
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 font-medium">
+                            Unrestricted
                           </span>
                         )}
                       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Terminal, Play, AlertTriangle, Cpu, Globe, Bitcoin, RefreshCw } from "lucide-react";
 import { MEZO_CONFIG } from "@/lib/constants";
 import type { SessionKeyItem } from "@/lib/types";
@@ -12,7 +12,8 @@ interface SandboxProps {
     actionName: string,
     costMUSD: number,
     txHash: string,
-    isRevert?: boolean
+    isRevert?: boolean,
+    revertReason?: string
   ) => void;
 }
 
@@ -22,22 +23,32 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
 }) => {
   const [selectedKeyId, setSelectedKeyId] = useState<string>(sessionKeys[0]?.id || "");
   const [isExecuting, setIsExecuting] = useState(false);
+  const terminalEndRef = useRef<HTMLDivElement>(null);
   const [consoleLogs, setConsoleLogs] = useState<string[]>([
     "[SYSTEM] MezoAgent Autonomous Engine initialized on Chain ID 31611 (Mezo Testnet).",
     "[SYSTEM] Session Key cryptographic policy verifier: ACTIVE.",
     "[SYSTEM] Select an action below to simulate autonomous agent execution.",
   ]);
 
-  const activeKeys = sessionKeys.filter((k) => k.active);
-  const currentKey = sessionKeys.find((k) => k.id === selectedKeyId) || activeKeys[0];
+  const currentKey = sessionKeys.find((k) => k.id === selectedKeyId) || sessionKeys[0];
+
+  useEffect(() => {
+    terminalEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [consoleLogs]);
 
   const logMessage = (msg: string) => {
-    setConsoleLogs((prev) => [...prev.slice(-15), `[${new Date().toLocaleTimeString()}] ${msg}`]);
+    setConsoleLogs((prev) => [...prev.slice(-20), `[${new Date().toLocaleTimeString()}] ${msg}`]);
   };
 
   const executeAction = (actionTitle: string, cost: number, shouldRevert: boolean = false) => {
     if (!currentKey) {
-      logMessage("[ERROR] No active session key selected.");
+      logMessage("[ERROR] No session key selected.");
+      return;
+    }
+
+    if (!currentKey.active) {
+      logMessage(`[SECURITY REVERT] Session key "${currentKey.label}" has been REVOKED by owner. Execution rejected on-chain.`);
+      onExecuteAction(currentKey.id, actionTitle, cost, "", true, "Session Key Revoked by Owner");
       return;
     }
 
@@ -50,7 +61,14 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
         logMessage(`[SECURITY CHECK] Hourly cap: $${currentKey.hourlyLimit.toFixed(2)} MUSD | Spent: $${currentKey.hourlySpent.toFixed(2)} MUSD`);
         logMessage(`[REVERT] Transaction reverted: "Hourly MUSD limit exceeded" (0x08c379a0)`);
         logMessage(`[SHIELD] Master treasury protected. Unauthorized excess rejected on-chain.`);
-        onExecuteAction(currentKey.id, actionTitle, cost, "", true);
+        onExecuteAction(
+          currentKey.id,
+          actionTitle,
+          cost,
+          "",
+          true,
+          `Hourly Velocity Cap Exceeded ($${currentKey.hourlyLimit} MUSD max)`
+        );
         setIsExecuting(false);
         return;
       }
@@ -91,9 +109,9 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
             onChange={(e) => setSelectedKeyId(e.target.value)}
             className="px-3 py-1.5 rounded-lg bg-surface-light border border-surface-border text-xs text-white focus:outline-none focus:border-mezo"
           >
-            {activeKeys.map((k) => (
+            {sessionKeys.map((k) => (
               <option key={k.id} value={k.id} className="bg-surface text-white">
-                {k.label} (${(k.hourlyLimit - k.hourlySpent).toFixed(1)} left)
+                {k.label} {k.active ? `($${(k.hourlyLimit - k.hourlySpent).toFixed(1)} left)` : `(REVOKED)`}
               </option>
             ))}
           </select>
@@ -205,6 +223,7 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
               </div>
             );
           })}
+          <div ref={terminalEndRef} />
         </div>
       </div>
     </div>

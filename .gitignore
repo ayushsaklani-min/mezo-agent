@@ -6,12 +6,14 @@ package-lock.json
 # Foundry
 contracts/out/
 contracts/cache/
+contracts/broadcast/
 
 # Next.js
 .next/
 out/
 build/
 dist/
+.vercel/
 
 # Environment
 .env

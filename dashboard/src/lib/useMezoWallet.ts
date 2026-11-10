@@ -80,7 +80,10 @@ export function useMezoWallet() {
 
   const connectWallet = async () => {
     if (typeof window === "undefined" || !(window as any).ethereum) {
-      alert("No Ethereum wallet found. Please install MetaMask, Rabby, or use Interactive Demo Mode.");
+      setWallet((prev) => ({
+        ...prev,
+        error: "No Web3 wallet detected. Running in Interactive Sandbox Mode with full simulation.",
+      }));
       return;
     }
 
@@ -163,5 +166,6 @@ export function useMezoWallet() {
     ...wallet,
     connectWallet,
     switchToMezo,
+    clearError: () => setWallet((prev) => ({ ...prev, error: null })),
   };
 }
