@@ -83,7 +83,7 @@ mezo-agent/
 │   │   ├── app/                 # App Router (page.tsx, layout.tsx, globals.css)
 │   │   ├── components/          # Header, TreasuryMetrics, BridgeCard, SessionKeysManager, Sandbox
 │   │   └── lib/                 # Constants, types, and Mezo config
-└── SPECIFICATION.md            # Comprehensive project architecture spec
+└── README.md                   # Comprehensive project architecture & developer guide
 ```
 
 ---
