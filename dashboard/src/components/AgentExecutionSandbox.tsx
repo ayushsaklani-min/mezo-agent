@@ -60,7 +60,7 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
       // Check limits
       if (shouldRevert || (currentKey.hourlySpent + cost > currentKey.hourlyLimit)) {
         logMessage(`[SECURITY CHECK] Hourly cap: $${currentKey.hourlyLimit.toFixed(2)} MUSD | Spent: $${currentKey.hourlySpent.toFixed(2)} MUSD`);
-        logMessage(`[REVERT] Transaction reverted: "Hourly MUSD limit exceeded" (0x08c379a0)`);
+        logMessage(`[REVERT] Smart account reverted on-chain: "Hourly MUSD limit exceeded" (Error selector 0x08c379a0)`);
         logMessage(`[SHIELD] Master treasury protected. Unauthorized excess rejected on-chain.`);
         onExecuteAction(
           currentKey.id,

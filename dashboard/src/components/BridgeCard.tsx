@@ -59,11 +59,11 @@ export const BridgeCard: React.FC<BridgeCardProps> = ({
               Cross-Chain Liquidity Inbound
             </h2>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-800/40">
-              Wormhole NTT
+              Testnet Bridge Simulation
             </span>
           </div>
           <p className="text-xs text-slate-400">
-            Convert external USDC into native Mezo MUSD smart treasury
+            Convert external USDC into native Mezo MUSD smart treasury (Production: Wormhole NTT)
           </p>
         </div>
 

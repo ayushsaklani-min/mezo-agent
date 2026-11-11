@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowUpRight, CheckCircle2, XCircle, Clock, ExternalLink, Activity } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, XCircle, Clock, ExternalLink, Activity, Download, FileSpreadsheet, FileJson, Check } from "lucide-react";
 import { MEZO_CONFIG } from "@/lib/constants";
 import type { ActivityLog } from "@/lib/types";
 
@@ -11,6 +11,73 @@ interface ActivityFeedProps {
 }
 
 export const ActivityFeed: React.FC<ActivityFeedProps> = ({ logs }) => {
+  const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
+
+  const handleExportCSV = () => {
+    const headers = [
+      "Timestamp",
+      "ISO_Date",
+      "Type",
+      "Title",
+      "Amount",
+      "Status",
+      "TxHash",
+      "Description",
+      "Explorer_URL",
+    ];
+
+    const rows = logs.map((l) => [
+      l.timestamp,
+      new Date(l.timestamp).toISOString(),
+      `"${l.type}"`,
+      `"${l.title.replace(/"/g, '""')}"`,
+      `"${l.amount || ""}"`,
+      l.status,
+      l.txHash || "",
+      `"${l.description.replace(/"/g, '""')}"`,
+      l.txHash ? `${MEZO_CONFIG.explorerUrl}/tx/${l.txHash}` : "",
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `mezoagent-audit-trail-${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setDownloadSuccess("CSV");
+    setTimeout(() => setDownloadSuccess(null), 2500);
+  };
+
+  const handleExportJSON = () => {
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      network: MEZO_CONFIG.name,
+      chainId: MEZO_CONFIG.chainId,
+      totalEvents: logs.length,
+      auditTrail: logs.map((l) => ({
+        ...l,
+        isoDate: new Date(l.timestamp).toISOString(),
+        explorerUrl: l.txHash ? `${MEZO_CONFIG.explorerUrl}/tx/${l.txHash}` : null,
+      })),
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `mezoagent-audit-trail-${Date.now()}.json`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setDownloadSuccess("JSON");
+    setTimeout(() => setDownloadSuccess(null), 2500);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -18,7 +85,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ logs }) => {
       transition={{ duration: 0.35, delay: 0.25 }}
       className="p-6 sm:p-7 rounded-3xl bg-surface border border-surface-border shadow-xl relative overflow-hidden"
     >
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
@@ -30,9 +97,43 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ logs }) => {
             Real-time events emitted from MezoAgentAccount contracts on Mezo Testnet
           </p>
         </div>
-        <span className="text-xs font-mono px-3 py-1 rounded-full bg-surface-card border border-surface-border text-slate-400 font-semibold">
-          {logs.length} transactions
-        </span>
+
+        {/* Audit Trail Export Action Buttons */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <span className="text-xs font-mono px-3 py-1 rounded-full bg-surface-card border border-surface-border text-slate-400 font-semibold hidden md:inline">
+            {logs.length} events
+          </span>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleExportCSV}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-card border border-surface-border hover:border-slate-500 text-xs font-semibold text-slate-300 transition-colors shadow-sm"
+            title="Download CSV Audit Log for Accounting / Treasuries"
+          >
+            {downloadSuccess === "CSV" ? (
+              <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[3]" />
+            ) : (
+              <FileSpreadsheet className="w-3.5 h-3.5 text-mezo" />
+            )}
+            <span>Export CSV</span>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleExportJSON}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-card border border-surface-border hover:border-slate-500 text-xs font-semibold text-slate-300 transition-colors shadow-sm"
+            title="Download JSON Audit Log for SIEM / Data Pipeline"
+          >
+            {downloadSuccess === "JSON" ? (
+              <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[3]" />
+            ) : (
+              <FileJson className="w-3.5 h-3.5 text-cyan-400" />
+            )}
+            <span>Export JSON</span>
+          </motion.button>
+        </div>
       </div>
 
       <div className="space-y-3">

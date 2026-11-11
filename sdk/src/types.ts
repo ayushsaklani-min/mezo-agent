@@ -48,25 +48,25 @@ export interface SessionPolicyView {
   hourlyLimit: bigint;
   dailyLimit: bigint;
   validUntil: bigint;
-  hourlySpent: bigint;
-  dailySpent: bigint;
   restrictTargets: boolean;
   label: string;
 }
 
 export interface PaymentParams {
   recipient: Address;
-  amountInMUSD: string | number; // String or number in standard MUSD units (e.g. "0.5")
+  amountInMUSD: string | number; // e.g. "0.5"
   calldata?: Hex;
   memo?: string;
 }
 
 export interface ExecutionReceipt {
-  success: boolean;
   txHash: Hash;
-  musdSpent: string;
-  remainingHourlyBudget: string;
-  remainingDailyBudget: string;
-  recipient: Address;
-  timestamp: number;
+  target: Address;
+  musdAmount: string;
+  gasUsed?: bigint;
+  blockNumber?: bigint;
+  status: "CONFIRMED" | "REVERTED";
+  success: boolean;
+  recipient?: Address;
+  remainingHourlyBudget?: string;
 }

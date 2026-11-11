@@ -32,9 +32,10 @@ contract MezoAgentFactory {
     /**
      * @notice Deploy a new MezoAgentAccount for the caller.
      * @param initialMUSD Optional initial MUSD deposit transferred from caller.
+     * @param timelockDelay Timelock delay in seconds for limit increases (e.g. 0 for instant, 86400 for 1 day).
      */
-    function createAccount(uint256 initialMUSD) external payable returns (address account) {
-        MezoAgentAccount newAccount = new MezoAgentAccount(msg.sender, musdToken);
+    function createAccountWithTimelock(uint256 initialMUSD, uint256 timelockDelay) public payable returns (address account) {
+        MezoAgentAccount newAccount = new MezoAgentAccount(msg.sender, musdToken, timelockDelay);
         account = address(newAccount);
 
         allAccounts.push(account);
@@ -53,6 +54,10 @@ contract MezoAgentFactory {
         }
 
         emit AccountCreated(msg.sender, account, allAccounts.length - 1, block.timestamp);
+    }
+
+    function createAccount(uint256 initialMUSD) external payable returns (address account) {
+        return createAccountWithTimelock(initialMUSD, 0);
     }
 
     function getUserAccounts(address user) external view returns (address[] memory) {

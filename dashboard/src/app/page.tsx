@@ -10,6 +10,7 @@ import { AgentExecutionSandbox } from "@/components/AgentExecutionSandbox";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { StorySection } from "@/components/StorySection";
 import { TransactionConfirmationModal, ConfirmationDetails } from "@/components/TransactionConfirmationModal";
+import { AlertRulesModal } from "@/components/AlertRulesModal";
 import { INITIAL_ACCOUNT_DATA, INITIAL_SESSION_KEYS, MEZO_CONFIG } from "@/lib/constants";
 import type { SessionKeyItem, ActivityLog } from "@/lib/types";
 import { ShieldCheck, Cpu, Code2, ExternalLink, ArrowDown, Sparkles, Terminal, BookOpen, Layers } from "lucide-react";
@@ -18,6 +19,8 @@ export default function Home() {
   const [account, setAccount] = useState(INITIAL_ACCOUNT_DATA);
   const [sessionKeys, setSessionKeys] = useState<SessionKeyItem[]>(INITIAL_SESSION_KEYS);
   const [confirmationDetails, setConfirmationDetails] = useState<ConfirmationDetails | null>(null);
+  const [isLiveMode, setIsLiveMode] = useState(false);
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
 
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([
     {
@@ -307,7 +310,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#07080E] text-slate-100 font-sans selection:bg-mezo/30 selection:text-orange-200">
-      <Header ownerAddress={account.ownerAddress} />
+      <Header
+        ownerAddress={account.ownerAddress}
+        isLiveMode={isLiveMode}
+        onToggleMode={() => setIsLiveMode((prev) => !prev)}
+        onOpenAlerts={() => setIsAlertModalOpen(true)}
+      />
 
       <main className="flex-1 w-full space-y-12">
         {/* 1. HERO SECTION (High-Impact Storytelling & Live Pulse) */}
@@ -342,7 +350,7 @@ export default function Home() {
             >
               Autonomous AI Agents Need Capital to Act.{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-mezo via-orange-400 to-amber-200">
-                Giving Them Master Keys is Suicide.
+                Giving Them Master Keys Puts Treasuries at Risk.
               </span>
             </motion.h1>
 
@@ -353,7 +361,7 @@ export default function Home() {
               transition={{ duration: 0.45, delay: 0.16 }}
               className="text-base sm:text-lg text-slate-300 max-w-3xl mx-auto leading-relaxed"
             >
-              MezoAgent provides <strong>budget-controlled smart accounts</strong> on Bitcoin's economic layer. Delegate cryptographic session keys with on-chain velocity limits, target whitelisting, and auto-compounding Bitcoin yield—without surrendering treasury custody.
+              MezoAgent provides <strong>budget-controlled smart accounts</strong> on Bitcoin's economic layer. Delegate cryptographic session keys with on-chain sliding window velocity limits, function selector whitelisting, and auto-compounding Bitcoin yield—without surrendering treasury custody.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -403,15 +411,15 @@ export default function Home() {
               </div>
               <div className="p-3.5 rounded-2xl bg-surface-card border border-surface-border/70">
                 <span className="block text-[10px] text-slate-500 font-mono uppercase">Hourly Velocity Limit</span>
-                <span className="block text-sm font-extrabold text-mezo mt-0.5">EVM Opcode Enforced</span>
+                <span className="block text-sm font-extrabold text-mezo mt-0.5">12-Bucket Sliding Window</span>
               </div>
               <div className="p-3.5 rounded-2xl bg-surface-card border border-surface-border/70">
-                <span className="block text-[10px] text-slate-500 font-mono uppercase">Cross-Chain Routing</span>
-                <span className="block text-sm font-extrabold text-cyan-400 mt-0.5">1:1 USDC → MUSD</span>
+                <span className="block text-[10px] text-slate-500 font-mono uppercase">Cross-Chain Liquidity</span>
+                <span className="block text-sm font-extrabold text-cyan-400 mt-0.5">1:1 USDC → MUSD (Demo)</span>
               </div>
               <div className="p-3.5 rounded-2xl bg-surface-card border border-surface-border/70">
                 <span className="block text-[10px] text-slate-500 font-mono uppercase">Yield Compounding</span>
-                <span className="block text-sm font-extrabold text-amber-400 mt-0.5">Real Native Satoshis</span>
+                <span className="block text-sm font-extrabold text-amber-400 mt-0.5">Auto BTC Yield (Testnet)</span>
               </div>
             </motion.div>
           </div>
@@ -488,6 +496,13 @@ export default function Home() {
       <TransactionConfirmationModal
         details={confirmationDetails}
         onClose={() => setConfirmationDetails(null)}
+      />
+
+      {/* Alert Rules & Webhook Configuration Modal */}
+      <AlertRulesModal
+        isOpen={isAlertModalOpen}
+        onClose={() => setIsAlertModalOpen(false)}
+        smartAccountAddress={account.accountAddress}
       />
 
       {/* Footer */}

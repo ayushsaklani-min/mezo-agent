@@ -46,7 +46,7 @@ export async function runAutonomousAgentLoop(
         onIteration({
           iteration,
           txHash: receipt.txHash,
-          remainingHourly: receipt.remainingHourlyBudget,
+          remainingHourly: receipt.remainingHourlyBudget || "0",
         });
       }
     } catch (err: any) {

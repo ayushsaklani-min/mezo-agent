@@ -12,9 +12,9 @@ export const StorySection: React.FC = () => {
       id: "custody",
       number: "01",
       badge: "The AI Custody Dilemma",
-      title: "Giving AI Agents Master Keys is Financial Suicide",
+      title: "Giving Autonomous Agents Master Keys Puts Treasuries at Risk",
       description:
-        "Every autonomous trading bot, data scraper, and LLM oracle needs money to execute transactions. But handing an AI agent master private key access means a single prompt injection, memory hijack, or coding bug can drain your treasury in one block.",
+        "Every autonomous trading bot, data scraper, and LLM oracle needs capital to execute transactions. But handing an AI agent master private key access means a single prompt injection, memory hijack, or execution loop bug can drain your entire treasury in seconds.",
       icon: ShieldAlert,
       color: "red",
       stats: [
@@ -36,23 +36,23 @@ export const StorySection: React.FC = () => {
       stats: [
         { label: "Master Key Exposure", value: "0% (Zero Risk)", warning: false },
         { label: "Key Lifetime", value: "Configurable (24h - 90d)", warning: false },
-        { label: "Revocation Time", value: "< 1.2s on Mezo", warning: false },
+        { label: "Revocation Time", value: "Effective Next Block", warning: false },
       ],
       diagram: "session",
     },
     {
       id: "velocity",
       number: "03",
-      badge: "Hardware-Enforced Velocity",
-      title: "Rolling Hourly & Daily EVM Spending Envelopes",
+      badge: "On-Chain Rate Limiting",
+      title: "12-Bucket Sliding Window Spending Envelopes",
       description:
-        "Define strict mathematical velocity bounds. If an agent with a $15/hour cap attempts to execute a $500 rogue trade, the MezoAgent smart contract automatically halts and reverts on-chain at the EVM opcode level—preventing any token outflow.",
+        "Define strict mathematical velocity bounds. Built with 12 sub-buckets (300s each) that eliminate boundary double-spend exploits. If an agent with a $15/hour cap attempts an unauthorized outflow, the Mezo smart account reverts on-chain immediately with a typed error.",
       icon: Gauge,
       color: "cyan",
       stats: [
-        { label: "Hourly Cap Enforcement", value: "On-Chain EVM Opcode", warning: false },
-        { label: "Target Restriction", value: "Strict Contract Whitelist", warning: false },
-        { label: "Reentrancy Protection", value: "OpenZeppelin Guard", warning: false },
+        { label: "Hourly Cap Enforcement", value: "12-Bucket Sliding Window", warning: false },
+        { label: "Target & Selector Check", value: "Strict On-Chain Whitelist", warning: false },
+        { label: "Formal Invariants", value: "Foundry Verified (128k+ Calls)", warning: false },
       ],
       diagram: "velocity",
     },
@@ -68,7 +68,7 @@ export const StorySection: React.FC = () => {
       stats: [
         { label: "Base Asset", value: "MUSD (Bitcoin-Backed USD)", warning: false },
         { label: "Yield Target", value: "Native Satoshis (BTC)", warning: false },
-        { label: "Inbound Liquidity", value: "Wormhole NTT (USDC 1:1)", warning: false },
+        { label: "Inbound Liquidity", value: "Testnet Simulation (Wormhole NTT)", warning: false },
       ],
       diagram: "yield",
     },
@@ -230,7 +230,7 @@ export const StorySection: React.FC = () => {
                             ⏱️ Rolling 24-Hour safety net: Maximum $100 MUSD.
                           </div>
                           <div className="p-3 rounded-xl bg-black/60 border border-cyan-800/30 text-[11px] text-cyan-400">
-                            Attempted spend of $26 MUSD? Transaction reverts with opcode 0x08c379a0. Zero treasury impact.
+                            Attempted spend of $26 MUSD? Smart contract reverts on-chain with standard Error(string) selector 0x08c379a0. Zero treasury impact.
                           </div>
                         </div>
                       )}

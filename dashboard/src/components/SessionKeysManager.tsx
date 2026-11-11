@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Key, Clock, ShieldAlert, Check, Copy, Ban, Sparkles, X, ShieldCheck } from "lucide-react";
+import { Plus, Key, Clock, ShieldAlert, Check, Copy, Ban, Sparkles, X, ShieldCheck, Cpu, Lock } from "lucide-react";
 import type { SessionKeyItem } from "@/lib/types";
 
 interface SessionKeysManagerProps {
@@ -20,6 +20,7 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
   const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null);
 
   // New Key Form State
+  const [keyInputMode, setKeyInputMode] = useState<"enclave" | "sandbox">("enclave");
   const [label, setLabel] = useState("");
   const [hourlyLimit, setHourlyLimit] = useState("25");
   const [dailyLimit, setDailyLimit] = useState("100");
@@ -78,11 +79,11 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
               AI Agent Session Keys
             </h2>
             <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-800/40">
-              ERC-4337 Compatible
+              Custom Smart Account (EIP-7715 Inspired)
             </span>
           </div>
           <p className="text-xs text-slate-400">
-            Cryptographic ephemeral keys with velocity controls and target limits
+            Cryptographic ephemeral keys with 12-bucket sliding window velocity controls
           </p>
         </div>
 
@@ -90,13 +91,14 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => {
-            handleGenerateRandomKey();
+            setKeyInputMode("enclave");
+            setCustomKey("");
             setIsModalOpen(true);
           }}
           className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-mezo hover:bg-mezo-hover text-black text-xs font-extrabold shadow-lg shadow-mezo/20 transition-all self-start sm:self-auto"
         >
           <Plus className="w-4 h-4 text-black stroke-[3]" />
-          <span>Mint Session Key</span>
+          <span>Authorize Session Key</span>
         </motion.button>
       </div>
 
@@ -107,7 +109,7 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
             <Key className="w-8 h-8 text-slate-500 mx-auto mb-2" />
             <p className="text-sm text-slate-400 font-semibold">No active session keys found</p>
             <p className="text-xs text-slate-500 mt-1">
-              Mint a session key to delegate safe MUSD spending to an AI agent.
+              Authorize a session key to delegate safe MUSD spending to an AI agent.
             </p>
           </div>
         ) : (
@@ -191,7 +193,7 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                         whileTap={{ scale: 0.97 }}
                         onClick={() => onRevokeKey(item.id)}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 border border-red-800/40 text-xs font-bold text-red-300 transition-colors shadow-sm"
-                        title="Instant on-chain revocation"
+                        title="Instant on-chain revocation (effective in next block)"
                       >
                         <Ban className="w-3.5 h-3.5 stroke-[2.2]" />
                         <span>Revoke</span>
@@ -205,7 +207,7 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                   {/* Hourly Limit */}
                   <div>
                     <div className="flex items-center justify-between text-xs mb-1.5">
-                      <span className="text-slate-400 font-medium">Hourly Velocity Cap</span>
+                      <span className="text-slate-400 font-medium">Sliding Hourly Velocity Cap</span>
                       <span className="font-mono text-slate-200 font-semibold">
                         ${item.hourlySpent.toFixed(2)} / ${item.hourlyLimit.toFixed(2)} MUSD
                       </span>
@@ -248,7 +250,7 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
         )}
       </div>
 
-      {/* Modal for Minting a New Session Key */}
+      {/* Modal for Minting / Registering a Session Key */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -264,12 +266,12 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-[#0B0F19] border border-surface-border rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl relative z-10"
+              className="bg-[#0B0F19] border border-surface-border rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl relative z-10"
             >
               <div className="flex items-center justify-between pb-3 mb-4 border-b border-surface-border">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-mezo" />
-                  <h3 className="text-base font-bold text-white">Mint AI Agent Session Key</h3>
+                  <h3 className="text-base font-bold text-white">Authorize AI Agent Session Key</h3>
                 </div>
                 <button
                   onClick={() => setIsModalOpen(false)}
@@ -279,9 +281,51 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                 </button>
               </div>
 
-              <p className="text-xs text-slate-400 mb-4">
-                Deploy an on-chain authorization policy for your autonomous agent.
-              </p>
+              {/* Mode Selector Tabs */}
+              <div className="grid grid-cols-2 gap-2 mb-4 p-1 rounded-xl bg-surface-card border border-surface-border text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setKeyInputMode("enclave");
+                    setCustomKey("");
+                  }}
+                  className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                    keyInputMode === "enclave"
+                      ? "bg-mezo text-black shadow-sm font-bold"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Enclave Public Key</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setKeyInputMode("sandbox");
+                    handleGenerateRandomKey();
+                  }}
+                  className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                    keyInputMode === "sandbox"
+                      ? "bg-mezo text-black shadow-sm font-bold"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <Cpu className="w-3.5 h-3.5" />
+                  <span>Sandbox Generator</span>
+                </button>
+              </div>
+
+              {/* Security Context Banner */}
+              {keyInputMode === "enclave" ? (
+                <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40 text-[11px] text-emerald-300 leading-relaxed mb-4">
+                  🔒 <strong>Zero-Knowledge Key Handshake:</strong> The autonomous agent generates its ECDSA private key within its local secure enclave, Docker runner, or AWS KMS. Enter only its public address below. Your master account signs on-chain authorization without the private key ever leaving the agent environment.
+                </div>
+              ) : (
+                <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-800/40 text-[11px] text-cyan-300 leading-relaxed mb-4">
+                  🧪 <strong>Interactive Sandbox Mode:</strong> A random mock address is generated for live browser demonstrations and velocity testing.
+                </div>
+              )}
 
               <form onSubmit={handleSubmitNewKey} className="space-y-4">
                 <div>
@@ -291,7 +335,7 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Per-Call Search Agent"
+                    placeholder="e.g. LangChain Search & Retrieval Worker"
                     value={label}
                     onChange={(e) => setLabel(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-surface-card border border-surface-border text-xs text-white placeholder-slate-500 focus:outline-none focus:border-mezo"
@@ -300,30 +344,33 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
 
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                    Ephemeral Key Public Address
+                    {keyInputMode === "enclave" ? "Agent Public Address (0x...)" : "Generated Demo Address"}
                   </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
                       required
+                      placeholder="0x..."
                       value={customKey}
                       onChange={(e) => setCustomKey(e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-surface-card border border-surface-border text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-mezo"
                     />
-                    <button
-                      type="button"
-                      onClick={handleGenerateRandomKey}
-                      className="px-3 py-2.5 rounded-xl bg-surface-light border border-surface-border text-[11px] font-bold text-slate-200 hover:text-white shrink-0"
-                    >
-                      Random
-                    </button>
+                    {keyInputMode === "sandbox" && (
+                      <button
+                        type="button"
+                        onClick={handleGenerateRandomKey}
+                        className="px-3 py-2.5 rounded-xl bg-surface-light border border-surface-border text-[11px] font-bold text-slate-200 hover:text-white shrink-0"
+                      >
+                        New
+                      </button>
+                    )}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                      Hourly Limit (MUSD)
+                      Sliding Hourly Limit (MUSD)
                     </label>
                     <input
                       type="number"
@@ -335,7 +382,7 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                   </div>
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                      Daily Limit (MUSD)
+                      Daily Safety Cap (MUSD)
                     </label>
                     <input
                       type="number"
@@ -349,46 +396,45 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
 
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                    Session Expiration
+                    Key Expiration Window
                   </label>
                   <select
                     value={durationDays}
                     onChange={(e) => setDurationDays(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-surface-card border border-surface-border text-xs text-white focus:outline-none focus:border-mezo cursor-pointer"
                   >
-                    <option value="1">24 Hours</option>
-                    <option value="7">7 Days</option>
-                    <option value="30">30 Days</option>
-                    <option value="90">90 Days</option>
+                    <option value="1" className="bg-[#0B0F19]">24 Hours (High Security / Short Task)</option>
+                    <option value="7" className="bg-[#0B0F19]">7 Days (Standard Autonomous Worker)</option>
+                    <option value="30" className="bg-[#0B0F19]">30 Days (Production Agent Service)</option>
+                    <option value="90" className="bg-[#0B0F19]">90 Days (Enterprise Infrastructure)</option>
                   </select>
                 </div>
 
-                <div className="flex items-center gap-2 pt-1">
-                  <input
-                    type="checkbox"
-                    id="restrict"
-                    checked={restrictTargets}
-                    onChange={(e) => setRestrictTargets(e.target.checked)}
-                    className="rounded border-slate-700 text-mezo focus:ring-mezo"
-                  />
-                  <label htmlFor="restrict" className="text-xs text-slate-300 cursor-pointer">
-                    Restrict to whitelisted API & DEX target contracts only
+                <div className="pt-2">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={restrictTargets}
+                      onChange={(e) => setRestrictTargets(e.target.checked)}
+                      className="rounded text-mezo focus:ring-mezo w-4 h-4 bg-slate-900 border-slate-700"
+                    />
+                    <span>Restrict calls to Whitelisted Target Contracts & Function Selectors</span>
                   </label>
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-3 border-t border-surface-border">
+                <div className="pt-3 flex items-center justify-end gap-2.5">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2.5 rounded-xl bg-surface-light text-xs font-semibold text-slate-300 hover:text-white"
+                    className="px-4 py-2.5 rounded-xl text-xs text-slate-400 hover:text-white transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 rounded-xl bg-mezo hover:bg-mezo-hover text-xs font-extrabold text-black shadow-lg shadow-mezo/20"
+                    className="px-5 py-2.5 rounded-xl bg-mezo hover:bg-mezo-hover text-black text-xs font-extrabold shadow-lg shadow-mezo/20 transition-all"
                   >
-                    Confirm & Mint Key
+                    Authorize on Mezo
                   </button>
                 </div>
               </form>

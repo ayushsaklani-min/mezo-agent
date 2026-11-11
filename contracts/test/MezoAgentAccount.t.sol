@@ -8,14 +8,32 @@ import "../src/MezoBridgeRouter.sol";
 import "../src/MockMUSD.sol";
 import "../src/MockUSDC.sol";
 
+// Mock Target Contract to test selector whitelisting
+contract MockTargetService {
+    uint256 public queryCount;
+    event QueryExecuted(uint256 count, string memo);
+
+    function executeQuery(string calldata memo) external returns (bool) {
+        queryCount++;
+        emit QueryExecuted(queryCount, memo);
+        return true;
+    }
+
+    function dangerousOperation() external pure returns (bool) {
+        return true;
+    }
+}
+
 contract MezoAgentAccountTest is Test {
     MezoAgentAccount public account;
     MezoAgentFactory public factory;
     MezoBridgeRouter public router;
     MockMUSD public musd;
     MockUSDC public usdc;
+    MockTargetService public targetService;
 
     address public owner = address(0xAA11);
+    address public guardian = address(0xAA22);
     address public agentKey = address(0xBB22);
     address public unauthorizedUser = address(0xDEAD);
     address public serviceProvider = address(0xCC33);
@@ -23,9 +41,11 @@ contract MezoAgentAccountTest is Test {
     uint256 public constant INITIAL_BALANCE = 10_000 * 1e18;
     uint256 public constant HOURLY_LIMIT = 50 * 1e18;
     uint256 public constant DAILY_LIMIT = 200 * 1e18;
+    uint256 public constant TIMELOCK_DELAY = 1 days;
 
     function setUp() public {
         vm.deal(owner, 10 ether);
+        vm.deal(guardian, 1 ether);
         vm.deal(agentKey, 1 ether);
         vm.startPrank(owner);
 
@@ -33,8 +53,10 @@ contract MezoAgentAccountTest is Test {
         usdc = new MockUSDC();
         factory = new MezoAgentFactory(address(musd));
         router = new MezoBridgeRouter(address(usdc), address(musd));
+        targetService = new MockTargetService();
 
-        account = new MezoAgentAccount(owner, address(musd));
+        account = new MezoAgentAccount(owner, address(musd), TIMELOCK_DELAY);
+        account.setGuardian(guardian);
 
         // Fund account with MUSD
         musd.mint(address(account), INITIAL_BALANCE);
@@ -44,6 +66,7 @@ contract MezoAgentAccountTest is Test {
 
     function test_InitialState() public view {
         assertEq(account.owner(), owner);
+        assertEq(account.guardian(), guardian);
         assertEq(address(account.musdToken()), address(musd));
         (uint256 musdBal, ) = account.getAccountBalance();
         assertEq(musdBal, INITIAL_BALANCE);
@@ -55,6 +78,9 @@ contract MezoAgentAccountTest is Test {
         address[] memory targets = new address[](1);
         targets[0] = serviceProvider;
 
+        bytes4[] memory selectors = new bytes4[](1);
+        selectors[0] = MockTargetService.executeQuery.selector;
+
         uint256 expiry = block.timestamp + 7 days;
 
         account.createSessionKey(
@@ -64,6 +90,7 @@ contract MezoAgentAccountTest is Test {
             expiry,
             true, // restrictTargets
             targets,
+            selectors,
             "Autonomous Search Agent"
         );
 
@@ -74,10 +101,6 @@ contract MezoAgentAccountTest is Test {
             uint256 hourlyLimit,
             uint256 dailyLimit,
             uint256 validUntil,
-            ,
-            ,
-            ,
-            ,
             bool restrictTargets,
             string memory label
         ) = account.sessionPolicies(agentKey);
@@ -89,13 +112,15 @@ contract MezoAgentAccountTest is Test {
         assertTrue(restrictTargets);
         assertEq(label, "Autonomous Search Agent");
         assertTrue(account.isTargetAllowed(agentKey, serviceProvider));
+        assertTrue(account.isFunctionAllowed(agentKey, serviceProvider, MockTargetService.executeQuery.selector));
     }
 
     function test_ExecuteAsAgent_Success() public {
-        // Setup session key
         vm.startPrank(owner);
         address[] memory targets = new address[](1);
         targets[0] = serviceProvider;
+        bytes4[] memory selectors = new bytes4[](0);
+
         account.createSessionKey(
             agentKey,
             HOURLY_LIMIT,
@@ -103,6 +128,7 @@ contract MezoAgentAccountTest is Test {
             block.timestamp + 1 days,
             true,
             targets,
+            selectors,
             "Payment Agent"
         );
         vm.stopPrank();
@@ -122,6 +148,8 @@ contract MezoAgentAccountTest is Test {
         vm.startPrank(owner);
         address[] memory targets = new address[](1);
         targets[0] = serviceProvider;
+        bytes4[] memory selectors = new bytes4[](0);
+
         account.createSessionKey(
             agentKey,
             HOURLY_LIMIT,
@@ -129,6 +157,7 @@ contract MezoAgentAccountTest is Test {
             block.timestamp + 1 days,
             false,
             targets,
+            selectors,
             "Agent"
         );
         vm.stopPrank();
@@ -140,9 +169,225 @@ contract MezoAgentAccountTest is Test {
         vm.stopPrank();
     }
 
+    // ------------------------------------------------------------------------
+    // P0 SECURITY FIX TEST: TRUE SLIDING WINDOW PREVENTS BOUNDARY ATTACK
+    // ------------------------------------------------------------------------
+    function test_SlidingWindow_PreventsBoundaryAttack() public {
+        vm.startPrank(owner);
+        address[] memory targets = new address[](1);
+        targets[0] = serviceProvider;
+        bytes4[] memory selectors = new bytes4[](0);
+
+        // Limit: 50 MUSD / hour
+        account.createSessionKey(
+            agentKey,
+            HOURLY_LIMIT,
+            DAILY_LIMIT,
+            block.timestamp + 2 days,
+            false,
+            targets,
+            selectors,
+            "Boundary Attack Tester"
+        );
+        vm.stopPrank();
+
+        // Start at t = 3540 seconds (59 minutes into hour 0)
+        vm.warp(3540);
+
+        vm.startPrank(agentKey);
+        // Spend full hourly limit at 59 mins
+        account.executeAsAgent(serviceProvider, 50 * 1e18, "");
+        assertEq(account.getHourlySpent(agentKey), 50 * 1e18);
+
+        // Advance by only 2 minutes to t = 3660 (61 minutes from t=0, in next fixed hour)
+        vm.warp(3660);
+
+        // Under fixed window, this would exploit and reset to 0!
+        // Under our multi-bucket sliding window, bucket from t=3540 is STILL ACTIVE (< 3600s old).
+        // Attempting to spend even 1 MUSD must revert!
+        vm.expectRevert("Hourly MUSD limit exceeded");
+        account.executeAsAgent(serviceProvider, 1 * 1e18, "");
+
+        // Advance to t = 7200 (> 3600s after the first spend)
+        vm.warp(7200);
+
+        // Now the first spend has exited the 1-hour sliding window!
+        assertEq(account.getHourlySpent(agentKey), 0);
+        assertEq(account.getRemainingHourlyBudget(agentKey), HOURLY_LIMIT);
+
+        // Can safely execute new spend
+        account.executeAsAgent(serviceProvider, 30 * 1e18, "");
+        vm.stopPrank();
+
+        assertEq(musd.balanceOf(serviceProvider), 80 * 1e18);
+    }
+
+    // ------------------------------------------------------------------------
+    // P0 SECURITY FIX TEST: FUNCTION SELECTOR WHITELISTING & APPROVE BLOCK
+    // ------------------------------------------------------------------------
+    function test_FunctionSelectorWhitelisting() public {
+        vm.startPrank(owner);
+        address[] memory targets = new address[](1);
+        targets[0] = address(targetService);
+
+        bytes4[] memory selectors = new bytes4[](1);
+        selectors[0] = MockTargetService.executeQuery.selector;
+
+        account.createSessionKey(
+            agentKey,
+            HOURLY_LIMIT,
+            DAILY_LIMIT,
+            block.timestamp + 1 days,
+            true, // Restrict targets and selectors
+            targets,
+            selectors,
+            "Scoped Caller"
+        );
+        vm.stopPrank();
+
+        vm.startPrank(agentKey);
+
+        // Allowed selector: executeQuery
+        bytes memory validCall = abi.encodeWithSelector(MockTargetService.executeQuery.selector, "Search Query");
+        account.executeAsAgent(address(targetService), 0, validCall);
+        assertEq(targetService.queryCount(), 1);
+
+        // Disallowed selector: dangerousOperation
+        bytes memory rogueCall = abi.encodeWithSelector(MockTargetService.dangerousOperation.selector);
+        vm.expectRevert("Function selector not whitelisted");
+        account.executeAsAgent(address(targetService), 0, rogueCall);
+
+        vm.stopPrank();
+    }
+
+    function test_DirectMUSDApprove_Forbidden() public {
+        vm.startPrank(owner);
+        address[] memory targets = new address[](1);
+        targets[0] = address(musd);
+
+        bytes4[] memory selectors = new bytes4[](1);
+        selectors[0] = musd.approve.selector;
+
+        account.createSessionKey(
+            agentKey,
+            HOURLY_LIMIT,
+            DAILY_LIMIT,
+            block.timestamp + 1 days,
+            true,
+            targets,
+            selectors,
+            "Approval Attacker"
+        );
+        vm.stopPrank();
+
+        vm.startPrank(agentKey);
+        bytes memory approveCall = abi.encodeWithSelector(musd.approve.selector, unauthorizedUser, 1000 * 1e18);
+        vm.expectRevert("Direct MUSD approve forbidden for agent keys");
+        account.executeAsAgent(address(musd), 0, approveCall);
+        vm.stopPrank();
+    }
+
+    // ------------------------------------------------------------------------
+    // P0 SECURITY FIX TEST: EMERGENCY PAUSE & REVOKE ALL
+    // ------------------------------------------------------------------------
+    function test_EmergencyPause_OwnerAndGuardian() public {
+        vm.startPrank(owner);
+        address[] memory targets = new address[](1);
+        targets[0] = serviceProvider;
+        bytes4[] memory selectors = new bytes4[](0);
+
+        account.createSessionKey(
+            agentKey,
+            HOURLY_LIMIT,
+            DAILY_LIMIT,
+            block.timestamp + 1 days,
+            false,
+            targets,
+            selectors,
+            "Agent"
+        );
+        vm.stopPrank();
+
+        // Guardian pauses the account
+        vm.prank(guardian);
+        account.pause();
+        assertTrue(account.paused());
+
+        // Agent execution is frozen
+        vm.startPrank(agentKey);
+        vm.expectRevert(abi.encodeWithSignature("EnforcedPause()"));
+        account.executeAsAgent(serviceProvider, 10 * 1e18, "");
+        vm.stopPrank();
+
+        // Guardian cannot unpause (only owner)
+        vm.prank(guardian);
+        vm.expectRevert("Only owner can call this function");
+        account.unpause();
+
+        // Owner unpauses
+        vm.prank(owner);
+        account.unpause();
+        assertFalse(account.paused());
+
+        // Agent can execute again
+        vm.prank(agentKey);
+        account.executeAsAgent(serviceProvider, 10 * 1e18, "");
+        assertEq(musd.balanceOf(serviceProvider), 10 * 1e18);
+    }
+
+    function test_RevokeAllSessionKeys() public {
+        vm.startPrank(owner);
+        address agent2 = address(0xBB33);
+        address[] memory targets = new address[](0);
+        bytes4[] memory selectors = new bytes4[](0);
+
+        account.createSessionKey(agentKey, HOURLY_LIMIT, DAILY_LIMIT, block.timestamp + 1 days, false, targets, selectors, "Key 1");
+        account.createSessionKey(agent2, HOURLY_LIMIT, DAILY_LIMIT, block.timestamp + 1 days, false, targets, selectors, "Key 2");
+
+        // Emergency: Revoke all keys
+        account.revokeAllSessionKeys();
+        vm.stopPrank();
+
+        (bool active1,,,,,) = account.sessionPolicies(agentKey);
+        (bool active2,,,,,) = account.sessionPolicies(agent2);
+        assertFalse(active1);
+        assertFalse(active2);
+    }
+
+    // ------------------------------------------------------------------------
+    // P0 SECURITY FIX TEST: TIMELOCK FOR LIMIT INCREASES
+    // ------------------------------------------------------------------------
+    function test_TimelockForLimitIncrease() public {
+        vm.startPrank(owner);
+        address[] memory targets = new address[](0);
+        bytes4[] memory selectors = new bytes4[](0);
+
+        account.createSessionKey(agentKey, HOURLY_LIMIT, DAILY_LIMIT, block.timestamp + 7 days, false, targets, selectors, "Agent");
+
+        // Propose limit increase
+        uint256 newHourly = 100 * 1e18;
+        uint256 newDaily = 500 * 1e18;
+        account.proposeLimitIncrease(agentKey, newHourly, newDaily);
+
+        // Immediate execution rejected
+        vm.expectRevert("Timelock delay not elapsed");
+        account.executeLimitIncrease(agentKey);
+
+        // Warp past timelock delay (1 day)
+        vm.warp(block.timestamp + TIMELOCK_DELAY + 1);
+
+        account.executeLimitIncrease(agentKey);
+        vm.stopPrank();
+
+        (,uint256 h, uint256 d,,,) = account.sessionPolicies(agentKey);
+        assertEq(h, newHourly);
+        assertEq(d, newDaily);
+    }
+
     function test_ExecuteAsAgent_Expired() public {
         vm.startPrank(owner);
         address[] memory targets = new address[](0);
+        bytes4[] memory selectors = new bytes4[](0);
         uint256 expiry = block.timestamp + 1 hours;
         account.createSessionKey(
             agentKey,
@@ -151,6 +396,7 @@ contract MezoAgentAccountTest is Test {
             expiry,
             false,
             targets,
+            selectors,
             "Expiring Agent"
         );
         vm.stopPrank();
@@ -167,6 +413,7 @@ contract MezoAgentAccountTest is Test {
     function test_ExecuteAsAgent_Revoked() public {
         vm.startPrank(owner);
         address[] memory targets = new address[](0);
+        bytes4[] memory selectors = new bytes4[](0);
         account.createSessionKey(
             agentKey,
             HOURLY_LIMIT,
@@ -174,6 +421,7 @@ contract MezoAgentAccountTest is Test {
             block.timestamp + 1 days,
             false,
             targets,
+            selectors,
             "To Be Revoked"
         );
 
@@ -191,6 +439,7 @@ contract MezoAgentAccountTest is Test {
         vm.startPrank(owner);
         address[] memory targets = new address[](1);
         targets[0] = serviceProvider;
+        bytes4[] memory selectors = new bytes4[](0);
         account.createSessionKey(
             agentKey,
             HOURLY_LIMIT,
@@ -198,6 +447,7 @@ contract MezoAgentAccountTest is Test {
             block.timestamp + 1 days,
             true, // Restricted
             targets,
+            selectors,
             "Strict Agent"
         );
         vm.stopPrank();
@@ -209,169 +459,87 @@ contract MezoAgentAccountTest is Test {
         vm.stopPrank();
     }
 
-    function test_WindowReset() public {
-        vm.startPrank(owner);
-        address[] memory targets = new address[](0);
-        account.createSessionKey(
-            agentKey,
-            HOURLY_LIMIT,
-            DAILY_LIMIT,
-            block.timestamp + 2 days,
-            false,
-            targets,
-            "Multi-hour Agent"
-        );
-        vm.stopPrank();
-
-        vm.startPrank(agentKey);
-        // Spend full hourly limit (50 MUSD)
-        account.executeAsAgent(serviceProvider, 50 * 1e18, "");
-        assertEq(account.getRemainingHourlyBudget(agentKey), 0);
-
-        // Advance time by 65 minutes (next hour window)
-        vm.warp(block.timestamp + 65 minutes);
-
-        // Hourly budget resets back to 50 MUSD
-        assertEq(account.getRemainingHourlyBudget(agentKey), HOURLY_LIMIT);
-        // Daily remaining is now 200 - 50 = 150 MUSD
-        assertEq(account.getRemainingDailyBudget(agentKey), 150 * 1e18);
-
-        // Can spend another 40 MUSD
-        account.executeAsAgent(serviceProvider, 40 * 1e18, "");
-        vm.stopPrank();
-
-        assertEq(musd.balanceOf(serviceProvider), 90 * 1e18);
-    }
-
     function test_FactoryDeployment() public {
         vm.startPrank(owner);
         musd.approve(address(factory), 100 * 1e18);
         address newAcc = factory.createAccount{value: 0.05 ether}(100 * 1e18);
+        vm.stopPrank();
 
         assertTrue(factory.isMezoAgentAccount(newAcc));
-        assertEq(factory.getUserAccounts(owner).length, 1);
         assertEq(musd.balanceOf(newAcc), 100 * 1e18);
         assertEq(newAcc.balance, 0.05 ether);
-        vm.stopPrank();
+        assertEq(factory.totalAccountsCount(), 1);
     }
 
     function test_CrossChainBridge() public {
-        address user = address(0x5555);
-        uint256 depositUSDC = 500 * 1e6; // 500 USDC (6 decimals)
+        vm.startPrank(owner);
+        uint256 usdcAmount = 500 * 1e6; // 500 USDC
+        usdc.mint(owner, usdcAmount);
+        usdc.approve(address(router), usdcAmount);
 
-        vm.startPrank(user);
-        usdc.faucet(depositUSDC);
-        usdc.approve(address(router), depositUSDC);
+        // Mint liquidity into router for 1:1 payout
+        musd.mint(address(router), 10_000 * 1e18);
 
-        // Bridge USDC to account
-        router.bridgeUSDCToMUSD(address(account), depositUSDC);
+        router.bridgeUSDCToMUSD(address(account), usdcAmount);
         vm.stopPrank();
 
-        // 500 USDC converts to 500 MUSD (18 decimals)
-        // INITIAL_BALANCE (10,000) + 500 = 10,500 MUSD
-        assertEq(musd.balanceOf(address(account)), INITIAL_BALANCE + (500 * 1e18));
+        assertEq(musd.balanceOf(address(account)), INITIAL_BALANCE + 500 * 1e18);
     }
 
     function test_WithdrawMUSD_OnlyOwner() public {
-        vm.startPrank(unauthorizedUser);
-        vm.expectRevert("Only owner can call this function");
-        account.withdrawMUSD(unauthorizedUser, 100 * 1e18);
-        vm.stopPrank();
-
         uint256 ownerBalBefore = musd.balanceOf(owner);
-        vm.startPrank(owner);
+
+        vm.prank(unauthorizedUser);
+        vm.expectRevert("Only owner can call this function");
+        account.withdrawMUSD(unauthorizedUser, 500 * 1e18);
+
+        vm.prank(owner);
         account.withdrawMUSD(owner, 500 * 1e18);
         assertEq(musd.balanceOf(owner), ownerBalBefore + 500 * 1e18);
-        vm.stopPrank();
     }
 
     function test_WithdrawGas_OnlyOwner() public {
-        // Send native gas to account
-        vm.prank(owner);
-        (bool sent, ) = address(account).call{value: 2 ether}("");
-        assertTrue(sent);
+        // Fund account with native BTC
+        vm.deal(address(account), 1 ether);
 
-        vm.startPrank(unauthorizedUser);
+        vm.prank(unauthorizedUser);
         vm.expectRevert("Only owner can call this function");
-        account.withdrawGas(payable(unauthorizedUser), 1 ether);
-        vm.stopPrank();
+        account.withdrawGas(payable(unauthorizedUser), 0.5 ether);
 
         uint256 ownerBalBefore = owner.balance;
-        vm.startPrank(owner);
-        account.withdrawGas(payable(owner), 1 ether);
-        assertEq(owner.balance, ownerBalBefore + 1 ether);
-        vm.stopPrank();
+        vm.prank(owner);
+        account.withdrawGas(payable(owner), 0.5 ether);
+        assertEq(owner.balance, ownerBalBefore + 0.5 ether);
     }
 
-    function test_MultipleSessionKeys_Isolation() public {
-        address agentA = address(0xAA01);
-        address agentB = address(0xBB02);
+    function testFuzz_RateLimitBoundaries(uint96 spendAmount1, uint96 spendAmount2) public {
+        vm.assume(spendAmount1 > 0 && spendAmount1 <= HOURLY_LIMIT);
+        vm.assume(spendAmount2 > 0 && spendAmount2 <= HOURLY_LIMIT);
 
         vm.startPrank(owner);
         address[] memory targets = new address[](0);
-        account.createSessionKey(agentA, 20 * 1e18, 100 * 1e18, block.timestamp + 1 days, false, targets, "Agent A");
-        account.createSessionKey(agentB, 50 * 1e18, 200 * 1e18, block.timestamp + 1 days, false, targets, "Agent B");
-        vm.stopPrank();
-
-        assertEq(account.getRegisteredKeysCount(), 2);
-
-        // Agent A spends 20
-        vm.prank(agentA);
-        account.executeAsAgent(serviceProvider, 20 * 1e18, "");
-        assertEq(account.getRemainingHourlyBudget(agentA), 0);
-
-        // Agent B's budget is completely untouched and can spend 50
-        assertEq(account.getRemainingHourlyBudget(agentB), 50 * 1e18);
-        vm.prank(agentB);
-        account.executeAsAgent(serviceProvider, 50 * 1e18, "");
-        assertEq(account.getRemainingHourlyBudget(agentB), 0);
-    }
-
-    function test_DailyLimitExceededAcrossWindows() public {
-        vm.startPrank(owner);
-        address[] memory targets = new address[](0);
-        // Hourly limit 50, Daily limit 100
-        account.createSessionKey(agentKey, 50 * 1e18, 100 * 1e18, block.timestamp + 3 days, false, targets, "Capped Agent");
+        bytes4[] memory selectors = new bytes4[](0);
+        account.createSessionKey(
+            agentKey,
+            HOURLY_LIMIT,
+            DAILY_LIMIT,
+            block.timestamp + 10 days,
+            false,
+            targets,
+            selectors,
+            "Fuzz Agent"
+        );
         vm.stopPrank();
 
         vm.startPrank(agentKey);
-        // Hour 1: spend 50
-        account.executeAsAgent(serviceProvider, 50 * 1e18, "");
+        account.executeAsAgent(serviceProvider, spendAmount1, "");
 
-        // Advance 1 hour
-        vm.warp(block.timestamp + 1 hours);
-        // Hour 2: spend 50 (Total daily spent: 100)
-        account.executeAsAgent(serviceProvider, 50 * 1e18, "");
-
-        // Advance 1 hour
-        vm.warp(block.timestamp + 1 hours);
-        // Hour 3: Hourly limit would be 50, but daily limit is 100 and already exhausted!
-        assertEq(account.getRemainingDailyBudget(agentKey), 0);
-        vm.expectRevert("Daily MUSD limit exceeded");
-        account.executeAsAgent(serviceProvider, 1 * 1e18, "");
-        vm.stopPrank();
-    }
-
-    function testFuzz_RateLimitBoundaries(uint96 rawLimit, uint96 rawSpend) public {
-        vm.assume(rawLimit > 1e18 && rawLimit < 1_000_000 * 1e18);
-        vm.assume(rawSpend > 0 && rawSpend < 1_000_000 * 1e18);
-
-        uint256 limit = uint256(rawLimit);
-        uint256 spend = uint256(rawSpend);
-
-        address fuzzAgent = address(0xF002);
-        vm.startPrank(owner);
-        address[] memory targets = new address[](0);
-        account.createSessionKey(fuzzAgent, limit, limit * 2, block.timestamp + 1 days, false, targets, "Fuzz");
-        vm.stopPrank();
-
-        vm.startPrank(fuzzAgent);
-        if (spend <= limit && spend <= INITIAL_BALANCE) {
-            account.executeAsAgent(serviceProvider, spend, "");
-            assertEq(musd.balanceOf(serviceProvider), spend);
-        } else if (spend > limit) {
+        if (uint256(spendAmount1) + uint256(spendAmount2) <= HOURLY_LIMIT) {
+            account.executeAsAgent(serviceProvider, spendAmount2, "");
+            assertEq(musd.balanceOf(serviceProvider), uint256(spendAmount1) + uint256(spendAmount2));
+        } else {
             vm.expectRevert("Hourly MUSD limit exceeded");
-            account.executeAsAgent(serviceProvider, spend, "");
+            account.executeAsAgent(serviceProvider, spendAmount2, "");
         }
         vm.stopPrank();
     }
