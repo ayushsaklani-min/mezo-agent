@@ -24,6 +24,7 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
   const [label, setLabel] = useState("");
   const [hourlyLimit, setHourlyLimit] = useState("25");
   const [dailyLimit, setDailyLimit] = useState("100");
+  const [maxPerTx, setMaxPerTx] = useState("5");
   const [durationDays, setDurationDays] = useState("7");
   const [restrictTargets, setRestrictTargets] = useState(true);
   const [customKey, setCustomKey] = useState("");
@@ -367,29 +368,43 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                      Sliding Hourly Limit (MUSD)
+                      Hourly Limit (MUSD)
                     </label>
                     <input
                       type="number"
                       min="1"
                       value={hourlyLimit}
                       onChange={(e) => setHourlyLimit(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-surface-card border border-surface-border text-xs font-mono text-white focus:outline-none focus:border-mezo"
+                      className="w-full px-3 py-2 rounded-xl bg-surface-card border border-surface-border text-xs font-mono text-white focus:outline-none focus:border-mezo"
                     />
                   </div>
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                      Daily Safety Cap (MUSD)
+                      Daily Cap (MUSD)
                     </label>
                     <input
                       type="number"
                       min="1"
                       value={dailyLimit}
                       onChange={(e) => setDailyLimit(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-surface-card border border-surface-border text-xs font-mono text-white focus:outline-none focus:border-mezo"
+                      className="w-full px-3 py-2 rounded-xl bg-surface-card border border-surface-border text-xs font-mono text-white focus:outline-none focus:border-mezo"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                      Max Per Tx (MUSD)
+                    </label>
+                    <input
+                      type="number"
+                      min="0.1"
+                      step="0.1"
+                      value={maxPerTx}
+                      onChange={(e) => setMaxPerTx(e.target.value)}
+                      placeholder="0 = none"
+                      className="w-full px-3 py-2 rounded-xl bg-surface-card border border-surface-border text-xs font-mono text-white focus:outline-none focus:border-mezo"
                     />
                   </div>
                 </div>

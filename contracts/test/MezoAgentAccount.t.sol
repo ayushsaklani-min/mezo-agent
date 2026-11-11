@@ -100,6 +100,7 @@ contract MezoAgentAccountTest is Test {
             bool active,
             uint256 hourlyLimit,
             uint256 dailyLimit,
+            uint256 maxPerTx,
             uint256 validUntil,
             bool restrictTargets,
             string memory label
@@ -348,8 +349,8 @@ contract MezoAgentAccountTest is Test {
         account.revokeAllSessionKeys();
         vm.stopPrank();
 
-        (bool active1,,,,,) = account.sessionPolicies(agentKey);
-        (bool active2,,,,,) = account.sessionPolicies(agent2);
+        (bool active1,,,,,,) = account.sessionPolicies(agentKey);
+        (bool active2,,,,,,) = account.sessionPolicies(agent2);
         assertFalse(active1);
         assertFalse(active2);
     }
@@ -379,7 +380,7 @@ contract MezoAgentAccountTest is Test {
         account.executeLimitIncrease(agentKey);
         vm.stopPrank();
 
-        (,uint256 h, uint256 d,,,) = account.sessionPolicies(agentKey);
+        (,uint256 h, uint256 d,,,,) = account.sessionPolicies(agentKey);
         assertEq(h, newHourly);
         assertEq(d, newDaily);
     }
@@ -542,5 +543,120 @@ contract MezoAgentAccountTest is Test {
             account.executeAsAgent(serviceProvider, spendAmount2, "");
         }
         vm.stopPrank();
+    }
+
+    // ------------------------------------------------------------------------
+    // P1 ENTERPRISE UPGRADE: MAX PER TRANSACTION CAP
+    // ------------------------------------------------------------------------
+    function test_MaxPerTxCap() public {
+        vm.startPrank(owner);
+        address[] memory targets = new address[](0);
+        bytes4[] memory selectors = new bytes4[](0);
+        uint256 maxPerTx = 2 ether;
+
+        account.createSessionKey(
+            agentKey,
+            HOURLY_LIMIT,
+            DAILY_LIMIT,
+            maxPerTx,
+            block.timestamp + 7 days,
+            false,
+            targets,
+            selectors,
+            "Capped Agent"
+        );
+        vm.stopPrank();
+
+        vm.startPrank(agentKey);
+        // Spend within maxPerTx succeeds
+        account.executeAsAgent(serviceProvider, 1.5 ether, "");
+        assertEq(musd.balanceOf(serviceProvider), 1.5 ether);
+
+        // Attempting to spend 2.5 ether (> maxPerTx) reverts
+        vm.expectRevert("Amount exceeds maxPerTx cap");
+        account.executeAsAgent(serviceProvider, 2.5 ether, "");
+        vm.stopPrank();
+    }
+
+    // ------------------------------------------------------------------------
+    // P1 ENTERPRISE UPGRADE: HUMAN-IN-THE-LOOP APPROVAL QUEUE
+    // ------------------------------------------------------------------------
+    function test_HumanInTheLoop_ApprovalQueue() public {
+        vm.startPrank(owner);
+        address[] memory targets = new address[](0);
+        bytes4[] memory selectors = new bytes4[](0);
+
+        account.createSessionKey(agentKey, HOURLY_LIMIT, DAILY_LIMIT, block.timestamp + 7 days, false, targets, selectors, "Autonomous Agent");
+        account.setHumanApprovalThreshold(5 ether);
+        vm.stopPrank();
+
+        vm.startPrank(agentKey);
+        // 1. Direct spend > threshold reverts with instruction to queue
+        vm.expectRevert("Amount exceeds human approval threshold: call requestExecution");
+        account.executeAsAgent(serviceProvider, 8 ether, "");
+
+        // 2. Submit to request queue
+        uint256 reqId = account.requestExecution(serviceProvider, 8 ether, "", "High value GPU compute purchase");
+        assertEq(reqId, 0);
+        vm.stopPrank();
+
+        // 3. Inspect pending requests view
+        MezoAgentAccount.ExecutionRequest[] memory pending = account.getPendingRequests();
+        assertEq(pending.length, 1);
+        assertEq(pending[0].musdAmount, 8 ether);
+        assertEq(pending[0].memo, "High value GPU compute purchase");
+        assertFalse(pending[0].executed);
+
+        // 4. Owner approves request
+        vm.startPrank(owner);
+        account.approveExecution(reqId);
+        vm.stopPrank();
+
+        // Check funds transferred & request marked executed
+        assertEq(musd.balanceOf(serviceProvider), 8 ether);
+        pending = account.getPendingRequests();
+        assertEq(pending.length, 0);
+    }
+
+    function test_HumanInTheLoop_Reject() public {
+        vm.startPrank(owner);
+        address[] memory targets = new address[](0);
+        bytes4[] memory selectors = new bytes4[](0);
+        account.createSessionKey(agentKey, HOURLY_LIMIT, DAILY_LIMIT, block.timestamp + 7 days, false, targets, selectors, "Agent");
+        account.setHumanApprovalThreshold(5 ether);
+        vm.stopPrank();
+
+        vm.startPrank(agentKey);
+        uint256 reqId = account.requestExecution(serviceProvider, 9 ether, "", "Rogue API Call");
+        vm.stopPrank();
+
+        // Owner rejects the request
+        vm.startPrank(owner);
+        account.rejectExecution(reqId, "Suspicious payload");
+        
+        // Cannot approve rejected request
+        vm.expectRevert("Request was rejected");
+        account.approveExecution(reqId);
+        vm.stopPrank();
+    }
+
+    // ------------------------------------------------------------------------
+    // P1 ENTERPRISE UPGRADE: EIP-1271 SIGNATURE VERIFICATION
+    // ------------------------------------------------------------------------
+    function test_EIP1271_SignatureValidation() public {
+        bytes32 testHash = keccak256("MezoAgent EIP-1271 Test Message");
+        
+        uint256 ownerPk = 0xA11CE;
+        address customOwner = vm.addr(ownerPk);
+
+        vm.startPrank(owner);
+        account.transferOwnership(customOwner);
+        vm.stopPrank();
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPk, testHash);
+        bytes memory sig = abi.encodePacked(r, s, v);
+
+        bytes4 magic = account.isValidSignature(testHash, sig);
+        assertEq(magic, bytes4(0x1626ba7e));
     }
 }

@@ -1,0 +1,88 @@
+name: CI/CD Quality & Invariant Verification
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    name: Foundry Contracts & Formal Invariants
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run Foundry Build & Invariant Suite
+        run: |
+          cd contracts
+          forge --version
+          forge build --sizes
+          forge test -vvv
+
+  sdk:
+    name: TypeScript SDK Build & Error Interceptor Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: sdk/package.json
+
+      - name: Install SDK Dependencies
+        run: |
+          cd sdk
+          npm install
+
+      - name: Build SDK (TypeScript compiler)
+        run: |
+          cd sdk
+          npm run build
+
+      - name: Run SDK Unit & Mock Contract Tests
+        run: |
+          cd sdk
+          npm test
+
+  dashboard:
+    name: Next.js Production Build & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: dashboard/package.json
+
+      - name: Install Dashboard Dependencies
+        run: |
+          cd dashboard
+          npm install
+
+      - name: Next.js Production Build
+        run: |
+          cd dashboard
+          npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1

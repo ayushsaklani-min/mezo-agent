@@ -6,6 +6,7 @@ export {
   type MezoNetworkConfig,
   type AgentClientConfig,
   type SessionPolicyView,
+  type ExecutionRequestView,
   type PaymentParams,
   type ExecutionReceipt,
 } from "./types.js";
@@ -13,6 +14,8 @@ export {
   MezoAgentError,
   HourlyLimitExceededError,
   DailyLimitExceededError,
+  MaxPerTxExceededError,
+  PendingApprovalRequiredError,
   SessionKeyRevokedError,
   SessionKeyExpiredError,
   TargetNotWhitelistedError,

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Shield, Sparkles, ExternalLink, Copy, Check, Wallet, Code2, AlertCircle, X, Bell, SlidersHorizontal } from "lucide-react";
+import { Shield, Sparkles, ExternalLink, Copy, Check, Wallet, Code2, AlertCircle, X, Bell, SlidersHorizontal, ShieldCheck } from "lucide-react";
 import { MEZO_CONFIG } from "@/lib/constants";
 import { useMezoWallet } from "@/lib/useMezoWallet";
 import { DeveloperQuickstartModal } from "./DeveloperQuickstartModal";
@@ -12,6 +12,7 @@ interface HeaderProps {
   isLiveMode?: boolean;
   onToggleMode?: () => void;
   onOpenAlerts?: () => void;
+  onOpenSecurity?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   isLiveMode = false,
   onToggleMode,
   onOpenAlerts,
+  onOpenSecurity,
 }) => {
   const [copied, setCopied] = useState(false);
   const [isSdkModalOpen, setIsSdkModalOpen] = useState(false);
@@ -86,6 +88,20 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <Bell className="w-3.5 h-3.5 text-mezo" />
                 <span className="hidden sm:inline">Alerts</span>
+              </motion.button>
+            )}
+
+            {/* Security & Audit Modal Button */}
+            {onOpenSecurity && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onOpenSecurity}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-card border border-surface-border hover:border-slate-500 text-xs font-semibold text-slate-300 transition-colors shadow-sm"
+                title="View Formal Invariants, Threat Model & Bug Bounty"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">Security</span>
               </motion.button>
             )}
 

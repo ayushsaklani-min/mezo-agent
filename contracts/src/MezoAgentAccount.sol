@@ -5,14 +5,17 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/interfaces/IERC1271.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /**
  * @title MezoAgentAccount
  * @notice Enterprise-grade smart account for autonomous AI agents on Mezo.
- * @dev Enforces cryptographic session key validation, true sliding-window velocity limits,
- *      granular (target, selector) whitelisting, guardian emergency freeze, and Safe/multisig compatibility.
+ * @dev Enforces cryptographic session key validation, 12-bucket sliding-window velocity limits,
+ *      granular (target, selector) whitelisting, guardian emergency freeze, Safe/multisig compatibility (EIP-1271),
+ *      and human-in-the-loop pending approval queues for high-value executions.
  */
-contract MezoAgentAccount is ReentrancyGuard, Pausable {
+contract MezoAgentAccount is ReentrancyGuard, Pausable, IERC1271 {
     using SafeERC20 for IERC20;
 
     // ------------------------------------------------------------------------
@@ -26,6 +29,8 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
     uint256 public constant DAILY_BUCKET_SIZE = 3600;   // 1 hour per bucket
     uint256 public constant DAILY_BUCKETS = 24;         // 24 * 3600s = 86400s
 
+    bytes4 internal constant MAGICVALUE = 0x1626ba7e;   // IERC1271.isValidSignature.selector
+
     address public owner;
     address public guardian; // Optional security guardian (can freeze/pause in emergency)
     IERC20 public immutable musdToken;
@@ -33,10 +38,14 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
     // Timelock configuration for limit increases (enterprise safety)
     uint256 public timelockDelay;
 
+    // Human-in-the-Loop Threshold: executions above this threshold require owner/guardian approval
+    uint256 public humanApprovalThreshold;
+
     struct SessionPolicy {
         bool active;
         uint256 hourlyLimit;      // Max MUSD allowed in any sliding 1-hour window
         uint256 dailyLimit;       // Max MUSD allowed in any sliding 24-hour window
+        uint256 maxPerTx;         // Max MUSD allowed in a single transaction (0 = no single tx cap)
         uint256 validUntil;       // Unix timestamp after which session key expires
         bool restrictTargets;     // Whether agent is restricted to whitelisted targets & selectors
         string label;             // Human-readable agent name / role
@@ -55,6 +64,18 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
         uint256 executeAfter;
     }
 
+    struct ExecutionRequest {
+        uint256 id;
+        address sessionKey;
+        address target;
+        uint256 musdAmount;
+        bytes callData;
+        uint256 requestedAt;
+        bool executed;
+        bool rejected;
+        string memo;
+    }
+
     // Mapping from session key address to its policy
     mapping(address => SessionPolicy) public sessionPolicies;
 
@@ -68,8 +89,16 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
     // sessionKey => targetAddress => functionSelector => isAllowed
     mapping(address => mapping(address => mapping(bytes4 => bool))) public isFunctionAllowed;
 
+    // Multi-token allowlist (MUSD enabled by default)
+    mapping(address => bool) public isTokenAllowed;
+
     // Pending limit increase proposals (timelock enforced)
     mapping(address => LimitProposal) public pendingLimitProposals;
+
+    // Human-in-the-loop execution queue
+    uint256 public nextRequestId;
+    mapping(uint256 => ExecutionRequest) public executionRequests;
+    uint256[] public pendingRequestIds;
 
     // Array of all registered session keys for auditing & UI display
     address[] public registeredKeys;
@@ -81,28 +110,33 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
         address indexed sessionKey,
         uint256 hourlyLimit,
         uint256 dailyLimit,
+        uint256 maxPerTx,
         uint256 validUntil,
         bool restrictTargets,
         string label
     );
     event SessionKeyRevoked(address indexed sessionKey);
     event AllSessionKeysRevoked(uint256 timestamp);
-    event TargetWhitelisted(address indexed sessionKey, address indexed target, bool allowed);
-    event FunctionWhitelisted(address indexed sessionKey, address indexed target, bytes4 indexed selector, bool allowed);
     event AgentActionExecuted(
         address indexed sessionKey,
         address indexed target,
         uint256 musdAmount,
-        bytes4 selector,
-        bool callSuccess
+        bytes data,
+        bool success
     );
-    event FundsDeposited(address indexed sender, uint256 amount);
     event FundsWithdrawn(address indexed to, uint256 amount);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event GuardianUpdated(address indexed previousGuardian, address indexed newGuardian);
+    event LimitsUpdated(address indexed sessionKey, uint256 newHourly, uint256 newDaily);
     event LimitIncreaseProposed(address indexed sessionKey, uint256 newHourly, uint256 newDaily, uint256 executeAfter);
     event LimitIncreaseExecuted(address indexed sessionKey, uint256 newHourly, uint256 newDaily);
-    event LimitsUpdated(address indexed sessionKey, uint256 newHourly, uint256 newDaily);
+    event TargetWhitelisted(address indexed sessionKey, address indexed target, bool allowed);
+    event FunctionWhitelisted(address indexed sessionKey, address indexed target, bytes4 indexed selector, bool allowed);
+    event TokenAllowedUpdated(address indexed token, bool allowed);
+    event HumanApprovalThresholdUpdated(uint256 oldThreshold, uint256 newThreshold);
+    event ExecutionRequested(uint256 indexed requestId, address indexed sessionKey, address indexed target, uint256 amount, string memo);
+    event ExecutionApproved(uint256 indexed requestId, address indexed approver, uint256 amount);
+    event ExecutionRejected(uint256 indexed requestId, address indexed rejecter, string reason);
 
     // ------------------------------------------------------------------------
     // MODIFIERS
@@ -123,9 +157,29 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
         owner = _owner;
         musdToken = IERC20(_musdToken);
         timelockDelay = _timelockDelay;
+        isTokenAllowed[_musdToken] = true;
     }
 
     receive() external payable {}
+
+    // ------------------------------------------------------------------------
+    // EIP-1271 SIGNATURE VALIDATION (SAFE / MULTISIG COMPATIBILITY)
+    // ------------------------------------------------------------------------
+
+    /**
+     * @notice Validates a signature against the contract owner (supports both EOA and contract owners like Safe).
+     */
+    function isValidSignature(bytes32 _hash, bytes memory _signature) external view override returns (bytes4 magicValue) {
+        if (owner.code.length > 0) {
+            return IERC1271(owner).isValidSignature(_hash, _signature);
+        } else {
+            (address recovered, ECDSA.RecoverError err, ) = ECDSA.tryRecover(_hash, _signature);
+            if (err == ECDSA.RecoverError.NoError && recovered == owner) {
+                return MAGICVALUE;
+            }
+            return 0xffffffff;
+        }
+    }
 
     // ------------------------------------------------------------------------
     // OWNER & GUARDIAN MANAGEMENT
@@ -144,6 +198,18 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
 
     function setTimelockDelay(uint256 _delay) external onlyOwner {
         timelockDelay = _delay;
+    }
+
+    function setHumanApprovalThreshold(uint256 _threshold) external onlyOwner {
+        uint256 old = humanApprovalThreshold;
+        humanApprovalThreshold = _threshold;
+        emit HumanApprovalThresholdUpdated(old, _threshold);
+    }
+
+    function setTokenAllowed(address token, bool allowed) external onlyOwner {
+        require(token != address(0), "Invalid token address");
+        isTokenAllowed[token] = allowed;
+        emit TokenAllowedUpdated(token, allowed);
     }
 
     /**
@@ -165,8 +231,63 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
     // ------------------------------------------------------------------------
 
     /**
-     * @notice Register a session key for an autonomous agent.
-     * @dev Only the public key derived by the agent is registered; the private key never touches the chain.
+     * @notice Register a session key with max-per-tx cap for an autonomous agent.
+     */
+    function createSessionKey(
+        address keySigner,
+        uint256 hourlyLimit,
+        uint256 dailyLimit,
+        uint256 maxPerTx,
+        uint256 validUntil,
+        bool restrictTargets,
+        address[] calldata allowedTargets,
+        bytes4[] calldata allowedSelectors,
+        string calldata label
+    ) public onlyOwner {
+        require(keySigner != address(0), "Invalid key signer");
+        require(validUntil > block.timestamp, "Expiry must be in future");
+        require(hourlyLimit <= dailyLimit, "Hourly limit cannot exceed daily limit");
+        if (maxPerTx > 0) {
+            require(maxPerTx <= hourlyLimit, "maxPerTx cannot exceed hourly limit");
+        }
+
+        if (!sessionPolicies[keySigner].active && sessionPolicies[keySigner].validUntil == 0) {
+            registeredKeys.push(keySigner);
+        }
+
+        sessionPolicies[keySigner] = SessionPolicy({
+            active: true,
+            hourlyLimit: hourlyLimit,
+            dailyLimit: dailyLimit,
+            maxPerTx: maxPerTx,
+            validUntil: validUntil,
+            restrictTargets: restrictTargets,
+            label: label
+        });
+
+        _initWhitelists(keySigner, allowedTargets, allowedSelectors);
+
+        emit SessionKeyCreated(keySigner, hourlyLimit, dailyLimit, maxPerTx, validUntil, restrictTargets, label);
+    }
+
+    function _initWhitelists(
+        address keySigner,
+        address[] calldata allowedTargets,
+        bytes4[] calldata allowedSelectors
+    ) internal {
+        for (uint256 i = 0; i < allowedTargets.length; i++) {
+            isTargetAllowed[keySigner][allowedTargets[i]] = true;
+            emit TargetWhitelisted(keySigner, allowedTargets[i], true);
+
+            for (uint256 j = 0; j < allowedSelectors.length; j++) {
+                isFunctionAllowed[keySigner][allowedTargets[i]][allowedSelectors[j]] = true;
+                emit FunctionWhitelisted(keySigner, allowedTargets[i], allowedSelectors[j], true);
+            }
+        }
+    }
+
+    /**
+     * @notice Backward-compatible overload without maxPerTx (defaults to 0 / no single-tx cap).
      */
     function createSessionKey(
         address keySigner,
@@ -178,35 +299,17 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
         bytes4[] calldata allowedSelectors,
         string calldata label
     ) external onlyOwner {
-        require(keySigner != address(0), "Invalid key signer");
-        require(validUntil > block.timestamp, "Expiry must be in future");
-        require(hourlyLimit <= dailyLimit, "Hourly limit cannot exceed daily limit");
-
-        if (!sessionPolicies[keySigner].active && sessionPolicies[keySigner].validUntil == 0) {
-            registeredKeys.push(keySigner);
-        }
-
-        sessionPolicies[keySigner] = SessionPolicy({
-            active: true,
-            hourlyLimit: hourlyLimit,
-            dailyLimit: dailyLimit,
-            validUntil: validUntil,
-            restrictTargets: restrictTargets,
-            label: label
-        });
-
-        for (uint256 i = 0; i < allowedTargets.length; i++) {
-            isTargetAllowed[keySigner][allowedTargets[i]] = true;
-            emit TargetWhitelisted(keySigner, allowedTargets[i], true);
-
-            // If selectors provided, whitelist them for this target
-            for (uint256 j = 0; j < allowedSelectors.length; j++) {
-                isFunctionAllowed[keySigner][allowedTargets[i]][allowedSelectors[j]] = true;
-                emit FunctionWhitelisted(keySigner, allowedTargets[i], allowedSelectors[j], true);
-            }
-        }
-
-        emit SessionKeyCreated(keySigner, hourlyLimit, dailyLimit, validUntil, restrictTargets, label);
+        createSessionKey(
+            keySigner,
+            hourlyLimit,
+            dailyLimit,
+            0,
+            validUntil,
+            restrictTargets,
+            allowedTargets,
+            allowedSelectors,
+            label
+        );
     }
 
     /**
@@ -309,6 +412,12 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
         emit FundsWithdrawn(to, amount);
     }
 
+    function withdrawToken(address token, address to, uint256 amount) external onlyOwner nonReentrant {
+        require(to != address(0), "Invalid recipient");
+        IERC20(token).safeTransfer(to, amount);
+        emit FundsWithdrawn(to, amount);
+    }
+
     function withdrawGas(address payable to, uint256 amount) external onlyOwner nonReentrant {
         require(to != address(0), "Invalid recipient");
         require(address(this).balance >= amount, "Insufficient native balance");
@@ -322,10 +431,6 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
 
     /**
      * @notice Execute an authorized action on behalf of the smart account.
-     * @dev Validates session key status, expiry, target whitelist, selector whitelist, and true sliding-window rate limits.
-     * @param target The target contract or recipient.
-     * @param musdAmount The amount of MUSD to transfer to the target.
-     * @param data The calldata payload to execute on the target.
      */
     function executeAsAgent(
         address target,
@@ -335,6 +440,14 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
         SessionPolicy storage policy = sessionPolicies[msg.sender];
         require(policy.active, "Session key inactive or non-existent");
         require(block.timestamp <= policy.validUntil, "Session key has expired");
+
+        if (policy.maxPerTx > 0) {
+            require(musdAmount <= policy.maxPerTx, "Amount exceeds maxPerTx cap");
+        }
+
+        if (humanApprovalThreshold > 0 && musdAmount > humanApprovalThreshold) {
+            revert("Amount exceeds human approval threshold: call requestExecution");
+        }
 
         bytes4 selector = bytes4(0);
         if (data.length >= 4) {
@@ -369,14 +482,137 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
         bool callSuccess = true;
         if (data.length > 0) {
             (callSuccess, returnData) = target.call(data);
-            require(callSuccess, "Agent target call failed");
+            require(callSuccess, "Low-level target execution reverted");
         }
 
-        emit AgentActionExecuted(msg.sender, target, musdAmount, selector, callSuccess);
+        emit AgentActionExecuted(msg.sender, target, musdAmount, data, callSuccess);
     }
 
     // ------------------------------------------------------------------------
-    // SLIDING WINDOW INTERNALS
+    // HUMAN-IN-THE-LOOP APPROVAL QUEUE
+    // ------------------------------------------------------------------------
+
+    /**
+     * @notice Request execution of a high-value or gated transaction requiring human confirmation.
+     */
+    function requestExecution(
+        address target,
+        uint256 musdAmount,
+        bytes calldata data,
+        string calldata memo
+    ) external whenNotPaused returns (uint256 requestId) {
+        SessionPolicy storage policy = sessionPolicies[msg.sender];
+        require(policy.active, "Session key inactive or non-existent");
+        require(block.timestamp <= policy.validUntil, "Session key has expired");
+
+        bytes4 selector = bytes4(0);
+        if (data.length >= 4) {
+            selector = bytes4(data[:4]);
+        }
+
+        if (policy.restrictTargets) {
+            require(isTargetAllowed[msg.sender][target], "Target address not whitelisted");
+            if (data.length >= 4) {
+                require(isFunctionAllowed[msg.sender][target][selector], "Function selector not whitelisted");
+            }
+            if (target == address(musdToken) && selector == IERC20.approve.selector) {
+                revert("Direct MUSD approve forbidden for agent keys");
+            }
+        }
+
+        requestId = nextRequestId++;
+        executionRequests[requestId] = ExecutionRequest({
+            id: requestId,
+            sessionKey: msg.sender,
+            target: target,
+            musdAmount: musdAmount,
+            callData: data,
+            requestedAt: block.timestamp,
+            executed: false,
+            rejected: false,
+            memo: memo
+        });
+        pendingRequestIds.push(requestId);
+
+        emit ExecutionRequested(requestId, msg.sender, target, musdAmount, memo);
+    }
+
+    /**
+     * @notice Approve and execute a pending high-value request (Owner or Guardian only).
+     */
+    function approveExecution(uint256 requestId) external onlyOwnerOrGuardian nonReentrant whenNotPaused returns (bytes memory returnData) {
+        ExecutionRequest storage req = executionRequests[requestId];
+        require(req.id == requestId && req.requestedAt > 0, "Request does not exist");
+        require(!req.executed, "Request already executed");
+        require(!req.rejected, "Request was rejected");
+
+        SessionPolicy storage policy = sessionPolicies[req.sessionKey];
+        require(policy.active, "Session key inactive");
+        require(block.timestamp <= policy.validUntil, "Session key expired");
+
+        if (req.musdAmount > 0) {
+            uint256 currentHourlySpent = getHourlySpent(req.sessionKey);
+            require(currentHourlySpent + req.musdAmount <= policy.hourlyLimit, "Hourly MUSD limit exceeded");
+
+            uint256 currentDailySpent = getDailySpent(req.sessionKey);
+            require(currentDailySpent + req.musdAmount <= policy.dailyLimit, "Daily MUSD limit exceeded");
+
+            require(musdToken.balanceOf(address(this)) >= req.musdAmount, "Insufficient MUSD account balance");
+
+            _recordSpend(req.sessionKey, req.musdAmount);
+            musdToken.safeTransfer(req.target, req.musdAmount);
+        }
+
+        req.executed = true;
+
+        bool callSuccess = true;
+        if (req.callData.length > 0) {
+            (callSuccess, returnData) = req.target.call(req.callData);
+            require(callSuccess, "Low-level target execution reverted");
+        }
+
+        emit ExecutionApproved(requestId, msg.sender, req.musdAmount);
+        emit AgentActionExecuted(req.sessionKey, req.target, req.musdAmount, req.callData, true);
+    }
+
+    /**
+     * @notice Reject a pending high-value request (Owner or Guardian only).
+     */
+    function rejectExecution(uint256 requestId, string calldata reason) external onlyOwnerOrGuardian {
+        ExecutionRequest storage req = executionRequests[requestId];
+        require(req.id == requestId && req.requestedAt > 0, "Request does not exist");
+        require(!req.executed, "Request already executed");
+        require(!req.rejected, "Request already rejected");
+
+        req.rejected = true;
+        emit ExecutionRejected(requestId, msg.sender, reason);
+    }
+
+    /**
+     * @notice View all active pending human-in-the-loop requests.
+     */
+    function getPendingRequests() external view returns (ExecutionRequest[] memory) {
+        uint256 count = 0;
+        for (uint256 i = 0; i < pendingRequestIds.length; i++) {
+            ExecutionRequest storage req = executionRequests[pendingRequestIds[i]];
+            if (!req.executed && !req.rejected) {
+                count++;
+            }
+        }
+
+        ExecutionRequest[] memory pending = new ExecutionRequest[](count);
+        uint256 index = 0;
+        for (uint256 i = 0; i < pendingRequestIds.length; i++) {
+            ExecutionRequest storage req = executionRequests[pendingRequestIds[i]];
+            if (!req.executed && !req.rejected) {
+                pending[index++] = req;
+            }
+        }
+        return pending;
+    }
+
+    // ------------------------------------------------------------------------
+    // INTERNAL ACCOUNTING & SLIDING WINDOW IMPLEMENTATION
     // ------------------------------------------------------------------------
 
     function _recordSpend(address keySigner, uint256 amount) internal {
@@ -388,7 +624,6 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
         uint256 hourlyMarker = hourlyBucketTime + 1; // +1 to distinguish from uninitialized 0
 
         if (window.hourlyTimestamps[hourlyBucketIdx] != hourlyMarker) {
-            // New bucket interval reached: overwrite stale bucket data
             window.hourlyTimestamps[hourlyBucketIdx] = hourlyMarker;
             window.hourlyAmounts[hourlyBucketIdx] = amount;
         } else {
@@ -398,10 +633,9 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
         // 2. Record Daily Spend (24 buckets of 3600s)
         uint256 dailyBucketIdx = (block.timestamp / DAILY_BUCKET_SIZE) % DAILY_BUCKETS;
         uint256 dailyBucketTime = (block.timestamp / DAILY_BUCKET_SIZE) * DAILY_BUCKET_SIZE;
-        uint256 dailyMarker = dailyBucketTime + 1; // +1 to distinguish from uninitialized 0
+        uint256 dailyMarker = dailyBucketTime + 1;
 
         if (window.dailyTimestamps[dailyBucketIdx] != dailyMarker) {
-            // New daily bucket reached: overwrite stale data
             window.dailyTimestamps[dailyBucketIdx] = dailyMarker;
             window.dailyAmounts[dailyBucketIdx] = amount;
         } else {
@@ -413,9 +647,6 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
     // VIEW FUNCTIONS & AUDIT HELPERS
     // ------------------------------------------------------------------------
 
-    /**
-     * @notice Sums expenditure across the active buckets within the last 3600 seconds.
-     */
     function getHourlySpent(address keySigner) public view returns (uint256 total) {
         SlidingWindow storage window = sessionWindows[keySigner];
         uint256 nowSec = block.timestamp;
@@ -431,9 +662,6 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable {
         }
     }
 
-    /**
-     * @notice Sums expenditure across the active buckets within the last 86400 seconds.
-     */
     function getDailySpent(address keySigner) public view returns (uint256 total) {
         SlidingWindow storage window = sessionWindows[keySigner];
         uint256 nowSec = block.timestamp;

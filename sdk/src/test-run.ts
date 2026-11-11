@@ -6,6 +6,8 @@ import {
   MEZO_TESTNET,
   HourlyLimitExceededError,
   DailyLimitExceededError,
+  MaxPerTxExceededError,
+  PendingApprovalRequiredError,
   SessionKeyRevokedError,
   SessionKeyExpiredError,
   TargetNotWhitelistedError,
@@ -51,6 +53,13 @@ async function runTests() {
 
   const pausedErr = new AccountPausedError("0x3333333333333333333333333333333333333333");
   assert(pausedErr.accountAddress.toLowerCase() === "0x3333333333333333333333333333333333333333", "AccountPausedError contains account address");
+
+  const maxTxErr = new MaxPerTxExceededError("5.0", "2.0");
+  assert(maxTxErr.maxPerTx === "2.0", "MaxPerTxExceededError has maxPerTx property");
+  assert(maxTxErr.attemptedAmount === "5.0", "MaxPerTxExceededError has attemptedAmount property");
+
+  const pendingErr = new PendingApprovalRequiredError("50.0", "10.0");
+  assert(pendingErr.threshold === "10.0", "PendingApprovalRequiredError has threshold property");
 
   // 2. Verify Client Instantiation
   const client = new MezoAgentClient({

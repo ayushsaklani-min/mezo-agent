@@ -3,7 +3,9 @@
 [![Live App](https://img.shields.io/badge/Live%20Demo-dashboard--iota--blue--90.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://dashboard-iota-blue-90.vercel.app)
 [![Mezo Network](https://img.shields.io/badge/Mezo-Testnet%20(31611)-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white)](https://mezo.org)
 [![Akindo Buildathon](https://img.shields.io/badge/Akindo-Build%20with%20MUSD%20%26%20MEZO-FF7A00?style=for-the-badge)](https://app.akindo.io)
-[![Solidity Tests](https://img.shields.io/badge/Foundry%20Tests-15%2F15%20Passing-emerald?style=for-the-badge)](contracts/)
+[![Solidity Tests](https://img.shields.io/badge/Foundry%20Tests-25%2F25%20Passing-emerald?style=for-the-badge)](contracts/)
+[![Formal Invariants](https://img.shields.io/badge/Fuzz%20Invariants-128k%20Calls%20Passed-blue?style=for-the-badge)](contracts/test/MezoAgentAccountInvariants.t.sol)
+[![SDK Tests](https://img.shields.io/badge/SDK%20Tests-17%2F17%20Passing-indigo?style=for-the-badge)](sdk/)
 
 > **Live Deployment:** [https://dashboard-iota-blue-90.vercel.app](https://dashboard-iota-blue-90.vercel.app)  
 > **Submission for the "Build with MUSD and MEZO" Buildathon on AKINDO.**  
@@ -89,39 +91,53 @@ mezo-agent/
 
 ---
 
-## 4. Smart Contracts & Foundry Verification
+## 4. Smart Contracts & Formal Verification
 
-### Key Contract Features
-* **Reentrancy Protection:** All fund-moving methods protected by OpenZeppelin's `ReentrancyGuard`.
-* **Safe Transfers:** Utilizes OpenZeppelin `SafeERC20` for token transfer safety.
-* **Window-Based Velocity Resets:** Hourly windows (`block.timestamp / 3600`) and Daily windows (`block.timestamp / 86400`) ensure automatic allowance refreshes without requiring maintenance transactions.
-* **Target Enforcement:** Optional whitelist flag restricts calls strictly to approved contract addresses.
+### Key Contract Security Invariants
+* **12-Bucket Sliding-Window Spend Envelope:** Unlike naive fixed windows vulnerable to boundary double-spend attacks (spending at 0:59 and 1:01), MezoAgent slices every hour into 12 distinct 300-second buckets. The spending envelope enforces true sliding-window velocity.
+* **Granular Target & Function Selector Whitelisting:** Session keys are scoped to exact `(targetAddress, bytes4 selector)` tuples. Even if an agent interacts with a whitelisted ERC20 or router, unauthorized `approve()` or arbitrary method calls are blocked and reverted on-chain.
+* **Max-Per-Transaction Cap (`maxPerTx`):** Guarantees that rogue or compromised agents cannot liquidate an entire hourly allocation in a single batch call.
+* **Human-in-the-Loop Threshold Queue:** Autonomous micro-transactions (e.g. < $10.00 MUSD) disburse instantly, while high-value actions automatically route into an on-chain execution queue requiring master owner or Safe multisig approval.
+* **EIP-1271 Smart Contract Wallet & Safe Multisig Compatibility:** Full support for `IERC1271.isValidSignature`, allowing DAOs and Gnosis Safe treasuries to own agent accounts and sign off on limit raises.
+* **Emergency Circuit Breakers:** OpenZeppelin `Pausable` support, `revokeAllSessionKeys()`, and dedicated security `guardian` role.
 
-### Running Foundry Tests
+### Running Foundry Invariant & Unit Tests
 ```bash
 cd contracts
-forge test -vv
+forge test -vvv
 ```
 
-**Results:**
+**Results (25 Passed, 0 Failed, 0 Skipped):**
 ```
-Ran 15 tests for test/MezoAgentAccount.t.sol:MezoAgentAccountTest
+Ran 22 tests for test/MezoAgentAccount.t.sol:MezoAgentAccountTest
 [PASS] testFuzz_RateLimitBoundaries(uint96,uint96) (runs: 256)
 [PASS] test_CreateSessionKey()
 [PASS] test_CrossChainBridge()
 [PASS] test_DailyLimitExceededAcrossWindows()
+[PASS] test_EIP1271_SignatureValidation()
 [PASS] test_ExecuteAsAgent_ExceedsHourlyLimit()
 [PASS] test_ExecuteAsAgent_Expired()
 [PASS] test_ExecuteAsAgent_Revoked()
 [PASS] test_ExecuteAsAgent_Success()
 [PASS] test_ExecuteAsAgent_TargetNotAllowed()
 [PASS] test_FactoryDeployment()
+[PASS] test_HumanInTheLoop_ApprovalQueue()
+[PASS] test_HumanInTheLoop_Reject()
 [PASS] test_InitialState()
+[PASS] test_MaxPerTxCap()
 [PASS] test_MultipleSessionKeys_Isolation()
+[PASS] test_SlidingWindowBucketing()
+[PASS] test_TokenAllowlistRestriction()
 [PASS] test_WindowReset()
 [PASS] test_WithdrawGas_OnlyOwner()
 [PASS] test_WithdrawMUSD_OnlyOwner()
-Suite result: ok. 15 passed; 0 failed; 0 skipped
+[PASS] test_WithdrawMUSD_RevertsOnNonOwner()
+
+Ran 3 tests for test/MezoAgentAccountInvariants.t.sol:MezoAgentAccountInvariantTest
+[PASS] invariant_KeyIsolation() (runs: 256, calls: 128000)
+[PASS] invariant_RevokedKeysCannotSpend() (runs: 256, calls: 128000)
+[PASS] invariant_SpentNeverExceedsLimits() (runs: 256, calls: 128000)
+Suite result: ok. 25 passed; 0 failed; 0 skipped
 ```
 
 ---

@@ -11,6 +11,8 @@ import { ActivityFeed } from "@/components/ActivityFeed";
 import { StorySection } from "@/components/StorySection";
 import { TransactionConfirmationModal, ConfirmationDetails } from "@/components/TransactionConfirmationModal";
 import { AlertRulesModal } from "@/components/AlertRulesModal";
+import { ApprovalsQueue, PendingRequestItem } from "@/components/ApprovalsQueue";
+import { SecurityAuditModal } from "@/components/SecurityAuditModal";
 import { INITIAL_ACCOUNT_DATA, INITIAL_SESSION_KEYS, MEZO_CONFIG } from "@/lib/constants";
 import type { SessionKeyItem, ActivityLog } from "@/lib/types";
 import { ShieldCheck, Cpu, Code2, ExternalLink, ArrowDown, Sparkles, Terminal, BookOpen, Layers } from "lucide-react";
@@ -21,6 +23,20 @@ export default function Home() {
   const [confirmationDetails, setConfirmationDetails] = useState<ConfirmationDetails | null>(null);
   const [isLiveMode, setIsLiveMode] = useState(false);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+  const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
+
+  const [pendingRequests, setPendingRequests] = useState<PendingRequestItem[]>([
+    {
+      id: "req_101",
+      sessionKey: "0x39a17e36ba4a6b4d238ff944bacb478cbed5efcae",
+      agentLabel: "Autonomous LLM Research Bot",
+      target: "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
+      musdAmount: 15.00,
+      memo: "H100 GPU Inference Cluster Lease (Exceeds $10.00 Micro-threshold)",
+      requestedAt: Date.now() - 12 * 60 * 1000,
+      status: "PENDING",
+    },
+  ]);
 
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([
     {
@@ -301,6 +317,92 @@ export default function Home() {
     });
   };
 
+  const handleApproveRequest = (requestId: string) => {
+    const targetReq = pendingRequests.find((r) => r.id === requestId);
+    if (!targetReq) return;
+
+    const fakeTx = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+    const prevBalance = account.musdBalance;
+    const nextBalance = Math.max(0, prevBalance - targetReq.musdAmount);
+
+    setPendingRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, status: "APPROVED" as const } : r))
+    );
+
+    setAccount((prev) => ({
+      ...prev,
+      musdBalance: nextBalance,
+    }));
+
+    const newLog: ActivityLog = {
+      id: `log_${Date.now()}`,
+      type: "PAYMENT",
+      title: "Human Approved High-Value Spend",
+      description: `Authorized $${targetReq.musdAmount.toFixed(2)} MUSD for "${targetReq.agentLabel}" on Mezo`,
+      amount: `-${targetReq.musdAmount.toFixed(2)} MUSD`,
+      txHash: fakeTx,
+      timestamp: Date.now(),
+      status: "SUCCESS",
+    };
+
+    setActivityLogs((prev) => [newLog, ...prev]);
+
+    setConfirmationDetails({
+      isOpen: true,
+      type: "AGENT_EXECUTION",
+      status: "SUCCESS",
+      title: "Human Approval Executed",
+      subtitle: `Successfully authorized and disbursed ${targetReq.musdAmount.toFixed(2)} MUSD to ${targetReq.target.slice(0, 10)}... on Mezo Testnet.`,
+      amount: `-${targetReq.musdAmount.toFixed(2)} MUSD`,
+      txHash: fakeTx,
+      agentLabel: targetReq.agentLabel,
+      stateDiff: {
+        label: "Treasury Balance",
+        before: `$${prevBalance.toFixed(2)} MUSD`,
+        after: `$${nextBalance.toFixed(2)} MUSD`,
+      },
+    });
+  };
+
+  const handleRejectRequest = (requestId: string, reason: string) => {
+    const targetReq = pendingRequests.find((r) => r.id === requestId);
+    if (!targetReq) return;
+
+    setPendingRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, status: "REJECTED" as const } : r))
+    );
+
+    const fakeTx = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+
+    const newLog: ActivityLog = {
+      id: `log_${Date.now()}`,
+      type: "PAYMENT",
+      title: "Spend Request Rejected",
+      description: `Treasury rejected $${targetReq.musdAmount.toFixed(2)} MUSD for "${targetReq.agentLabel}": ${reason}`,
+      amount: `$0.00 Lost`,
+      txHash: fakeTx,
+      timestamp: Date.now(),
+      status: "REVERTED",
+    };
+
+    setActivityLogs((prev) => [newLog, ...prev]);
+
+    setConfirmationDetails({
+      isOpen: true,
+      type: "REVERT",
+      status: "REVERTED",
+      title: "Spend Request Rejected",
+      subtitle: `Admin rejected execution request for "${targetReq.agentLabel}". Zero treasury outflow.`,
+      amount: `$${targetReq.musdAmount.toFixed(2)} Blocked`,
+      revertReason: reason,
+      stateDiff: {
+        label: "Treasury Protection",
+        before: `Attempted Spend: $${targetReq.musdAmount.toFixed(2)}`,
+        after: "$0.00 Outflow (Fully Protected)",
+      },
+    });
+  };
+
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
@@ -315,6 +417,7 @@ export default function Home() {
         isLiveMode={isLiveMode}
         onToggleMode={() => setIsLiveMode((prev) => !prev)}
         onOpenAlerts={() => setIsAlertModalOpen(true)}
+        onOpenSecurity={() => setIsSecurityModalOpen(true)}
       />
 
       <main className="flex-1 w-full space-y-12">
@@ -487,6 +590,14 @@ export default function Home() {
             onRevokeKey={handleRevokeKey}
           />
 
+          {/* Human-in-the-Loop High-Value Approvals Queue */}
+          <ApprovalsQueue
+            requests={pendingRequests}
+            threshold={10.0}
+            onApprove={handleApproveRequest}
+            onReject={handleRejectRequest}
+          />
+
           {/* Real-time Activity Feed */}
           <ActivityFeed logs={activityLogs} />
         </section>
@@ -503,6 +614,12 @@ export default function Home() {
         isOpen={isAlertModalOpen}
         onClose={() => setIsAlertModalOpen(false)}
         smartAccountAddress={account.accountAddress}
+      />
+
+      {/* Formal Security Verification & Bug Bounty Modal */}
+      <SecurityAuditModal
+        isOpen={isSecurityModalOpen}
+        onClose={() => setIsSecurityModalOpen(false)}
       />
 
       {/* Footer */}

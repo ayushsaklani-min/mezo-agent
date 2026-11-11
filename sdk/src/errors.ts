@@ -40,6 +40,36 @@ export class DailyLimitExceededError extends MezoAgentError {
   }
 }
 
+export class MaxPerTxExceededError extends MezoAgentError {
+  public readonly attemptedAmount: string;
+  public readonly maxPerTx: string;
+
+  constructor(attemptedAmount: string, maxPerTx: string) {
+    super(
+      `Transaction amount ${attemptedAmount} MUSD exceeds the session key per-transaction cap of ${maxPerTx} MUSD.`
+    );
+    this.name = "MaxPerTxExceededError";
+    this.attemptedAmount = attemptedAmount;
+    this.maxPerTx = maxPerTx;
+    Object.setPrototypeOf(this, MaxPerTxExceededError.prototype);
+  }
+}
+
+export class PendingApprovalRequiredError extends MezoAgentError {
+  public readonly attemptedAmount: string;
+  public readonly threshold: string;
+
+  constructor(attemptedAmount: string, threshold: string) {
+    super(
+      `Amount ${attemptedAmount} MUSD exceeds human approval threshold of ${threshold} MUSD. Transaction must be submitted via requestExecution().`
+    );
+    this.name = "PendingApprovalRequiredError";
+    this.attemptedAmount = attemptedAmount;
+    this.threshold = threshold;
+    Object.setPrototypeOf(this, PendingApprovalRequiredError.prototype);
+  }
+}
+
 export class SessionKeyRevokedError extends MezoAgentError {
   public readonly sessionKey: string;
 

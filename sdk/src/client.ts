@@ -15,6 +15,8 @@ import { MEZO_AGENT_ACCOUNT_ABI } from "./abi.js";
 import {
   HourlyLimitExceededError,
   DailyLimitExceededError,
+  MaxPerTxExceededError,
+  PendingApprovalRequiredError,
   SessionKeyRevokedError,
   SessionKeyExpiredError,
   TargetNotWhitelistedError,
@@ -147,20 +149,77 @@ export class MezoAgentClient {
       abi: MEZO_AGENT_ACCOUNT_ABI,
       functionName: "sessionPolicies",
       args: [this.sessionSigner.address],
-    })) as [boolean, bigint, bigint, bigint, boolean, string];
+    })) as [boolean, bigint, bigint, bigint, bigint, boolean, string];
 
     return {
       active: policy[0],
       hourlyLimit: policy[1],
       dailyLimit: policy[2],
-      validUntil: policy[3],
-      restrictTargets: policy[4],
-      label: policy[5],
+      maxPerTx: policy[3],
+      validUntil: policy[4],
+      restrictTargets: policy[5],
+      label: policy[6],
     };
   }
 
   public async getPolicy(): Promise<SessionPolicyView> {
     return this.getSessionPolicy();
+  }
+
+  public async getHumanApprovalThreshold(): Promise<string> {
+    const raw = (await this.publicClient.readContract({
+      address: this.accountAddress,
+      abi: MEZO_AGENT_ACCOUNT_ABI,
+      functionName: "humanApprovalThreshold",
+    })) as bigint;
+
+    return formatEther(raw);
+  }
+
+  /**
+   * Request execution of a high-value or gated payment requiring human approval.
+   */
+  public async requestPaymentApproval(params: PaymentParams & { memo?: string }): Promise<Hash> {
+    const parsedAmount = parseEther(params.amountInMUSD.toString());
+    const calldata = params.calldata || "0x";
+    const memo = params.memo || "High-value spend request";
+
+    try {
+      const hash = (await this.walletClient.writeContract({
+        address: this.accountAddress,
+        abi: MEZO_AGENT_ACCOUNT_ABI,
+        functionName: "requestExecution",
+        args: [params.recipient, parsedAmount, calldata, memo],
+      })) as Hash;
+
+      return hash;
+    } catch (err: any) {
+      this._handleContractError(err, params.amountInMUSD.toString(), params.recipient);
+      throw err;
+    }
+  }
+
+  /**
+   * View all active pending human-in-the-loop requests.
+   */
+  public async getPendingRequests(): Promise<any[]> {
+    const raw = (await this.publicClient.readContract({
+      address: this.accountAddress,
+      abi: MEZO_AGENT_ACCOUNT_ABI,
+      functionName: "getPendingRequests",
+    })) as any[];
+
+    return raw.map((r: any) => ({
+      id: r.id,
+      sessionKey: r.sessionKey,
+      target: r.target,
+      musdAmount: formatEther(r.musdAmount),
+      callData: r.callData,
+      requestedAt: Number(r.requestedAt),
+      executed: r.executed,
+      rejected: r.rejected,
+      memo: r.memo,
+    }));
   }
 
   /**
@@ -229,6 +288,12 @@ export class MezoAgentClient {
     }
     if (errMsg.includes("Function selector not whitelisted")) {
       throw new SelectorNotWhitelistedError(target, "0x");
+    }
+    if (errMsg.includes("Amount exceeds maxPerTx cap")) {
+      throw new MaxPerTxExceededError(attemptedAmount, "maxPerTx limit");
+    }
+    if (errMsg.includes("Amount exceeds human approval threshold")) {
+      throw new PendingApprovalRequiredError(attemptedAmount, "Human Approval Threshold");
     }
     if (errMsg.includes("EnforcedPause")) {
       throw new AccountPausedError(this.accountAddress);

@@ -47,9 +47,22 @@ export interface SessionPolicyView {
   active: boolean;
   hourlyLimit: bigint;
   dailyLimit: bigint;
+  maxPerTx: bigint;
   validUntil: bigint;
   restrictTargets: boolean;
   label: string;
+}
+
+export interface ExecutionRequestView {
+  id: bigint;
+  sessionKey: Address;
+  target: Address;
+  musdAmount: string;
+  callData: Hex;
+  requestedAt: number;
+  executed: boolean;
+  rejected: boolean;
+  memo: string;
 }
 
 export interface PaymentParams {
