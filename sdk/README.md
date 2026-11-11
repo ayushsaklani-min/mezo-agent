@@ -1,8 +1,9 @@
-# @mezo-agent/sdk
+# mezo-agent-sdk
 
 > **Production-grade TypeScript SDK for autonomous AI agents transacting on Mezo Network.**
 > Budget-controlled smart accounts with mathematical sliding-window spend envelopes, granular function selector whitelisting, and instant on-chain revocation.
 
+[![npm version](https://img.shields.io/npm/v/mezo-agent-sdk.svg?style=for-the-badge&logo=npm)](https://www.npmjs.com/package/mezo-agent-sdk)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![Mezo Testnet](https://img.shields.io/badge/Network-Mezo%20Testnet%20(31611)-orange.svg)](https://explorer.test.mezo.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -13,7 +14,7 @@
 Giving autonomous AI agents (LangChain, AutoGPT, ElizaOS, Claude Computer Use) master private keys is an existential risk to treasuries. A prompt-injection attack or infinite execution loop can drain an entire wallet in seconds.
 
 ## The Solution
-`@mezo-agent/sdk` enables developers and DAOs to deploy **budget-controlled smart accounts**. Master ownership remains secured in your multisig or hardware wallet, while agents operate using **ephemeral session keys** bound by:
+`mezo-agent-sdk` enables developers and DAOs to deploy **budget-controlled smart accounts**. Master ownership remains secured in your multisig or hardware wallet, while agents operate using **ephemeral session keys** bound by:
 - 🕒 **Mathematical Sliding-Window Envelopes**: 12 sub-buckets (5m each) prevent the classic 59m/61m double-spend boundary exploit.
 - 🎯 **Selector-Level Whitelisting**: Authorize exact target addresses and 4-byte function signatures (e.g. disallow arbitrary `approve()` calls).
 - 🛑 **Instant Key Revocation & Pausability**: Freeze compromised agents in a single block without touching other operations.
@@ -24,9 +25,9 @@ Giving autonomous AI agents (LangChain, AutoGPT, ElizaOS, Claude Computer Use) m
 ## 📦 Installation
 
 ```bash
-npm install @mezo-agent/sdk viem
+npm install mezo-agent-sdk viem
 # or with pnpm / bun / yarn
-pnpm add @mezo-agent/sdk viem
+pnpm add mezo-agent-sdk viem
 ```
 
 ---
@@ -36,7 +37,7 @@ pnpm add @mezo-agent/sdk viem
 ### 1. Initialize the Agent Client
 
 ```typescript
-import { MezoAgentClient, MEZO_TESTNET } from "@mezo-agent/sdk";
+import { MezoAgentClient, MEZO_TESTNET } from "mezo-agent-sdk";
 
 // Ephemeral agent key generated in enclave / bot environment
 const client = new MezoAgentClient({

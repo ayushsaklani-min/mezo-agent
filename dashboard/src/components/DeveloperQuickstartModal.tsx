@@ -17,7 +17,10 @@ export const DeveloperQuickstartModal: React.FC<ModalProps> = ({ isOpen, onClose
   if (!isOpen) return null;
 
   const codeSnippets = {
-    ts: `import { MezoAgentClient, MEZO_TESTNET } from "@mezo-agent/sdk";
+    ts: `// 1. Install via npm:
+// npm install mezo-agent-sdk viem
+
+import { MezoAgentClient, MEZO_TESTNET } from "mezo-agent-sdk";
 
 // Initialize client with agent's ephemeral session key
 const agent = new MezoAgentClient({
@@ -39,8 +42,8 @@ const receipt = await agent.payService({
 
 console.log(\`Paid! Tx: \${receipt.txHash}\`);`,
 
-    langchain: `import { MezoAgentClient } from "@mezo-agent/sdk";
-import { createMezoPaymentTool } from "@mezo-agent/sdk/langchain";
+    langchain: `import { MezoAgentClient } from "mezo-agent-sdk";
+import { createMezoPaymentTool } from "mezo-agent-sdk/langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
 
@@ -52,8 +55,8 @@ const tools = [mezoTool];
 const model = new ChatOpenAI({ modelName: "gpt-4o" });
 // Agent now autonomously spends within hard session key caps!`,
 
-    eliza: `import { createElizaMezoAction } from "@mezo-agent/sdk/eliza";
-import { MezoAgentClient } from "@mezo-agent/sdk";
+    eliza: `import { createElizaMezoAction } from "mezo-agent-sdk/eliza";
+import { MezoAgentClient } from "mezo-agent-sdk";
 
 export const mezoPlugin = {
   name: "mezo-agent-plugin",
@@ -168,7 +171,7 @@ curl -X POST https://rpc.test.mezo.org \\
           <div className="mt-4 pt-3 border-t border-surface-border/60 flex items-center justify-between text-xs text-slate-400">
             <span className="flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5 text-mezo" />
-              Package: <code className="text-mezo font-bold font-mono">@mezo-agent/sdk</code>
+              Package: <a href="https://www.npmjs.com/package/mezo-agent-sdk" target="_blank" rel="noopener noreferrer" className="text-mezo font-bold font-mono underline hover:text-orange-400">mezo-agent-sdk</a>
             </span>
             <span className="font-mono text-slate-500">Node.js 18+ / Browser</span>
           </div>

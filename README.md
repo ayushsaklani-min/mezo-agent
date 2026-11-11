@@ -1,6 +1,7 @@
 # MezoAgent: Autonomous AI Agent Smart Accounts & Treasury on Mezo
 
 [![Live App](https://img.shields.io/badge/Live%20Demo-dashboard--iota--blue--90.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://dashboard-iota-blue-90.vercel.app)
+[![npm version](https://img.shields.io/badge/npm-mezo--agent--sdk%20v1.0.0-CB3837?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/mezo-agent-sdk)
 [![Mezo Network](https://img.shields.io/badge/Mezo-Testnet%20(31611)-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white)](https://mezo.org)
 [![Akindo Buildathon](https://img.shields.io/badge/Akindo-Build%20with%20MUSD%20%26%20MEZO-FF7A00?style=for-the-badge)](https://app.akindo.io)
 [![Solidity Tests](https://img.shields.io/badge/Foundry%20Tests-25%2F25%20Passing-emerald?style=for-the-badge)](contracts/)
@@ -142,17 +143,25 @@ Suite result: ok. 25 passed; 0 failed; 0 skipped
 
 ---
 
-## 5. TypeScript SDK (`@mezo-agent/sdk`)
+## 5. TypeScript SDK (`mezo-agent-sdk`)
 
-Autonomous agent integration in 5 lines of code:
+[![npm](https://img.shields.io/npm/v/mezo-agent-sdk.svg)](https://www.npmjs.com/package/mezo-agent-sdk)
 
+The production SDK is published on the official npm registry: [https://www.npmjs.com/package/mezo-agent-sdk](https://www.npmjs.com/package/mezo-agent-sdk)
+
+### Installation
+```bash
+npm install mezo-agent-sdk viem
+```
+
+### Autonomous Agent Integration
 ```typescript
-import { MezoAgentClient, MEZO_TESTNET } from "@mezo-agent/sdk";
+import { MezoAgentClient, MEZO_TESTNET } from "mezo-agent-sdk";
 
 // 1. Initialize client using the agent's ephemeral session key
 const agent = new MezoAgentClient({
-  accountAddress: "0xAgentSmartAccountAddress...",
-  sessionPrivateKey: process.env.AGENT_SESSION_PRIVATE_KEY,
+  accountAddress: "0x98f483D0b028d77aE37B6d123C34954Af248dC94",
+  sessionPrivateKey: process.env.AGENT_SESSION_PRIVATE_KEY!,
   network: MEZO_TESTNET,
 });
 
@@ -162,7 +171,7 @@ console.log(`Current hourly budget: ${remainingBudget} MUSD`);
 
 // 3. Autonomously pay for an API query
 const receipt = await agent.payService({
-  recipient: "0xSearchOracleProvider...",
+  recipient: "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
   amountInMUSD: "0.50",
   memo: "Per-call web search oracle",
 });
