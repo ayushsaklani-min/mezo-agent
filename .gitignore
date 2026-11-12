@@ -25,6 +25,7 @@ dist/
 Thumbs.db
 *.log
 *.tgz
+*.tsbuildinfo
 
 # Media & recordings
 *.mp4

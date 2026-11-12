@@ -73,7 +73,7 @@ export default function LandingPage() {
 
 // Initialize client with agent's scoped session key
 const agent = new MezoAgentClient({
-  accountAddress: "0x98f483D0b028d77aE37B6d123C34954Af248dC94",
+  accountAddress: "${MEZO_CONFIG.accountAddress}",
   sessionPrivateKey: process.env.AGENT_SESSION_PRIVATE_KEY!,
   network: MEZO_TESTNET,
 });
@@ -84,7 +84,7 @@ console.log(\`Remaining MUSD: \${budget}\`);
 
 // Autonomously pay for an API query
 const receipt = await agent.payService({
-  recipient: "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
+  recipient: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
   amountInMUSD: "0.25",
   memo: "LLM Web Search Oracle Query",
 });
@@ -121,8 +121,8 @@ curl -X POST https://rpc.test.mezo.org \\
     "jsonrpc":"2.0",
     "method":"eth_call",
     "params":[{
-      "to":"0x98f483D0b028d77aE37B6d123C34954Af248dC94",
-      "data":"0x789b91e900000000000000000000000071C02847a9D7881cE8F67C8E281F3e2D34E4c892"
+      "to":"${MEZO_CONFIG.accountAddress}",
+      "data":"0x789b91e900000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c8"
     }, "latest"],
     "id":1
   }'`,
@@ -293,7 +293,7 @@ curl -X POST https://rpc.test.mezo.org \\
               className="flex items-center gap-1.5 px-4 py-3 rounded-2xl bg-surface-card border border-surface-border hover:border-slate-500 text-xs font-semibold text-slate-300 hover:text-white transition-colors shadow-sm"
             >
               <span className="w-2 h-2 rounded-full bg-red-500" />
-              <span>npm v1.0.0</span>
+              <span>npm v1.0.2</span>
               <ExternalLink className="w-3 h-3 text-slate-500 ml-0.5" />
             </a>
           </motion.div>
@@ -422,7 +422,7 @@ curl -X POST https://rpc.test.mezo.org \\
               <span className="text-xs text-slate-400 font-medium">Invariant Fuzz Runs</span>
             </div>
             <div className="p-3">
-              <span className="block text-2xl font-extrabold text-mezo font-mono">v1.0.0</span>
+              <span className="block text-2xl font-extrabold text-mezo font-mono">v1.0.2</span>
               <span className="text-xs text-slate-400 font-medium">npm Published SDK</span>
             </div>
             <div className="p-3 col-span-2 md:col-span-1">
@@ -781,7 +781,7 @@ curl -X POST https://rpc.test.mezo.org \\
             </a>
             <span>•</span>
             <a
-              href="https://explorer.test.mezo.org/address/0x98f483D0b028d77aE37B6d123C34954Af248dC94"
+              href={`${MEZO_CONFIG.explorerUrl}/address/${MEZO_CONFIG.accountAddress}`}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-mezo transition-colors"

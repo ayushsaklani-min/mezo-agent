@@ -6,10 +6,19 @@ export const MEZO_CONFIG = {
   localRpcUrl: "http://127.0.0.1:8545",
   explorerUrl: "https://explorer.test.mezo.org",
   faucetUrl: "https://faucet.test.mezo.org",
-  musdAddress: "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
-  factoryAddress: "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318",
-  accountAddress: "0x8aCd85898458400f7Db866d53FCFF6f0D49741FF",
+  musdAddress: "0x5fbdb2315678afecb367f032d93f642f64180aa3",
+  factoryAddress: "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0",
+  accountAddress: "0x75537828f2ce51be7289709686A69CbFDbB714F1",
+  usdcAddress: "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+  bridgeRouterAddress: "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9",
+  recipientAddress: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
   gasToken: "BTC",
+  demoSigners: {
+    owner: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    ownerPrivateKey: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+    agentSigner: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+    agentPrivateKey: "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d",
+  },
   buildathon: {
     event: "Build with MUSD and MEZO",
     platform: "AKINDO",
@@ -19,55 +28,12 @@ export const MEZO_CONFIG = {
 };
 
 export const INITIAL_ACCOUNT_DATA = {
-  accountAddress: "0x98f483D0b028d77aE37B6d123C34954Af248dC94",
-  ownerAddress: "0x32A418E63991Ff71295E700b0d39e3B2F04eA312",
-  musdBalance: 12500.0,
-  usdcBridged: 8400.0,
-  btcGasBalance: 0.145,
-  stackedBtcYield: 0.0084,
+  accountAddress: "0x75537828f2ce51be7289709686A69CbFDbB714F1",
+  ownerAddress: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  musdBalance: 935.0,
+  usdcBridged: 1000.0,
+  btcGasBalance: 0.05,
+  stackedBtcYield: 0.00412,
 };
 
-export const INITIAL_SESSION_KEYS = [
-  {
-    id: "sk_1",
-    label: "LLM Data & Web Scraper Agent",
-    keyAddress: "0x71C02847a9D7881cE8F67C8E281F3e2D34E4c892",
-    hourlyLimit: 15.0,
-    hourlySpent: 3.25,
-    dailyLimit: 60.0,
-    dailySpent: 18.5,
-    validUntil: Date.now() + 86400 * 1000 * 5, // 5 days
-    active: true,
-    restrictTargets: true,
-    allowedTargets: [
-      "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
-      "0x9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e",
-    ],
-  },
-  {
-    id: "sk_2",
-    label: "Autonomous BTC Yield Looper",
-    keyAddress: "0x4F921B66E0F1426cD0a9A7147b4A786d1C5e7F11",
-    hourlyLimit: 50.0,
-    hourlySpent: 22.0,
-    dailyLimit: 200.0,
-    dailySpent: 78.0,
-    validUntil: Date.now() + 86400 * 1000 * 12, // 12 days
-    active: true,
-    restrictTargets: false,
-    allowedTargets: [],
-  },
-  {
-    id: "sk_3",
-    label: "Compute Node Micro-Paymaster",
-    keyAddress: "0xE822839AcC918C713dB3A680B1569B13481283dF",
-    hourlyLimit: 5.0,
-    hourlySpent: 4.8,
-    dailyLimit: 30.0,
-    dailySpent: 29.4,
-    validUntil: Date.now() + 86400 * 1000 * 2, // 2 days
-    active: true,
-    restrictTargets: true,
-    allowedTargets: ["0x555566667777888899990000aaaabbbbccccdddd"],
-  },
-];
+export const INITIAL_SESSION_KEYS: any[] = [];

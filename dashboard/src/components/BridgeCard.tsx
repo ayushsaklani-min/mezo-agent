@@ -19,30 +19,30 @@ export const BridgeCard: React.FC<BridgeCardProps> = ({
   const [isBridging, setIsBridging] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
 
-  const handleClaimFaucet = () => {
+  const handleClaimFaucet = async () => {
     setIsClaiming(true);
-    setTimeout(() => {
-      onFaucetClaim(1000);
+    try {
+      await onFaucetClaim(1000);
+    } catch (err) {
+      console.warn("Faucet error:", err);
+    } finally {
       setIsClaiming(false);
-    }, 500);
+    }
   };
 
-  const handleBridge = (e: React.FormEvent) => {
+  const handleBridge = async (e: React.FormEvent) => {
     e.preventDefault();
     const numericAmount = parseFloat(amount);
     if (isNaN(numericAmount) || numericAmount <= 0) return;
 
     setIsBridging(true);
-
-    setTimeout(() => {
-      const randomHex = Array.from({ length: 64 }, () =>
-        Math.floor(Math.random() * 16).toString(16)
-      ).join("");
-      const fakeTx = `0x${randomHex}`;
-
-      onBridgeSuccess(numericAmount, numericAmount, fakeTx);
+    try {
+      await onBridgeSuccess(numericAmount, numericAmount, "");
+    } catch (err) {
+      console.warn("Bridge error:", err);
+    } finally {
       setIsBridging(false);
-    }, 750);
+    }
   };
 
   return (

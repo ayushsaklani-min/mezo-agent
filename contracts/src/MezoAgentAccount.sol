@@ -689,6 +689,10 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable, IERC1271 {
         return registeredKeys.length;
     }
 
+    function getRegisteredKeys() external view returns (address[] memory) {
+        return registeredKeys;
+    }
+
     function getAccountBalance() external view returns (uint256 musdBalance, uint256 nativeBalance) {
         return (musdToken.balanceOf(address(this)), address(this).balance);
     }

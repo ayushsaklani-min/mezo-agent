@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Terminal, Play, AlertTriangle, Cpu, Globe, Bitcoin, RefreshCw, Zap, ShieldAlert } from "lucide-react";
 import { MEZO_CONFIG } from "@/lib/constants";
 import type { SessionKeyItem } from "@/lib/types";
+import { executeLiveAgentAction } from "@/lib/blockchain";
 
 interface SandboxProps {
   sessionKeys: SessionKeyItem[];
@@ -22,7 +23,7 @@ interface SandboxProps {
 
 export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
   sessionKeys,
-  isLiveMode = false,
+  isLiveMode = true,
   accountAddress,
   onExecuteAction,
 }) => {
@@ -32,7 +33,7 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
   const [consoleLogs, setConsoleLogs] = useState<string[]>([
     "[SYSTEM] MezoAgent Autonomous Engine initialized on Chain ID 31611 (Mezo Testnet).",
     "[SYSTEM] Session Key cryptographic policy verifier: ACTIVE.",
-    "[SYSTEM] Select an action below to simulate autonomous agent execution.",
+    "[SYSTEM] Select an action below to execute live on-chain agent micro-payments.",
   ]);
 
   const currentKey = sessionKeys.find((k) => k.id === selectedKeyId) || sessionKeys[0];
@@ -45,58 +46,74 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
     setConsoleLogs((prev) => [...prev.slice(-20), `[${new Date().toLocaleTimeString()}] ${msg}`]);
   };
 
-  const executeAction = (actionTitle: string, cost: number, shouldRevert: boolean = false) => {
+  const executeAction = async (actionTitle: string, cost: number, shouldRevert: boolean = false) => {
     if (!currentKey) {
-      logMessage("[ERROR] No session key selected.");
+      logMessage("[ERROR] No session key selected. Mint or authorize an agent key first.");
       return;
     }
 
     if (!currentKey.active) {
-      logMessage(`[SECURITY REVERT] Session key "${currentKey.label}" is REVOKED. Master treasury rejected execution on-chain.`);
+      logMessage(`[SECURITY REVERT] Session key "${currentKey.label}" is REVOKED on-chain.`);
+      logMessage(`[SHIELD] Smart account rejected call: Session key inactive.`);
       onExecuteAction(currentKey.id, actionTitle, cost, "", true, "Session Key Revoked by Master Owner");
       return;
     }
 
     setIsExecuting(true);
     logMessage(`[START] Agent "${currentKey.label}" initiated: "${actionTitle}"`);
-    if (isLiveMode) {
-      logMessage(`[NETWORK] Mode: LIVE MEZO TESTNET (Chain ID 31611)`);
-      if (accountAddress) {
-        logMessage(`[VAULT] Delegated Account: ${accountAddress.slice(0, 14)}...`);
-      }
-    }
+    logMessage(`[NETWORK] Target Network: Mezo Testnet (Chain ID 31611)`);
+    logMessage(`[SIGNER] Ephemeral Session Signer: ${currentKey.keyAddress.slice(0, 10)}...${currentKey.keyAddress.slice(-6)}`);
 
-    setTimeout(() => {
-      // Check limits
+    try {
+      const isHighValue = cost > 10.0;
       if (shouldRevert || (currentKey.hourlySpent + cost > currentKey.hourlyLimit)) {
-        logMessage(`[SECURITY CHECK] Hourly cap: $${currentKey.hourlyLimit.toFixed(2)} MUSD | Spent: $${currentKey.hourlySpent.toFixed(2)} MUSD`);
-        logMessage(`[REVERT] Smart account reverted on-chain: "Hourly MUSD limit exceeded" (Error selector 0x08c379a0)`);
-        logMessage(`[SHIELD] Master treasury protected. Unauthorized excess rejected on-chain.`);
-        onExecuteAction(
-          currentKey.id,
-          actionTitle,
-          cost,
-          "",
-          true,
-          `Hourly Velocity Cap Exceeded ($${currentKey.hourlyLimit} MUSD max)`
-        );
-        setIsExecuting(false);
-        return;
+        logMessage(`[POLICY CHECK] Cost: $${cost.toFixed(2)} MUSD | Remaining Hourly: $${Math.max(0, currentKey.hourlyLimit - currentKey.hourlySpent).toFixed(2)} MUSD`);
+        logMessage(`[TRANSMIT] Submitting to smart account on-chain to test security boundary...`);
+        try {
+          await executeLiveAgentAction({
+            accountAddress: (accountAddress || MEZO_CONFIG.accountAddress) as `0x${string}`,
+            agentPrivateKey: (currentKey.privateKey as `0x${string}`) || (MEZO_CONFIG.demoSigners.agentPrivateKey as `0x${string}`),
+            target: MEZO_CONFIG.recipientAddress as `0x${string}`,
+            musdAmount: cost,
+          });
+        } catch (evmErr: any) {
+          const revertMsg = evmErr?.shortMessage || evmErr?.message || "Hourly MUSD limit exceeded";
+          logMessage(`[EVM REVERT] Blocked by contract policy: ${revertMsg}`);
+          logMessage(`[SHIELD] Master treasury protected. 0 loss occurred.`);
+          onExecuteAction(currentKey.id, actionTitle, cost, "", true, "Hourly Velocity Limit Exceeded");
+          setIsExecuting(false);
+          return;
+        }
       }
 
-      const randomHex = Array.from({ length: 64 }, () =>
-        Math.floor(Math.random() * 16).toString(16)
-      ).join("");
-      const txHash = `0x${randomHex}`;
+      logMessage(`[BROADCAST] Broadcasting signed execution to Mezo EVM...`);
+      const result = await executeLiveAgentAction({
+        accountAddress: (accountAddress || MEZO_CONFIG.accountAddress) as `0x${string}`,
+        agentPrivateKey: (currentKey.privateKey as `0x${string}`) || (MEZO_CONFIG.demoSigners.agentPrivateKey as `0x${string}`),
+        target: MEZO_CONFIG.recipientAddress as `0x${string}`,
+        musdAmount: cost,
+        isApprovalRequest: isHighValue,
+        memo: `Autonomous Agent Action: ${actionTitle}`,
+      });
 
-      logMessage(`[CRYPTO] Signed by session key: ${currentKey.keyAddress.slice(0, 14)}...`);
-      logMessage(`[VERIFIED] Target contract whitelisted. Rate limit valid.`);
-      logMessage(`[EXECUTED] Transferred $${cost.toFixed(2)} MUSD on Mezo.`);
-      logMessage(`[CONFIRMED] Tx Hash: ${txHash.slice(0, 18)}... (Block time 1.18s)`);
+      if (result.isRequest) {
+        logMessage(`[QUEUED] Amount $${cost.toFixed(2)} MUSD exceeded threshold. Created on-chain human approval request.`);
+        logMessage(`[CONFIRMED] Tx Hash: ${result.hash.slice(0, 18)}... (Pending multi-sig approval)`);
+      } else {
+        logMessage(`[VERIFIED] On-chain 12-bucket sliding window velocity valid.`);
+        logMessage(`[EXECUTED] Transferred $${cost.toFixed(2)} MUSD on Mezo.`);
+        logMessage(`[CONFIRMED] Tx Hash: ${result.hash.slice(0, 18)}... (Receipt verified)`);
+      }
 
-      onExecuteAction(currentKey.id, actionTitle, cost, txHash, false);
+      onExecuteAction(currentKey.id, actionTitle, cost, result.hash, false);
+    } catch (err: any) {
+      console.warn("Execution error:", err);
+      const errorMsg = err?.shortMessage || err?.message || "Transaction reverted";
+      logMessage(`[EVM ERROR] ${errorMsg}`);
+      onExecuteAction(currentKey.id, actionTitle, cost, "", true, errorMsg);
+    } finally {
       setIsExecuting(false);
-    }, 700);
+    }
   };
 
   return (

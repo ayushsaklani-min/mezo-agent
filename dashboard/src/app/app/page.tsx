@@ -13,16 +13,19 @@ import { ApprovalsQueue, PendingRequestItem } from "@/components/ApprovalsQueue"
 import { TransactionConfirmationModal, ConfirmationDetails } from "@/components/TransactionConfirmationModal";
 import { AlertRulesModal } from "@/components/AlertRulesModal";
 import { SecurityAuditModal } from "@/components/SecurityAuditModal";
-import { INITIAL_ACCOUNT_DATA, INITIAL_SESSION_KEYS, MEZO_CONFIG } from "@/lib/constants";
+import { INITIAL_ACCOUNT_DATA, MEZO_CONFIG } from "@/lib/constants";
 import type { SessionKeyItem, ActivityLog } from "@/lib/types";
 import { useMezoWallet } from "@/lib/useMezoWallet";
 import {
   fetchLiveBalances,
+  fetchLiveSessionKeys,
   fetchLivePendingRequests,
+  fetchLiveActivityLogs,
   executeLiveFaucetClaim,
   executeLiveApprove,
   executeLiveRevokeKey,
   executeLiveCreateKey,
+  executeLiveBridgeDeposit,
 } from "@/lib/blockchain";
 import type { Address } from "viem";
 import {
@@ -36,6 +39,7 @@ import {
   CheckCircle2,
   ExternalLink,
   Code2,
+  RotateCw,
 } from "lucide-react";
 
 type CockpitTab = "all" | "overview" | "keys" | "approvals" | "audit";
@@ -43,52 +47,58 @@ type CockpitTab = "all" | "overview" | "keys" | "approvals" | "audit";
 export default function CockpitPage() {
   const wallet = useMezoWallet();
   const [account, setAccount] = useState(INITIAL_ACCOUNT_DATA);
-  const [sessionKeys, setSessionKeys] = useState<SessionKeyItem[]>(INITIAL_SESSION_KEYS);
+  const [sessionKeys, setSessionKeys] = useState<SessionKeyItem[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequestItem[]>([]);
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [confirmationDetails, setConfirmationDetails] = useState<ConfirmationDetails | null>(null);
-  const [isLiveMode, setIsLiveMode] = useState(false);
+  const [isLiveMode, setIsLiveMode] = useState(true);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<CockpitTab>("all");
   const [isSyncingOnChain, setIsSyncingOnChain] = useState(false);
 
-  const [pendingRequests, setPendingRequests] = useState<PendingRequestItem[]>([
-    {
-      id: "req_101",
-      onChainId: 0,
-      sessionKey: "0x39a17e36ba4a6b4d238ff944bacb478cbed5efcae",
-      agentLabel: "Autonomous LLM Research Bot",
-      target: "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
-      musdAmount: 15.0,
-      memo: "H100 GPU Inference Cluster Lease (Exceeds $10.00 Micro-threshold)",
-      requestedAt: Date.now() - 12 * 60 * 1000,
-      status: "PENDING",
-    },
-  ]);
-
-  // Sync with live on-chain balances when wallet is connected on Mezo
-  useEffect(() => {
-    if (isLiveMode && wallet.isConnected) {
-      setIsSyncingOnChain(true);
-      Promise.all([
+  // Dedicated sync function querying real on-chain contract state
+  const refreshAllOnChainData = async () => {
+    setIsSyncingOnChain(true);
+    try {
+      const [liveBalances, liveKeys, liveRequests, liveLogs] = await Promise.all([
         fetchLiveBalances(MEZO_CONFIG.accountAddress as Address, MEZO_CONFIG.musdAddress as Address),
+        fetchLiveSessionKeys(MEZO_CONFIG.accountAddress as Address),
         fetchLivePendingRequests(MEZO_CONFIG.accountAddress as Address),
-      ])
-        .then(([liveBalances, liveRequests]) => {
-          if (liveBalances) {
-            setAccount((prev) => ({
-              ...prev,
-              musdBalance: liveBalances.musdBalance,
-              btcGasBalance: liveBalances.btcGasBalance,
-            }));
-          }
-          if (liveRequests && liveRequests.length > 0) {
-            setPendingRequests(liveRequests);
-          }
-        })
-        .catch((e) => console.warn("Live sync error:", e))
-        .finally(() => setIsSyncingOnChain(false));
+        fetchLiveActivityLogs(MEZO_CONFIG.accountAddress as Address),
+      ]);
+
+      if (liveBalances) {
+        setAccount((prev) => ({
+          ...prev,
+          musdBalance: liveBalances.musdBalance,
+          btcGasBalance: liveBalances.btcGasBalance,
+          stackedBtcYield: liveBalances.musdBalance * 0.0000044,
+        }));
+      }
+
+      if (liveKeys) {
+        setSessionKeys(liveKeys);
+      }
+
+      if (liveRequests) {
+        setPendingRequests(liveRequests);
+      }
+
+      if (liveLogs && liveLogs.length > 0) {
+        setActivityLogs(liveLogs);
+      }
+    } catch (err) {
+      console.warn("Error refreshing live on-chain data:", err);
+    } finally {
+      setIsSyncingOnChain(false);
     }
-  }, [isLiveMode, wallet.isConnected]);
+  };
+
+  // Initial mount: load live blockchain state
+  useEffect(() => {
+    refreshAllOnChainData();
+  }, []);
 
   // Keep ownerAddress in sync with connected wallet if available
   useEffect(() => {
@@ -100,31 +110,25 @@ export default function CockpitPage() {
     }
   }, [wallet.isConnected, wallet.address]);
 
-  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([
-    {
-      id: "log_init",
-      type: "CREATE_KEY",
-      title: "Agent Session Keys Initialized",
-      description: "Deployed 3 budget-capped agent keys on Mezo Testnet (31611)",
-      txHash: "0x39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff8014589234",
-      timestamp: Date.now() - 3600 * 1000 * 2,
-      status: "SUCCESS",
-    },
-    {
-      id: "log_bridge_prev",
-      type: "BRIDGE",
-      title: "Cross-Chain Inbound Liquidity",
-      description: "Bridged 2,500 USDC from Base into MezoAgent MUSD Treasury",
-      amount: "+2,500.00 MUSD",
-      txHash: "0x82b9e3a9675a2a3dFde7bcD65B81c6F1DC068f59aAa99730AdE5c7413b49deA1",
-      timestamp: Date.now() - 3600 * 1000 * 4,
-      status: "SUCCESS",
-    },
-  ]);
-
   // Handle Bridge USDC -> MUSD
-  const handleBridgeSuccess = (usdcAmount: number, musdAmount: number, txHash: string) => {
+  const handleBridgeSuccess = async (usdcAmount: number, musdAmount: number, txHash: string) => {
     const prevBalance = account.musdBalance;
+    let finalTxHash = txHash || ("0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(""));
+    let isLive = false;
+
+    if (isLiveMode) {
+      try {
+        const liveHash = await executeLiveBridgeDeposit(
+          MEZO_CONFIG.accountAddress as Address,
+          usdcAmount
+        );
+        finalTxHash = liveHash;
+        isLive = true;
+      } catch (err) {
+        console.warn("Live bridge error:", err);
+      }
+    }
+
     const nextBalance = prevBalance + musdAmount;
 
     setAccount((prev) => ({
@@ -136,10 +140,10 @@ export default function CockpitPage() {
     const newLog: ActivityLog = {
       id: `log_${Date.now()}`,
       type: "BRIDGE",
-      title: "Cross-Chain Deposit",
+      title: isLive ? "On-Chain Bridge Deposit" : "Cross-Chain Deposit",
       description: `Bridged ${usdcAmount} USDC from Base → Minted ${musdAmount} MUSD on Mezo`,
       amount: `+${musdAmount.toFixed(2)} MUSD`,
-      txHash: txHash,
+      txHash: finalTxHash,
       timestamp: Date.now(),
       status: "SUCCESS",
     };
@@ -150,16 +154,18 @@ export default function CockpitPage() {
       isOpen: true,
       type: "BRIDGE",
       status: "SUCCESS",
-      title: "Cross-Chain Deposit Confirmed",
+      title: isLive ? "Live Cross-Chain Bridge Deposit Confirmed" : "Cross-Chain Deposit Confirmed",
       subtitle: `Successfully converted ${usdcAmount} USDC from Base into ${musdAmount} native MUSD on Mezo via Wormhole NTT routing.`,
       amount: `+${musdAmount.toFixed(2)} MUSD`,
-      txHash: txHash,
+      txHash: finalTxHash,
       stateDiff: {
         label: "Mezo MUSD Treasury Vault",
         before: `$${prevBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })} MUSD`,
         after: `$${nextBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })} MUSD`,
       },
     });
+
+    await refreshAllOnChainData();
   };
 
   // Handle Faucet Claim
@@ -167,10 +173,14 @@ export default function CockpitPage() {
     let finalTxHash = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
     let isLiveTx = false;
 
-    if (isLiveMode && wallet.isConnected && wallet.address) {
+    if (isLiveMode) {
       try {
+        const recipient = (wallet.isConnected && wallet.address)
+          ? (wallet.address as Address)
+          : (MEZO_CONFIG.accountAddress as Address);
+
         const liveHash = await executeLiveFaucetClaim(
-          wallet.address as Address,
+          recipient,
           MEZO_CONFIG.musdAddress as Address
         );
         finalTxHash = liveHash;
@@ -217,6 +227,8 @@ export default function CockpitPage() {
         after: `$${(account.musdBalance + claimedAmount).toLocaleString()} MUSD`,
       },
     });
+
+    await refreshAllOnChainData();
   };
 
   // Handle Create Session Key
@@ -224,11 +236,11 @@ export default function CockpitPage() {
     let finalTxHash = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
     let isLiveTx = false;
 
-    if (isLiveMode && wallet.isConnected && wallet.address) {
+    if (isLiveMode) {
       try {
         const liveHash = await executeLiveCreateKey(
           MEZO_CONFIG.accountAddress as Address,
-          wallet.address as Address,
+          ((wallet.isConnected && wallet.address) ? wallet.address : account.ownerAddress) as Address,
           {
             keySigner: newKey.keyAddress as Address,
             hourlyLimit: newKey.hourlyLimit,
@@ -276,21 +288,26 @@ export default function CockpitPage() {
         after: `${sessionKeys.filter((k) => k.active).length + 1} Keys`,
       },
     });
+
+    await refreshAllOnChainData();
   };
 
   // Handle Revoke Key
-  const handleRevokeKey = async (keyAddress: string) => {
-    const targetKey = sessionKeys.find((k) => k.keyAddress === keyAddress);
+  const handleRevokeKey = async (keyIdentifier: string) => {
+    const targetKey = sessionKeys.find(
+      (k) => k.id === keyIdentifier || k.keyAddress.toLowerCase() === keyIdentifier.toLowerCase()
+    );
+    const actualAddress = targetKey ? targetKey.keyAddress : keyIdentifier;
     const keyLabel = targetKey ? targetKey.label : "Agent Key";
     let finalTxHash = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
     let isLiveTx = false;
 
-    if (isLiveMode && wallet.isConnected && wallet.address) {
+    if (isLiveMode) {
       try {
         const liveHash = await executeLiveRevokeKey(
           MEZO_CONFIG.accountAddress as Address,
-          wallet.address as Address,
-          keyAddress as Address
+          ((wallet.isConnected && wallet.address) ? wallet.address : account.ownerAddress) as Address,
+          actualAddress as Address
         );
         finalTxHash = liveHash;
         isLiveTx = true;
@@ -300,7 +317,7 @@ export default function CockpitPage() {
     }
 
     setSessionKeys((prev) =>
-      prev.map((k) => (k.keyAddress === keyAddress ? { ...k, active: false } : k))
+      prev.map((k) => (k.keyAddress.toLowerCase() === actualAddress.toLowerCase() ? { ...k, active: false } : k))
     );
 
     const newLog: ActivityLog = {
@@ -332,10 +349,12 @@ export default function CockpitPage() {
         after: `${Math.max(0, sessionKeys.filter((k) => k.active).length - 1)} Active`,
       },
     });
+
+    await refreshAllOnChainData();
   };
 
   // Handle Agent Execution in Sandbox
-  const handleExecuteAction = (
+  const handleExecuteAction = async (
     keyId: string,
     actionName: string,
     costMUSD: number,
@@ -397,6 +416,8 @@ export default function CockpitPage() {
           after: `$${nextSpent.toFixed(2)} / $${targetKey?.hourlyLimit}.00`,
         },
       });
+
+      await refreshAllOnChainData();
     } else {
       const newLog: ActivityLog = {
         id: `log_${Date.now()}`,
@@ -438,11 +459,11 @@ export default function CockpitPage() {
     let finalTxHash = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
     let isLiveTx = false;
 
-    if (isLiveMode && wallet.isConnected && wallet.address) {
+    if (isLiveMode) {
       try {
         const liveHash = await executeLiveApprove(
           MEZO_CONFIG.accountAddress as Address,
-          wallet.address as Address,
+          ((wallet.isConnected && wallet.address) ? wallet.address : account.ownerAddress) as Address,
           targetReq.onChainId ?? 0
         );
         finalTxHash = liveHash;
@@ -492,6 +513,8 @@ export default function CockpitPage() {
         after: `$${nextBalance.toFixed(2)} MUSD`,
       },
     });
+
+    await refreshAllOnChainData();
   };
 
   // Handle Human-in-the-Loop Rejection
@@ -565,6 +588,15 @@ export default function CockpitPage() {
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 font-bold">
                 ONLINE
               </span>
+              <button
+                onClick={() => refreshAllOnChainData()}
+                disabled={isSyncingOnChain}
+                title="Sync live blockchain balances and registered session keys"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-card border border-surface-border hover:border-mezo/50 text-xs font-medium text-slate-300 hover:text-white transition-all disabled:opacity-50 ml-1"
+              >
+                <RotateCw className={`w-3 h-3 text-mezo ${isSyncingOnChain ? "animate-spin" : ""}`} />
+                <span className="text-[11px] font-mono">{isSyncingOnChain ? "Syncing..." : "Sync Chain"}</span>
+              </button>
             </div>
           </div>
 

@@ -24,7 +24,7 @@ import { MezoAgentClient, MEZO_TESTNET } from "mezo-agent-sdk";
 
 // Initialize client with agent's ephemeral session key
 const agent = new MezoAgentClient({
-  accountAddress: "0x98f483D0b028d77aE37B6d123C34954Af248dC94",
+  accountAddress: "${MEZO_CONFIG.accountAddress}",
   sessionPrivateKey: process.env.AGENT_SESSION_PRIVATE_KEY!,
   network: MEZO_TESTNET,
 });
@@ -35,7 +35,7 @@ console.log(\`Remaining MUSD: \${budget}\`);
 
 // Autonomously pay for an API query
 const receipt = await agent.payService({
-  recipient: "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
+  recipient: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
   amountInMUSD: "0.25",
   memo: "LLM Web Search Oracle Query",
 });
@@ -73,8 +73,8 @@ curl -X POST https://rpc.test.mezo.org \\
     "jsonrpc":"2.0",
     "method":"eth_call",
     "params":[{
-      "to":"0x98f483D0b028d77aE37B6d123C34954Af248dC94",
-      "data":"0x789b91e900000000000000000000000071C02847a9D7881cE8F67C8E281F3e2D34E4c892"
+      "to":"${MEZO_CONFIG.accountAddress}",
+      "data":"0x789b91e900000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c8"
     }, "latest"],
     "id":1
   }'`,
