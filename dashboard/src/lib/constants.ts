@@ -3,9 +3,12 @@ export const MEZO_CONFIG = {
   chainIdHex: "0x7b7b",
   name: "Mezo Testnet",
   rpcUrl: "https://rpc.test.mezo.org",
+  localRpcUrl: "http://127.0.0.1:8545",
   explorerUrl: "https://explorer.test.mezo.org",
   faucetUrl: "https://faucet.test.mezo.org",
-  musdAddress: "0xdD468A1DDc392dcdbEf6db6e34E89AA338F9F186",
+  musdAddress: "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
+  factoryAddress: "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318",
+  accountAddress: "0x8aCd85898458400f7Db866d53FCFF6f0D49741FF",
   gasToken: "BTC",
   buildathon: {
     event: "Build with MUSD and MEZO",

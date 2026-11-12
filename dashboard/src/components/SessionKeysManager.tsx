@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Key, Clock, ShieldAlert, Check, Copy, Ban, Sparkles, X, ShieldCheck, Cpu, Lock } from "lucide-react";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import type { SessionKeyItem } from "@/lib/types";
 
 interface SessionKeysManagerProps {
@@ -36,20 +37,39 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
   };
 
   const handleGenerateRandomKey = () => {
-    const randomHex = Array.from({ length: 40 }, () =>
-      Math.floor(Math.random() * 16).toString(16)
-    ).join("");
-    setCustomKey(`0x${randomHex}`);
+    try {
+      const pk = generatePrivateKey();
+      const acc = privateKeyToAccount(pk);
+      setCustomKey(acc.address);
+    } catch (_) {
+      const randomHex = Array.from({ length: 40 }, () =>
+        Math.floor(Math.random() * 16).toString(16)
+      ).join("");
+      setCustomKey(`0x${randomHex}`);
+    }
   };
 
   const handleSubmitNewKey = (e: React.FormEvent) => {
     e.preventDefault();
-    const finalKey = customKey || `0x${Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`;
+    let generatedPrivKey: string | undefined = undefined;
+    let finalKey = customKey;
+
+    if (!finalKey) {
+      try {
+        const pk = generatePrivateKey();
+        const acc = privateKeyToAccount(pk);
+        finalKey = acc.address;
+        generatedPrivKey = pk;
+      } catch (_) {
+        finalKey = `0x${Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`;
+      }
+    }
 
     const newKeyItem: SessionKeyItem = {
       id: `sk_${Date.now()}`,
       label: label || "Autonomous Agent Key",
       keyAddress: finalKey,
+      privateKey: generatedPrivKey,
       hourlyLimit: parseFloat(hourlyLimit) || 25,
       hourlySpent: 0,
       dailyLimit: parseFloat(dailyLimit) || 100,

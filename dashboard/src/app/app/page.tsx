@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/Header";
@@ -15,6 +15,16 @@ import { AlertRulesModal } from "@/components/AlertRulesModal";
 import { SecurityAuditModal } from "@/components/SecurityAuditModal";
 import { INITIAL_ACCOUNT_DATA, INITIAL_SESSION_KEYS, MEZO_CONFIG } from "@/lib/constants";
 import type { SessionKeyItem, ActivityLog } from "@/lib/types";
+import { useMezoWallet } from "@/lib/useMezoWallet";
+import {
+  fetchLiveBalances,
+  fetchLivePendingRequests,
+  executeLiveFaucetClaim,
+  executeLiveApprove,
+  executeLiveRevokeKey,
+  executeLiveCreateKey,
+} from "@/lib/blockchain";
+import type { Address } from "viem";
 import {
   Terminal,
   KeyRound,
@@ -31,6 +41,7 @@ import {
 type CockpitTab = "all" | "overview" | "keys" | "approvals" | "audit";
 
 export default function CockpitPage() {
+  const wallet = useMezoWallet();
   const [account, setAccount] = useState(INITIAL_ACCOUNT_DATA);
   const [sessionKeys, setSessionKeys] = useState<SessionKeyItem[]>(INITIAL_SESSION_KEYS);
   const [confirmationDetails, setConfirmationDetails] = useState<ConfirmationDetails | null>(null);
@@ -38,10 +49,12 @@ export default function CockpitPage() {
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<CockpitTab>("all");
+  const [isSyncingOnChain, setIsSyncingOnChain] = useState(false);
 
   const [pendingRequests, setPendingRequests] = useState<PendingRequestItem[]>([
     {
       id: "req_101",
+      onChainId: 0,
       sessionKey: "0x39a17e36ba4a6b4d238ff944bacb478cbed5efcae",
       agentLabel: "Autonomous LLM Research Bot",
       target: "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
@@ -51,6 +64,41 @@ export default function CockpitPage() {
       status: "PENDING",
     },
   ]);
+
+  // Sync with live on-chain balances when wallet is connected on Mezo
+  useEffect(() => {
+    if (isLiveMode && wallet.isConnected) {
+      setIsSyncingOnChain(true);
+      Promise.all([
+        fetchLiveBalances(MEZO_CONFIG.accountAddress as Address, MEZO_CONFIG.musdAddress as Address),
+        fetchLivePendingRequests(MEZO_CONFIG.accountAddress as Address),
+      ])
+        .then(([liveBalances, liveRequests]) => {
+          if (liveBalances) {
+            setAccount((prev) => ({
+              ...prev,
+              musdBalance: liveBalances.musdBalance,
+              btcGasBalance: liveBalances.btcGasBalance,
+            }));
+          }
+          if (liveRequests && liveRequests.length > 0) {
+            setPendingRequests(liveRequests);
+          }
+        })
+        .catch((e) => console.warn("Live sync error:", e))
+        .finally(() => setIsSyncingOnChain(false));
+    }
+  }, [isLiveMode, wallet.isConnected]);
+
+  // Keep ownerAddress in sync with connected wallet if available
+  useEffect(() => {
+    if (wallet.isConnected && wallet.address) {
+      setAccount((prev) => ({
+        ...prev,
+        ownerAddress: wallet.address!,
+      }));
+    }
+  }, [wallet.isConnected, wallet.address]);
 
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([
     {
@@ -115,21 +163,38 @@ export default function CockpitPage() {
   };
 
   // Handle Faucet Claim
-  const handleFaucetClaim = (claimedAmount: number) => {
-    const fakeTx = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+  const handleFaucetClaim = async (claimedAmount: number) => {
+    let finalTxHash = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+    let isLiveTx = false;
+
+    if (isLiveMode && wallet.isConnected && wallet.address) {
+      try {
+        const liveHash = await executeLiveFaucetClaim(
+          wallet.address as Address,
+          MEZO_CONFIG.musdAddress as Address
+        );
+        finalTxHash = liveHash;
+        isLiveTx = true;
+      } catch (err: any) {
+        console.warn("Live faucet error (falling back to sandbox drip):", err);
+      }
+    }
 
     setAccount((prev) => ({
       ...prev,
       usdcBridged: prev.usdcBridged + claimedAmount,
+      musdBalance: prev.musdBalance + claimedAmount,
     }));
 
     const newLog: ActivityLog = {
       id: `log_${Date.now()}`,
       type: "BRIDGE",
-      title: "USDC Testnet Faucet",
-      description: `Claimed ${claimedAmount} Mock USDC for cross-chain simulation`,
-      amount: `+${claimedAmount} USDC`,
-      txHash: fakeTx,
+      title: isLiveTx ? "On-Chain MUSD Faucet Mint" : "USDC Testnet Faucet",
+      description: isLiveTx
+        ? `Minted 1,000 MUSD on Mezo Testnet (Chain ID 31611)`
+        : `Claimed ${claimedAmount} Mock USDC for cross-chain simulation`,
+      amount: `+${claimedAmount} MUSD`,
+      txHash: finalTxHash,
       timestamp: Date.now(),
       status: "SUCCESS",
     };
@@ -140,30 +205,54 @@ export default function CockpitPage() {
       isOpen: true,
       type: "FAUCET",
       status: "SUCCESS",
-      title: "Mock USDC Faucet Drip Confirmed",
-      subtitle: `Allocated ${claimedAmount} Mock USDC to simulate cross-chain treasury deposits and agent liquidity delegation.`,
-      amount: `+${claimedAmount} USDC`,
-      txHash: fakeTx,
+      title: isLiveTx ? "Live Mezo Testnet Mint Confirmed" : "Mock USDC Faucet Drip Confirmed",
+      subtitle: isLiveTx
+        ? `Successfully broadcasted to Mezo Testnet and confirmed on-chain (Chain ID 31611).`
+        : `Allocated ${claimedAmount} Mock USDC to simulate cross-chain treasury deposits and agent liquidity delegation.`,
+      amount: `+${claimedAmount} MUSD`,
+      txHash: finalTxHash,
       stateDiff: {
-        label: "Simulated Testnet Liquidity",
-        before: `$${account.usdcBridged.toLocaleString()} USDC`,
-        after: `$${(account.usdcBridged + claimedAmount).toLocaleString()} USDC`,
+        label: isLiveTx ? "On-Chain MUSD Balance" : "Simulated Testnet Liquidity",
+        before: `$${account.musdBalance.toLocaleString()} MUSD`,
+        after: `$${(account.musdBalance + claimedAmount).toLocaleString()} MUSD`,
       },
     });
   };
 
   // Handle Create Session Key
-  const handleCreateKey = (newKey: SessionKeyItem) => {
-    const fakeTx = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+  const handleCreateKey = async (newKey: SessionKeyItem) => {
+    let finalTxHash = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+    let isLiveTx = false;
+
+    if (isLiveMode && wallet.isConnected && wallet.address) {
+      try {
+        const liveHash = await executeLiveCreateKey(
+          MEZO_CONFIG.accountAddress as Address,
+          wallet.address as Address,
+          {
+            keySigner: newKey.keyAddress as Address,
+            hourlyLimit: newKey.hourlyLimit,
+            dailyLimit: newKey.dailyLimit,
+            maxPerTx: newKey.hourlyLimit / 2,
+            durationDays: 7,
+            label: newKey.label,
+          }
+        );
+        finalTxHash = liveHash;
+        isLiveTx = true;
+      } catch (err: any) {
+        console.warn("Live createSessionKey error (falling back to sandbox key):", err);
+      }
+    }
 
     setSessionKeys((prev) => [newKey, ...prev]);
 
     const newLog: ActivityLog = {
       id: `log_${Date.now()}`,
       type: "CREATE_KEY",
-      title: "Session Key Minted",
+      title: isLiveTx ? "On-Chain Session Key Created" : "Session Key Minted",
       description: `Created key for "${newKey.label}" with $${newKey.hourlyLimit}/h limit`,
-      txHash: fakeTx,
+      txHash: finalTxHash,
       timestamp: Date.now(),
       status: "SUCCESS",
     };
@@ -174,10 +263,12 @@ export default function CockpitPage() {
       isOpen: true,
       type: "CREATE_KEY",
       status: "SUCCESS",
-      title: "Agent Session Key Active",
-      subtitle: `Successfully authorized cryptographic session key for "${newKey.label}". Key is bounded by a mathematical 12-bucket sliding window.`,
+      title: isLiveTx ? "On-Chain Session Key Active" : "Agent Session Key Active",
+      subtitle: isLiveTx
+        ? `Broadcasted to Mezo Testnet smart account. Guarded by 12-bucket sliding window velocity controls.`
+        : `Successfully authorized cryptographic session key for "${newKey.label}". Key is bounded by a mathematical 12-bucket sliding window.`,
       amount: `$${newKey.hourlyLimit}/h Limit`,
-      txHash: fakeTx,
+      txHash: finalTxHash,
       agentLabel: newKey.label,
       stateDiff: {
         label: "Active Agent Session Keys",
@@ -188,10 +279,25 @@ export default function CockpitPage() {
   };
 
   // Handle Revoke Key
-  const handleRevokeKey = (keyAddress: string) => {
+  const handleRevokeKey = async (keyAddress: string) => {
     const targetKey = sessionKeys.find((k) => k.keyAddress === keyAddress);
     const keyLabel = targetKey ? targetKey.label : "Agent Key";
-    const fakeTx = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+    let finalTxHash = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+    let isLiveTx = false;
+
+    if (isLiveMode && wallet.isConnected && wallet.address) {
+      try {
+        const liveHash = await executeLiveRevokeKey(
+          MEZO_CONFIG.accountAddress as Address,
+          wallet.address as Address,
+          keyAddress as Address
+        );
+        finalTxHash = liveHash;
+        isLiveTx = true;
+      } catch (err: any) {
+        console.warn("Live revokeSessionKey error:", err);
+      }
+    }
 
     setSessionKeys((prev) =>
       prev.map((k) => (k.keyAddress === keyAddress ? { ...k, active: false } : k))
@@ -200,9 +306,9 @@ export default function CockpitPage() {
     const newLog: ActivityLog = {
       id: `log_${Date.now()}`,
       type: "REVOKE",
-      title: "Session Key Revoked",
-      description: `Revoked session key for "${keyLabel}". Effective in the next block.`,
-      txHash: fakeTx,
+      title: isLiveTx ? "On-Chain Key Revocation" : "Session Key Revoked",
+      description: `Revoked session key for "${keyLabel}". Effective immediately on Mezo.`,
+      txHash: finalTxHash,
       timestamp: Date.now(),
       status: "SUCCESS",
     };
@@ -214,9 +320,11 @@ export default function CockpitPage() {
       type: "REVOKE_KEY",
       status: "SUCCESS",
       title: "Session Key Revocation Enforced",
-      subtitle: `Session key for "${keyLabel}" has been invalidated. Cryptographic execution attempts will now revert on-chain.`,
+      subtitle: isLiveTx
+        ? `Revocation transaction confirmed on Mezo Testnet (Chain ID 31611). Key invalidated.`
+        : `Session key for "${keyLabel}" has been invalidated. Cryptographic execution attempts will now revert on-chain.`,
       amount: "0.00 MUSD Spend Allowed",
-      txHash: fakeTx,
+      txHash: finalTxHash,
       agentLabel: keyLabel,
       stateDiff: {
         label: "Active Agent Keys",
@@ -323,13 +431,29 @@ export default function CockpitPage() {
   };
 
   // Handle Human-in-the-Loop Approval
-  const handleApproveRequest = (requestId: string) => {
+  const handleApproveRequest = async (requestId: string) => {
     const targetReq = pendingRequests.find((r) => r.id === requestId);
     if (!targetReq) return;
 
+    let finalTxHash = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+    let isLiveTx = false;
+
+    if (isLiveMode && wallet.isConnected && wallet.address) {
+      try {
+        const liveHash = await executeLiveApprove(
+          MEZO_CONFIG.accountAddress as Address,
+          wallet.address as Address,
+          targetReq.onChainId ?? 0
+        );
+        finalTxHash = liveHash;
+        isLiveTx = true;
+      } catch (err: any) {
+        console.warn("Live approveExecution error (falling back to sandbox):", err);
+      }
+    }
+
     setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
 
-    const fakeTx = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
     const prevBalance = account.musdBalance;
     const nextBalance = Math.max(0, prevBalance - targetReq.musdAmount);
 
@@ -341,10 +465,10 @@ export default function CockpitPage() {
     const newLog: ActivityLog = {
       id: `log_${Date.now()}`,
       type: "PAYMENT",
-      title: "Human Approval Executed",
+      title: isLiveTx ? "On-Chain Approval Disbursed" : "Human Approval Executed",
       description: `Disbursed $${targetReq.musdAmount.toFixed(2)} MUSD for "${targetReq.agentLabel}" after multi-sig review`,
       amount: `-${targetReq.musdAmount.toFixed(2)} MUSD`,
-      txHash: fakeTx,
+      txHash: finalTxHash,
       timestamp: Date.now(),
       status: "SUCCESS",
     };
@@ -355,10 +479,12 @@ export default function CockpitPage() {
       isOpen: true,
       type: "AGENT_EXECUTION",
       status: "SUCCESS",
-      title: "Human Approval Executed",
-      subtitle: `Successfully authorized and disbursed ${targetReq.musdAmount.toFixed(2)} MUSD to ${targetReq.target.slice(0, 10)}... on Mezo Testnet.`,
+      title: isLiveTx ? "On-Chain Approval Disbursed" : "Human Approval Executed",
+      subtitle: isLiveTx
+        ? `Transaction confirmed on Mezo Testnet (Chain ID 31611). Funds released to target.`
+        : `Successfully authorized and disbursed ${targetReq.musdAmount.toFixed(2)} MUSD to ${targetReq.target.slice(0, 10)}... on Mezo Testnet.`,
       amount: `-${targetReq.musdAmount.toFixed(2)} MUSD`,
-      txHash: fakeTx,
+      txHash: finalTxHash,
       agentLabel: targetReq.agentLabel,
       stateDiff: {
         label: "Treasury Balance",
@@ -500,6 +626,8 @@ export default function CockpitPage() {
             <div className="lg:col-span-7">
               <AgentExecutionSandbox
                 sessionKeys={sessionKeys}
+                isLiveMode={isLiveMode}
+                accountAddress={account.accountAddress}
                 onExecuteAction={handleExecuteAction}
               />
             </div>

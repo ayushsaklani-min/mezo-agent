@@ -551,15 +551,7 @@ contract MezoAgentAccount is ReentrancyGuard, Pausable, IERC1271 {
         require(block.timestamp <= policy.validUntil, "Session key expired");
 
         if (req.musdAmount > 0) {
-            uint256 currentHourlySpent = getHourlySpent(req.sessionKey);
-            require(currentHourlySpent + req.musdAmount <= policy.hourlyLimit, "Hourly MUSD limit exceeded");
-
-            uint256 currentDailySpent = getDailySpent(req.sessionKey);
-            require(currentDailySpent + req.musdAmount <= policy.dailyLimit, "Daily MUSD limit exceeded");
-
             require(musdToken.balanceOf(address(this)) >= req.musdAmount, "Insufficient MUSD account balance");
-
-            _recordSpend(req.sessionKey, req.musdAmount);
             musdToken.safeTransfer(req.target, req.musdAmount);
         }
 

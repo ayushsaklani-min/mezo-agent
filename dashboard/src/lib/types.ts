@@ -2,6 +2,7 @@ export interface SessionKeyItem {
   id: string;
   label: string;
   keyAddress: string;
+  privateKey?: string;
   hourlyLimit: number;
   hourlySpent: number;
   dailyLimit: number;

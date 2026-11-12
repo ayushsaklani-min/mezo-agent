@@ -34,6 +34,7 @@ export const MEZO_AGENT_ACCOUNT_ABI = [
       { name: "keySigner", type: "address" },
       { name: "hourlyLimit", type: "uint256" },
       { name: "dailyLimit", type: "uint256" },
+      { name: "maxPerTx", type: "uint256" },
       { name: "validUntil", type: "uint256" },
       { name: "restrictTargets", type: "bool" },
       { name: "allowedTargets", type: "address[]" },

@@ -8,6 +8,8 @@ import type { SessionKeyItem } from "@/lib/types";
 
 interface SandboxProps {
   sessionKeys: SessionKeyItem[];
+  isLiveMode?: boolean;
+  accountAddress?: string;
   onExecuteAction: (
     keyId: string,
     actionName: string,
@@ -20,6 +22,8 @@ interface SandboxProps {
 
 export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
   sessionKeys,
+  isLiveMode = false,
+  accountAddress,
   onExecuteAction,
 }) => {
   const [selectedKeyId, setSelectedKeyId] = useState<string>(sessionKeys[0]?.id || "");
@@ -55,6 +59,12 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
 
     setIsExecuting(true);
     logMessage(`[START] Agent "${currentKey.label}" initiated: "${actionTitle}"`);
+    if (isLiveMode) {
+      logMessage(`[NETWORK] Mode: LIVE MEZO TESTNET (Chain ID 31611)`);
+      if (accountAddress) {
+        logMessage(`[VAULT] Delegated Account: ${accountAddress.slice(0, 14)}...`);
+      }
+    }
 
     setTimeout(() => {
       // Check limits

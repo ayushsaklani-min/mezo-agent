@@ -7,6 +7,7 @@ import { MEZO_CONFIG } from "@/lib/constants";
 
 export interface PendingRequestItem {
   id: string;
+  onChainId?: number;
   sessionKey: string;
   agentLabel: string;
   target: string;
