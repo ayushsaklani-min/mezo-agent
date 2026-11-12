@@ -25,3 +25,10 @@ dist/
 Thumbs.db
 *.log
 *.tgz
+
+# Media & recordings
+*.mp4
+*.webm
+*.wav
+voiceover/
+
