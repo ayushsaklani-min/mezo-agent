@@ -8,9 +8,21 @@
 [![Formal Invariants](https://img.shields.io/badge/Fuzz%20Invariants-128k%20Calls%20Passed-blue?style=for-the-badge)](contracts/test/MezoAgentAccountInvariants.t.sol)
 [![SDK Tests](https://img.shields.io/badge/SDK%20Tests-17%2F17%20Passing-indigo?style=for-the-badge)](sdk/)
 
-> **Live Deployment:** [https://dashboard-iota-blue-90.vercel.app](https://dashboard-iota-blue-90.vercel.app)  
-> **Submission for the "Build with MUSD and MEZO" Buildathon on AKINDO.**  
-> Track: **Access & Distribution for MUSD/MEZO (Agentic Tools / AI Wallets)** and **DeFi Yield Stacking**.
+> **🌐 Live Landing Page:** [https://dashboard-iota-blue-90.vercel.app](https://dashboard-iota-blue-90.vercel.app)  
+> **⚡ Live Institutional Cockpit:** [https://dashboard-iota-blue-90.vercel.app/app](https://dashboard-iota-blue-90.vercel.app/app)  
+> **📦 Official npm SDK:** [https://www.npmjs.com/package/mezo-agent-sdk](https://www.npmjs.com/package/mezo-agent-sdk)  
+> **📄 Product & Security Specification:** [Google Docs Link](https://docs.google.com/document/d/1SyiFX6o2_Cy-hZ8FGZHAh82iRf-9LeO0AsDHEwSRIV4/edit)  
+> **🏆 AKINDO Buildathon Track:** "Build with MUSD and MEZO" ($7,000 USD Prize Pool)  
+> • *Track 1: Access & Distribution for MUSD/MEZO (Agentic Tools / AI Wallets)*  
+> • *Track 2: DeFi Yield Stacking*
+
+### Deployed Smart Contracts (Mezo Testnet Chain ID: `31611`)
+
+| Contract | Address | Explorer |
+| :--- | :--- | :--- |
+| **MezoAgentFactory** | `0x199468533b66d7F3B3673f4C79374EB70932a99E` | [View on Mezo Explorer](https://explorer.test.mezo.org/address/0x199468533b66d7F3B3673f4C79374EB70932a99E) |
+| **MezoAgentAccount (Vault)** | `0x98f483D0b028d77aE37B6d123C34954Af248dC94` | [View on Mezo Explorer](https://explorer.test.mezo.org/address/0x98f483D0b028d77aE37B6d123C34954Af248dC94) |
+| **MUSD Stablecoin** | `0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9` | [View on Mezo Explorer](https://explorer.test.mezo.org/address/0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9) |
 
 ---
 
@@ -181,23 +193,23 @@ console.log(`Transaction confirmed on Mezo: ${receipt.txHash}`);
 
 ---
 
-## 6. Next.js 14 Production Dashboard
+## 6. Next.js 14 Production Web Application
 
-The dashboard provides master owners with real-time treasury monitoring, session key minting, bridge simulation, and an interactive agent execution sandbox.
+The platform features a dual-route architecture built for both high-converting landing presentation and institutional operations:
+* **Landing Page (`/`):** Interactive hero simulation widget, velocity envelope visualizer, problem vs. solution chapter, feature bento grid, and SDK showcase.
+* **Institutional Cockpit (`/app`):** Full-screen treasury cockpit with tabbed workstations:
+  * **Liquidity & Terminal:** Cross-chain bridge with 1-click testnet mock USDC faucet drip and live monospace execution terminal.
+  * **Session Keys:** Ephemeral key manager supporting ZK Secure Enclave public key import and quick sandbox generation with 12-bucket sliding spend meters.
+  * **Approvals Queue:** Human-in-the-loop pending execution requests exceeding the $10 micro-threshold with on-chain Approve / Reject actions.
+  * **Audit Ledger:** Chronological transaction ledger with Mezo Explorer links and 1-click forensic CSV & SIEM JSON exports.
 
-### Running the Dashboard Locally
+### Running the Web App Locally
 ```bash
 cd dashboard
 npm install
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### Key Interactive Features
-1. **Cross-Chain Bridge:** Convert incoming USDC (from Base/Ethereum) directly into MUSD. Includes a 1-click **"+1,000 Mock USDC"** faucet button for instant evaluation.
-2. **Session Key Manager:** Mint new session keys with custom hourly/daily allowances, expiration timers, and target restrictions.
-3. **Live Execution Sandbox:** Trigger autonomous agent tasks (e.g. "Pay LLM Search API", "Auto-DCA to BTC") and watch the live monospace terminal verify cryptographic signatures and rate limits in real time.
-4. **On-Chain Activity Feed:** Real-time stream of all events with direct links to the Mezo Testnet Explorer.
+Open [http://localhost:3000](http://localhost:3000) for the landing page or [http://localhost:3000/app](http://localhost:3000/app) for the cockpit.
 
 ---
 
