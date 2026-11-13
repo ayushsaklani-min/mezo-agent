@@ -7,15 +7,9 @@ import {
   ShieldCheck,
   TrendingUp,
   Lock,
-  RefreshCw,
   Zap,
-  ArrowUpRight,
-  Info,
   Sliders,
-  DollarSign,
   PlusCircle,
-  CheckCircle2,
-  Sparkles,
 } from "lucide-react";
 import type { EndowmentVault as EndowmentVaultType } from "@/lib/types";
 

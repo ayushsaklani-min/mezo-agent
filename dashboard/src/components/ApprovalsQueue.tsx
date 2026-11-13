@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, CheckCircle2, XCircle, Clock, AlertTriangle, ArrowRight, UserCheck, Eye, Terminal } from "lucide-react";
-import { MEZO_CONFIG } from "@/lib/constants";
+import { ShieldCheck, CheckCircle2, XCircle, Clock, AlertTriangle, UserCheck } from "lucide-react";
 
 export interface PendingRequestItem {
   id: string;

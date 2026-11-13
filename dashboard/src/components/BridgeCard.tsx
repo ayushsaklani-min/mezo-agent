@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, RefreshCw, Zap, CheckCircle2, ShieldCheck, Coins, Sparkles } from "lucide-react";
-import { MEZO_CONFIG } from "@/lib/constants";
+import { ArrowRight, RefreshCw, Zap } from "lucide-react";
 
 interface BridgeCardProps {
   onBridgeSuccess: (usdcAmount: number, musdAmount: number, txHash: string) => void;

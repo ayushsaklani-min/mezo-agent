@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowUpRight, CheckCircle2, XCircle, Clock, ExternalLink, Activity, Download, FileSpreadsheet, FileJson, Check } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, ExternalLink, Activity, Download, FileSpreadsheet, FileJson, Check } from "lucide-react";
 import { MEZO_CONFIG } from "@/lib/constants";
 import type { ActivityLog } from "@/lib/types";
 

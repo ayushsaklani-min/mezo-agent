@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Header } from "@/components/Header";
 import { TreasuryMetrics } from "@/components/TreasuryMetrics";
 import { BridgeCard } from "@/components/BridgeCard";
@@ -37,9 +37,6 @@ import {
   FileSpreadsheet,
   Layers,
   ArrowLeft,
-  Sparkles,
-  CheckCircle2,
-  ExternalLink,
   Code2,
   RotateCw,
   Coins,

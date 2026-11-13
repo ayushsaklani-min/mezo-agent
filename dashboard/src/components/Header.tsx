@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Shield, Sparkles, ExternalLink, Copy, Check, Wallet, Code2, AlertCircle, X, Bell, SlidersHorizontal, ShieldCheck } from "lucide-react";
-import { MEZO_CONFIG } from "@/lib/constants";
+import { Shield, Sparkles, Copy, Check, Wallet, Code2, AlertCircle, X, Bell, ShieldCheck } from "lucide-react";
 import { useMezoWallet } from "@/lib/useMezoWallet";
 import { DeveloperQuickstartModal } from "./DeveloperQuickstartModal";
 

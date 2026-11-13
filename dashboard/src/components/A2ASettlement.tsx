@@ -1,22 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Cpu,
   Bot,
   FileText,
-  CheckCircle2,
   ExternalLink,
-  ShieldCheck,
   Send,
-  Sparkles,
-  ArrowRight,
   RefreshCw,
-  Clock,
-  Layers,
-  Database,
-  Hash,
 } from "lucide-react";
 import type { A2AInvoice } from "@/lib/types";
 import { MEZO_CONFIG } from "@/lib/constants";

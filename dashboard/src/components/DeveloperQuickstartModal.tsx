@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Code2, Copy, Check, Terminal, Sparkles, BookOpen } from "lucide-react";
+import { X, Code2, Copy, Check, BookOpen } from "lucide-react";
 import { MEZO_CONFIG } from "@/lib/constants";
 
 interface ModalProps {

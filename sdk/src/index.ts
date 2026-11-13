@@ -24,3 +24,5 @@ export {
 } from "./errors.js";
 export { createMezoPaymentTool } from "./langchain.js";
 export { createElizaMezoAction } from "./eliza.js";
+export { runAutonomousAgentLoop, type AutonomousTaskConfig } from "./agentRunner.js";
+export { startAutonomousAgentDemo } from "./demoAgent.js";

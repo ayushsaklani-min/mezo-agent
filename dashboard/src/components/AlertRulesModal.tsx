@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, X, Check, Send, AlertTriangle, ShieldAlert, Sparkles, CheckCircle2 } from "lucide-react";
+import { Bell, X, Send, AlertTriangle, ShieldAlert, CheckCircle2 } from "lucide-react";
 
 interface AlertRulesModalProps {
   isOpen: boolean;

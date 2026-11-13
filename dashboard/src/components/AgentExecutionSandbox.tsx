@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Terminal, Play, AlertTriangle, Cpu, Globe, Bitcoin, RefreshCw, Zap, ShieldAlert } from "lucide-react";
+import { Terminal, AlertTriangle, Cpu, Globe, Bitcoin, RefreshCw, ShieldAlert } from "lucide-react";
 import { MEZO_CONFIG } from "@/lib/constants";
 import type { SessionKeyItem } from "@/lib/types";
 import { executeLiveAgentAction } from "@/lib/blockchain";

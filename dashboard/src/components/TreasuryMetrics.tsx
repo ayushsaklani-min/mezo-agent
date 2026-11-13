@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { DollarSign, ArrowDownUp, Flame, KeyRound, TrendingUp, ShieldCheck } from "lucide-react";
+import { DollarSign, ArrowDownUp, Flame, KeyRound } from "lucide-react";
 
 interface MetricsProps {
   musdBalance: number;

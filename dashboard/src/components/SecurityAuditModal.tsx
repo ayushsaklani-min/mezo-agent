@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, X, Check, Lock, Bug, Terminal, FileCode2, ExternalLink, ShieldAlert, Award } from "lucide-react";
-import { MEZO_CONFIG } from "@/lib/constants";
+import { ShieldCheck, X, Lock, Bug, Award } from "lucide-react";
 
 interface SecurityAuditModalProps {
   isOpen: boolean;

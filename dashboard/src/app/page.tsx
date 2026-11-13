@@ -2,33 +2,23 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Shield,
   ShieldCheck,
   ShieldAlert,
-  KeyRound,
   Terminal,
   ArrowRight,
   Copy,
   Check,
   ExternalLink,
   Code2,
-  Sparkles,
-  Cpu,
-  Layers,
   Lock,
   RefreshCw,
-  FileSpreadsheet,
-  Bell,
-  Play,
   CheckCircle2,
   AlertTriangle,
-  ChevronRight,
-  Zap,
   Coins,
   Scale,
-  GitBranch,
   Bot,
 } from "lucide-react";
 import { MEZO_CONFIG } from "@/lib/constants";
