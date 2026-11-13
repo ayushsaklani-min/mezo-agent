@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, AlertOctagon, ExternalLink, Copy, Check, ShieldCheck, Zap, X, ArrowRight } from "lucide-react";
+import { CheckCircle2, AlertOctagon, ExternalLink, Copy, Check, X, ArrowRight } from "lucide-react";
 import confetti from "canvas-confetti";
 import { MEZO_CONFIG } from "@/lib/constants";
 
@@ -35,13 +35,13 @@ export const TransactionConfirmationModal: React.FC<Props> = ({ details, onClose
     if (details?.isOpen && details.status === "SUCCESS") {
       try {
         confetti({
-          particleCount: 50,
+          particleCount: 55,
           spread: 70,
           origin: { y: 0.6 },
-          colors: ["#F7931A", "#38BDF8", "#10B981", "#FFA834"],
+          colors: ["#F7CB46", "#FE9CE8", "#99E885", "#C0F7FE"],
         });
       } catch (e) {
-        // Safe fallback if canvas not available
+        // Safe fallback
       }
     }
   }, [details?.isOpen, details?.status]);
@@ -66,165 +66,132 @@ export const TransactionConfirmationModal: React.FC<Props> = ({ details, onClose
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-black/80 backdrop-blur-md"
+          className="fixed inset-0 bg-black/70 backdrop-blur-xs"
         />
 
         {/* Modal Card */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          transition={{ type: "spring", duration: 0.45, bounce: 0.2 }}
-          className={`relative z-10 w-full max-w-lg rounded-3xl p-6 sm:p-7 shadow-2xl border ${
-            isSuccess
-              ? "bg-[#0B0F19] border-emerald-500/30 shadow-emerald-950/40"
-              : "bg-[#140C0E] border-red-500/40 shadow-red-950/40"
-          }`}
+          exit={{ opacity: 0, scale: 0.95, y: 15 }}
+          className="relative z-10 w-full max-w-lg rounded-2xl p-6 sm:p-7 bg-white border-[3px] border-black shadow-[10px_10px_0px_0px_#000000]"
         >
-          {/* Ambient Corner Glow */}
-          <div
-            className={`absolute -top-16 -right-16 w-44 h-44 rounded-full blur-3xl pointer-events-none ${
-              isSuccess ? "bg-emerald-500/15" : "bg-red-500/20"
-            }`}
-          />
-
           {/* Close Icon */}
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            className="absolute top-5 right-5 p-1 rounded-lg border-2 border-black bg-[#FAF7F0] hover:bg-[#FF4757] hover:text-white transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 stroke-[3]" />
           </button>
 
           {/* Top Status Header */}
-          <div className="flex items-center gap-4 mb-5">
+          <div className="flex items-center gap-3.5 mb-5">
             <div
-              className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border ${
+              className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 border-2 border-black shadow-brutal-sm ${
                 isSuccess
-                  ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-400 shadow-lg shadow-emerald-500/20"
-                  : "bg-red-500/10 border-red-500/40 text-red-400 shadow-lg shadow-red-500/20"
+                  ? "bg-[#99E885] text-black"
+                  : "bg-[#FF4757] text-white"
               }`}
             >
               {isSuccess ? (
-                <CheckCircle2 className="w-7 h-7 stroke-[2.2]" />
+                <CheckCircle2 className="w-8 h-8 stroke-[2.5]" />
               ) : (
-                <AlertOctagon className="w-7 h-7 stroke-[2.2]" />
+                <AlertOctagon className="w-8 h-8 stroke-[2.5]" />
               )}
             </div>
 
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span
-                  className={`text-[11px] font-mono font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full border ${
+                  className={`text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded border border-black shadow-brutal-sm ${
                     isSuccess
-                      ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
-                      : "bg-red-500/15 text-red-300 border-red-500/30"
+                      ? "bg-[#C0F7FE] text-black"
+                      : "bg-[#FE9CE8] text-black"
                   }`}
                 >
-                  {isSuccess ? "Confirmed on Mezo EVM" : "EVM Security Reverted"}
+                  {isSuccess ? "CONFIRMED ON MEZO" : "EVM REVERT (SAFE)"}
                 </span>
-                <span className="text-[10px] text-slate-500 font-mono">Chain 31611</span>
+                <span className="text-[10px] text-slate-700 font-mono font-bold">CHAIN 31611</span>
               </div>
-              <h3 className="text-xl font-extrabold text-white tracking-tight">{details.title}</h3>
+              <h3 className="text-xl font-black text-black tracking-tight uppercase">{details.title}</h3>
             </div>
           </div>
 
-          <p className="text-xs text-slate-300 leading-relaxed mb-5">
+          <p className="text-xs font-bold text-slate-700 leading-relaxed mb-4">
             {details.subtitle}
           </p>
 
-          {/* Amount Badge (if applicable) */}
+          {/* Amount Badge */}
           {details.amount && (
-            <div className="mb-4 p-3.5 rounded-2xl bg-surface-light/80 border border-surface-border flex items-center justify-between">
-              <span className="text-xs text-slate-400">Value Transferred</span>
-              <span className="text-lg font-mono font-extrabold text-mezo">
+            <div className="mb-4 p-3 rounded-xl bg-[#FAF7F0] border-2 border-black shadow-brutal-sm flex items-center justify-between">
+              <span className="text-xs font-mono font-black uppercase text-slate-700">VALUE TRANSFERRED</span>
+              <span className="text-xl font-mono font-black text-black bg-[#FFDC9B] px-2 py-0.5 rounded border border-black">
                 {details.amount}
               </span>
             </div>
           )}
 
-          {/* State Diff Card (e.g. Balance or Limit changes) */}
+          {/* State Diff Card */}
           {details.stateDiff && (
-            <div className="mb-4 p-3.5 rounded-2xl bg-surface-card border border-surface-border/70">
-              <div className="text-[11px] text-slate-400 font-medium mb-1.5">
+            <div className="mb-4 p-3.5 rounded-xl bg-[#FAF7F0] border-2 border-black shadow-brutal-sm">
+              <div className="text-[10px] text-slate-700 font-mono font-black uppercase mb-1.5">
                 {details.stateDiff.label}
               </div>
-              <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-slate-400 line-through">{details.stateDiff.before}</span>
-                <ArrowRight className="w-3.5 h-3.5 text-mezo mx-2" />
-                <span className="text-emerald-400 font-bold">{details.stateDiff.after}</span>
+              <div className="flex items-center justify-between text-xs font-mono font-black">
+                <span className="text-slate-600 line-through bg-white px-2 py-1 rounded border border-black/30">
+                  {details.stateDiff.before}
+                </span>
+                <ArrowRight className="w-4 h-4 text-black stroke-[3]" />
+                <span className="text-black bg-[#99E885] px-2 py-1 rounded border-2 border-black shadow-brutal-sm">
+                  {details.stateDiff.after}
+                </span>
               </div>
             </div>
           )}
 
-          {/* Revert Reason Banner */}
-          {!isSuccess && details.revertReason && (
-            <div className="mb-4 p-3.5 rounded-2xl bg-red-950/40 border border-red-800/50">
-              <div className="flex items-center gap-2 text-xs font-semibold text-red-300 mb-1">
-                <ShieldCheck className="w-4 h-4 text-red-400" />
-                <span>On-Chain Velocity Guardrail Active</span>
-              </div>
-              <p className="text-[11px] text-red-200/90 font-mono">
-                {details.revertReason}
-              </p>
+          {/* Revert Reason Warning */}
+          {details.revertReason && (
+            <div className="mb-4 p-3 rounded-xl bg-[#FFF1F2] border-2 border-black shadow-brutal-sm text-xs font-bold text-[#FF4757]">
+              <span className="font-mono font-black uppercase">REVERT REASON:</span> {details.revertReason}
             </div>
           )}
 
-          {/* On-Chain Metrics Grid */}
-          <div className="grid grid-cols-2 gap-2 text-xs font-mono bg-black/40 border border-surface-border/60 rounded-2xl p-3.5 mb-5">
-            <div>
-              <span className="block text-[10px] text-slate-500 uppercase font-sans">Finality</span>
-              <span className="text-slate-200 font-semibold flex items-center gap-1 mt-0.5">
-                <Zap className="w-3 h-3 text-mezo" />
-                1.18s Block Time
-              </span>
+          {/* TxHash Box */}
+          <div className="p-3 rounded-xl bg-white border-2 border-black shadow-brutal-sm mb-5">
+            <div className="flex items-center justify-between text-[10px] font-mono font-black text-slate-700 mb-1">
+              <span>TRANSACTION HASH</span>
+              <button
+                onClick={handleCopy}
+                className="hover:text-black flex items-center gap-1 font-bold"
+              >
+                {copied ? <Check className="w-3 h-3 text-emerald-600 stroke-[3]" /> : <Copy className="w-3 h-3" />}
+                <span>{copied ? "COPIED" : "COPY"}</span>
+              </button>
             </div>
-            <div>
-              <span className="block text-[10px] text-slate-500 uppercase font-sans">Gas Token</span>
-              <span className="text-slate-200 font-semibold mt-0.5 block">0.000018 BTC</span>
-            </div>
-            <div className="col-span-2 pt-2 border-t border-surface-border/40">
-              <span className="block text-[10px] text-slate-500 uppercase font-sans mb-1">
-                Transaction Hash
-              </span>
-              <div className="flex items-center justify-between bg-surface-light/90 px-2.5 py-1.5 rounded-xl border border-surface-border text-[11px]">
-                <span className="text-slate-300 truncate max-w-[260px]">{displayTxHash}</span>
-                <button
-                  onClick={handleCopy}
-                  className="hover:text-white transition-colors ml-2 p-1"
-                  title="Copy Hash"
-                >
-                  {copied ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  ) : (
-                    <Copy className="w-3.5 h-3.5 text-slate-400" />
-                  )}
-                </button>
-              </div>
+            <div className="font-mono text-xs font-black text-black break-all">
+              {displayTxHash}
             </div>
           </div>
 
-          {/* Footer Actions */}
+          {/* Action Buttons */}
           <div className="flex items-center gap-3">
-            <a
-              href={`${MEZO_CONFIG.explorerUrl}/tx/${displayTxHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 py-3 px-4 rounded-xl bg-surface-light border border-surface-border hover:border-mezo/50 text-slate-200 hover:text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all"
-            >
-              <span>Mezo Explorer</span>
-              <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-            </a>
+            {details.txHash && (
+              <a
+                href={`${MEZO_CONFIG.explorerUrl}/tx/${details.txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="neo-btn flex-1 py-3 rounded-xl bg-[#C0F7FE] hover:bg-[#7dd3fc] text-black text-xs font-black flex items-center justify-center gap-2 uppercase"
+              >
+                <span>VIEW EXPLORER</span>
+                <ExternalLink className="w-3.5 h-3.5 stroke-[2.5]" />
+              </a>
+            )}
 
             <button
               onClick={onClose}
-              className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition-all shadow-lg ${
-                isSuccess
-                  ? "bg-mezo hover:bg-mezo-hover text-black shadow-mezo/20"
-                  : "bg-surface-light border border-surface-border hover:bg-surface text-white"
-              }`}
+              className="neo-btn flex-1 py-3 rounded-xl bg-[#000000] hover:bg-slate-800 text-white text-xs font-black uppercase tracking-wide"
             >
-              Continue
+              DISMISS
             </button>
           </div>
         </motion.div>

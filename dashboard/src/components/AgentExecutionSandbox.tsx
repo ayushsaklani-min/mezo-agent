@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Terminal, Play, AlertTriangle, Cpu, Globe, Bitcoin, RefreshCw, Zap, ShieldAlert } from "lucide-react";
+import { Terminal, Cpu, Globe, Bitcoin, RefreshCw, AlertTriangle, ShieldCheck } from "lucide-react";
 import { MEZO_CONFIG } from "@/lib/constants";
 import type { SessionKeyItem } from "@/lib/types";
 import { executeLiveAgentAction } from "@/lib/blockchain";
@@ -117,38 +116,36 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: 0.2 }}
-      className="p-6 sm:p-7 rounded-3xl bg-surface border border-surface-border shadow-xl relative overflow-hidden"
-    >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+    <div className="p-6 sm:p-7 rounded-2xl bg-white border-[3px] border-black shadow-brutal hover:shadow-brutal-lg transition-all relative overflow-hidden">
+      {/* Top Console Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b-2 border-black">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
-              <Terminal className="w-5 h-5 text-mezo" />
-              <span>Autonomous Agent Execution Sandbox</span>
+            <div className="w-8 h-8 rounded-lg bg-[#FF9900] border-2 border-black shadow-brutal-sm flex items-center justify-center text-black">
+              <Terminal className="w-4 h-4 stroke-[3]" />
+            </div>
+            <h2 className="text-lg font-black text-black tracking-tight uppercase">
+              Agent Execution Sandbox
             </h2>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-mezo/15 text-mezo border border-mezo/30 font-semibold">
-              Live EVM
+            <span className="neo-badge bg-[#4ADE80] text-black text-[10px] px-2 py-0.5 rounded uppercase">
+              EVM LIVE
             </span>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs font-bold text-slate-700">
             Trigger live on-chain micro-payments and observe cryptographic enforcement
           </p>
         </div>
 
         {/* Agent Key Selector */}
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <label className="text-xs font-semibold text-slate-400">Agent:</label>
+          <label className="text-xs font-mono font-black uppercase text-black">AGENT:</label>
           <select
             value={currentKey?.id || ""}
             onChange={(e) => setSelectedKeyId(e.target.value)}
-            className="px-3.5 py-1.5 rounded-xl bg-surface-card border border-surface-border text-xs text-white focus:outline-none focus:border-mezo font-medium cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-[#FAF7F0] border-2 border-black shadow-brutal-sm text-xs font-bold text-black focus:outline-none cursor-pointer"
           >
             {sessionKeys.map((k) => (
-              <option key={k.id} value={k.id} className="bg-[#0E111B] text-white">
+              <option key={k.id} value={k.id} className="bg-white text-black font-bold">
                 {k.label} {k.active ? `($${(k.hourlyLimit - k.hourlySpent).toFixed(1)} left)` : `(REVOKED)`}
               </option>
             ))}
@@ -157,123 +154,151 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
       </div>
 
       {/* Action Buttons Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         {/* Action 1: Search API */}
-        <motion.button
-          whileHover={{ y: -2 }}
-          whileTap={{ scale: 0.98 }}
+        <button
           onClick={() => executeAction("Pay LLM Search API", 0.50, false)}
           disabled={isExecuting || !currentKey}
-          className="p-4 rounded-2xl bg-surface-card border border-surface-border hover:border-cyan-500/50 text-left transition-all group disabled:opacity-50 shadow-sm"
+          className="neo-btn p-4 rounded-xl bg-[#BAE6FD] hover:bg-[#7DD3FC] text-left transition-all disabled:opacity-50 text-black flex flex-col justify-between"
         >
           <div className="flex items-center justify-between mb-2">
-            <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/20">
-              <Globe className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-white border-2 border-black shadow-brutal-sm flex items-center justify-center">
+              <Globe className="w-4 h-4 stroke-[2.5]" />
             </div>
-            <span className="text-xs font-mono font-extrabold text-cyan-400">0.50 MUSD</span>
+            <span className="text-xs font-mono font-black bg-white px-2 py-0.5 rounded border border-black shadow-brutal-sm">
+              0.50 MUSD
+            </span>
           </div>
-          <span className="text-xs font-bold text-white group-hover:text-cyan-300 block">
-            Pay Search Oracle API
-          </span>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">Per-query web data feed</span>
-        </motion.button>
+          <div>
+            <span className="text-xs font-black block">
+              Pay Search Oracle API
+            </span>
+            <span className="text-[11px] font-semibold text-slate-800 mt-0.5 block">
+              Per-query web feed
+            </span>
+          </div>
+        </button>
 
-        {/* Action 2: Compute Node */}
-        <motion.button
-          whileHover={{ y: -2 }}
-          whileTap={{ scale: 0.98 }}
+        {/* Action 2: GPU Compute */}
+        <button
           onClick={() => executeAction("Pay GPU Compute Node", 2.25, false)}
           disabled={isExecuting || !currentKey}
-          className="p-4 rounded-2xl bg-surface-card border border-surface-border hover:border-purple-500/50 text-left transition-all group disabled:opacity-50 shadow-sm"
+          className="neo-btn p-4 rounded-xl bg-[#E9D5FF] hover:bg-[#D8B4FE] text-left transition-all disabled:opacity-50 text-black flex flex-col justify-between"
         >
           <div className="flex items-center justify-between mb-2">
-            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 ring-1 ring-purple-500/20">
-              <Cpu className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-white border-2 border-black shadow-brutal-sm flex items-center justify-center">
+              <Cpu className="w-4 h-4 stroke-[2.5]" />
             </div>
-            <span className="text-xs font-mono font-extrabold text-purple-400">2.25 MUSD</span>
+            <span className="text-xs font-mono font-black bg-white px-2 py-0.5 rounded border border-black shadow-brutal-sm">
+              2.25 MUSD
+            </span>
           </div>
-          <span className="text-xs font-bold text-white group-hover:text-purple-300 block">
-            Pay GPU Compute Node
-          </span>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">Autonomous LLM inference</span>
-        </motion.button>
+          <div>
+            <span className="text-xs font-black block">
+              Pay GPU Compute Node
+            </span>
+            <span className="text-[11px] font-semibold text-slate-800 mt-0.5 block">
+              Autonomous LLM inference
+            </span>
+          </div>
+        </button>
 
-        {/* Action 3: Auto-DCA Bitcoin */}
-        <motion.button
-          whileHover={{ y: -2 }}
-          whileTap={{ scale: 0.98 }}
+        {/* Action 3: Auto-DCA */}
+        <button
           onClick={() => executeAction("Auto-DCA Yield to BTC", 5.00, false)}
           disabled={isExecuting || !currentKey}
-          className="p-4 rounded-2xl bg-surface-card border border-surface-border hover:border-amber-500/50 text-left transition-all group disabled:opacity-50 shadow-sm"
+          className="neo-btn p-4 rounded-xl bg-[#FED7AA] hover:bg-[#FDBA74] text-left transition-all disabled:opacity-50 text-black flex flex-col justify-between"
         >
           <div className="flex items-center justify-between mb-2">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20">
-              <Bitcoin className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-white border-2 border-black shadow-brutal-sm flex items-center justify-center">
+              <Bitcoin className="w-4 h-4 stroke-[2.5]" />
             </div>
-            <span className="text-xs font-mono font-extrabold text-amber-400">5.00 MUSD</span>
+            <span className="text-xs font-mono font-black bg-white px-2 py-0.5 rounded border border-black shadow-brutal-sm">
+              5.00 MUSD
+            </span>
           </div>
-          <span className="text-xs font-bold text-white group-hover:text-amber-300 block">
-            Auto-DCA Yield to BTC
-          </span>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">Swaps into native Satoshis</span>
-        </motion.button>
+          <div>
+            <span className="text-xs font-black block">
+              Auto-DCA Yield to BTC
+            </span>
+            <span className="text-[11px] font-semibold text-slate-800 mt-0.5 block">
+              Swaps into Satoshis
+            </span>
+          </div>
+        </button>
 
-        {/* Action 4: Trigger Over-limit (Revert Demo) */}
-        <motion.button
-          whileHover={{ y: -2 }}
-          whileTap={{ scale: 0.98 }}
+        {/* Action 4: Test Velocity Limit (Revert) */}
+        <button
           onClick={() => executeAction("Exceed Hourly Limit Test", 500.0, true)}
           disabled={isExecuting || !currentKey}
-          className="p-4 rounded-2xl bg-red-950/20 border border-red-900/40 hover:border-red-500/50 text-left transition-all group disabled:opacity-50 shadow-sm"
+          className="neo-btn p-4 rounded-xl bg-[#FECDD3] hover:bg-[#FDA4AF] text-left transition-all disabled:opacity-50 text-black flex flex-col justify-between"
         >
           <div className="flex items-center justify-between mb-2">
-            <div className="p-2 rounded-xl bg-red-500/10 text-red-400 ring-1 ring-red-500/20">
-              <AlertTriangle className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-white border-2 border-black shadow-brutal-sm flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4 text-red-600 stroke-[2.5]" />
             </div>
-            <span className="text-xs font-mono font-extrabold text-red-400">500.00 MUSD</span>
+            <span className="text-xs font-mono font-black bg-white px-2 py-0.5 rounded border border-black shadow-brutal-sm text-red-600">
+              500 MUSD
+            </span>
           </div>
-          <span className="text-xs font-bold text-white group-hover:text-red-300 block">
-            Test Velocity Limit
-          </span>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">Simulate on-chain revert</span>
-        </motion.button>
+          <div>
+            <span className="text-xs font-black text-red-950 block">
+              Test Velocity Cap
+            </span>
+            <span className="text-[11px] font-semibold text-slate-800 mt-0.5 block">
+              Simulate on-chain revert
+            </span>
+          </div>
+        </button>
       </div>
 
-      {/* Live Monospace Terminal */}
-      <div className="rounded-2xl bg-[#04060A] border border-surface-border p-4 sm:p-5 font-mono text-xs text-slate-300 relative overflow-hidden shadow-inner">
-        <div className="flex items-center justify-between pb-3 mb-3 border-b border-surface-border/60 text-[11px] text-slate-500">
+      {/* Retro Cyber Terminal */}
+      <div className="rounded-xl bg-[#121212] border-[3px] border-black p-4 font-mono text-xs text-white relative shadow-[4px_4px_0px_0px_#FFE600] overflow-hidden">
+        {/* Terminal Header */}
+        <div className="flex items-center justify-between pb-2.5 mb-3 border-b-2 border-white/20 text-[11px]">
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400/50" />
-            <span className="text-slate-400">Mezo EVM Execution Stream (RPC: {MEZO_CONFIG.rpcUrl})</span>
+            {/* Retro GUI circles */}
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-[#FF4757] border border-black" />
+              <div className="w-3 h-3 rounded-full bg-[#FFE600] border border-black" />
+              <div className="w-3 h-3 rounded-full bg-[#4ADE80] border border-black" />
+            </div>
+            <span className="text-slate-300 font-bold ml-1">
+              MEZO EVM LIVE STREAM (CHAIN 31611)
+            </span>
           </div>
           {isExecuting && (
-            <div className="flex items-center gap-1.5 text-mezo font-bold">
+            <div className="flex items-center gap-1.5 text-[#FFE600] font-black">
               <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              <span>Broadcasting...</span>
+              <span>TRANSMITTING...</span>
             </div>
           )}
         </div>
 
-        <div className="space-y-1.5 max-h-48 overflow-y-auto pr-2">
+        {/* Logs */}
+        <div className="space-y-1.5 max-h-48 overflow-y-auto pr-2 scrollbar-none">
           {consoleLogs.map((log, index) => {
             const isError = log.includes("[REVERT]") || log.includes("[ERROR]");
             const isSuccess = log.includes("[CONFIRMED]") || log.includes("[EXECUTED]");
             const isStart = log.includes("[START]");
-            const isShield = log.includes("[SHIELD]") || log.includes("[SECURITY CHECK]");
+            const isShield = log.includes("[SHIELD]") || log.includes("[POLICY CHECK]");
+            const isQueued = log.includes("[QUEUED]");
 
             return (
               <div
                 key={index}
                 className={
                   isError
-                    ? "text-red-400 font-bold"
+                    ? "text-[#FF6B6B] font-black"
                     : isSuccess
-                    ? "text-emerald-400 font-bold"
+                    ? "text-[#4ADE80] font-black"
                     : isShield
-                    ? "text-amber-400 font-medium"
+                    ? "text-[#FFE600] font-bold"
+                    : isQueued
+                    ? "text-[#38BDF8] font-bold"
                     : isStart
-                    ? "text-mezo font-semibold"
-                    : "text-slate-400"
+                    ? "text-[#FFA834] font-bold"
+                    : "text-slate-300"
                 }
               >
                 {log}
@@ -283,6 +308,6 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
           <div ref={terminalEndRef} />
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };

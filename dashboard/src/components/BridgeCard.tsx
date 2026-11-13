@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, RefreshCw, Zap, CheckCircle2, ShieldCheck, Coins, Sparkles } from "lucide-react";
-import { MEZO_CONFIG } from "@/lib/constants";
+import { ArrowRight, RefreshCw, Zap, ArrowDownUp } from "lucide-react";
 
 interface BridgeCardProps {
   onBridgeSuccess: (usdcAmount: number, musdAmount: number, txHash: string) => void;
@@ -46,75 +45,72 @@ export const BridgeCard: React.FC<BridgeCardProps> = ({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: 0.1 }}
-      className="p-6 sm:p-7 rounded-3xl bg-surface border border-surface-border shadow-xl relative overflow-hidden"
-    >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+    <div className="p-6 sm:p-7 rounded-2xl bg-white border-[3px] border-black shadow-brutal hover:shadow-brutal-lg transition-all relative overflow-hidden">
+      {/* Top Banner / Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b-2 border-black">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
-              Cross-Chain Liquidity Inbound
+            <div className="w-8 h-8 rounded-lg bg-[#38BDF8] border-2 border-black shadow-brutal-sm flex items-center justify-center">
+              <ArrowDownUp className="w-4 h-4 text-black stroke-[3]" />
+            </div>
+            <h2 className="text-lg font-black text-black tracking-tight uppercase">
+              Liquidity Inbound
             </h2>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-800/40">
-              Testnet Bridge Simulation
+            <span className="neo-badge bg-[#FFE600] text-black text-[10px] px-2 py-0.5 rounded uppercase">
+              Wormhole NTT
             </span>
           </div>
-          <p className="text-xs text-slate-400">
-            Convert external USDC into native Mezo MUSD smart treasury (Production: Wormhole NTT)
+          <p className="text-xs font-bold text-slate-700">
+            Route external USDC directly into Mezo MUSD smart treasury
           </p>
         </div>
 
         {/* Faucet Helper Button */}
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+        <button
           onClick={handleClaimFaucet}
           disabled={isClaiming}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-surface-light border border-surface-border hover:border-mezo/40 text-xs font-semibold text-slate-200 transition-colors shadow-sm self-start sm:self-auto"
+          className="neo-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FFE600] hover:bg-[#FACC15] text-black text-xs font-black shadow-brutal-sm self-start sm:self-auto disabled:opacity-50"
         >
           {isClaiming ? (
-            <RefreshCw className="w-3.5 h-3.5 animate-spin text-mezo" />
+            <RefreshCw className="w-3.5 h-3.5 animate-spin text-black" />
           ) : (
-            <Zap className="w-3.5 h-3.5 text-mezo fill-mezo/20" />
+            <Zap className="w-3.5 h-3.5 text-black stroke-[3]" />
           )}
-          <span>+1,000 Mock USDC</span>
-        </motion.button>
+          <span>+1,000 MUSD FAUCET</span>
+        </button>
       </div>
 
       <form onSubmit={handleBridge} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Source Chain Selector */}
-          <div className="p-3.5 rounded-2xl bg-surface-card border border-surface-border/80">
-            <label className="block text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1">
-              Source Network
+          <div className="p-3.5 rounded-xl bg-[#FAF7F0] border-2 border-black shadow-brutal-sm">
+            <label className="block text-[10px] uppercase font-mono font-black tracking-wider text-slate-700 mb-1">
+              SOURCE NETWORK
             </label>
             <div className="flex items-center justify-between">
               <select
                 value={sourceChain}
                 onChange={(e) => setSourceChain(e.target.value)}
-                className="bg-transparent text-sm font-bold text-white focus:outline-none cursor-pointer"
+                className="bg-transparent text-sm font-black text-black focus:outline-none cursor-pointer"
               >
-                <option value="Base" className="bg-[#0E111B] text-white">Base Chain</option>
-                <option value="Ethereum" className="bg-[#0E111B] text-white">Ethereum Mainnet</option>
-                <option value="BNB Chain" className="bg-[#0E111B] text-white">BNB Smart Chain</option>
+                <option value="Base" className="bg-white text-black font-bold">Base Chain</option>
+                <option value="Ethereum" className="bg-white text-black font-bold">Ethereum Mainnet</option>
+                <option value="BNB Chain" className="bg-white text-black font-bold">BNB Smart Chain</option>
               </select>
-              <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-400 font-extrabold border border-blue-500/30">
+              <span className="text-xs font-mono font-black px-2 py-0.5 rounded bg-[#BAE6FD] text-black border border-black shadow-brutal-sm">
                 USDC (6 dec)
               </span>
             </div>
           </div>
 
           {/* Destination */}
-          <div className="p-3.5 rounded-2xl bg-surface-card border border-surface-border/80">
-            <label className="block text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1">
-              Destination Treasury
+          <div className="p-3.5 rounded-xl bg-[#FAF7F0] border-2 border-black shadow-brutal-sm">
+            <label className="block text-[10px] uppercase font-mono font-black tracking-wider text-slate-700 mb-1">
+              DESTINATION TREASURY
             </label>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-white">Mezo Network</span>
-              <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-orange-500/15 text-orange-400 font-extrabold border border-orange-500/30">
+              <span className="text-sm font-black text-black">Mezo Network</span>
+              <span className="text-xs font-mono font-black px-2 py-0.5 rounded bg-[#FFD7A8] text-black border border-black shadow-brutal-sm">
                 MUSD (18 dec)
               </span>
             </div>
@@ -123,11 +119,13 @@ export const BridgeCard: React.FC<BridgeCardProps> = ({
 
         {/* Amount Input */}
         <div>
-          <div className="flex items-center justify-between mb-1.5 text-[11px]">
-            <label className="font-semibold text-slate-300">
+          <div className="flex items-center justify-between mb-1.5 text-xs font-bold text-black">
+            <label className="uppercase tracking-wider font-mono">
               Deposit Amount (USDC)
             </label>
-            <span className="text-slate-400 font-mono">Rate: 1.0000 MUSD / USDC</span>
+            <span className="font-mono text-[11px] bg-[#FAF7F0] px-2 py-0.5 border border-black rounded">
+              1 USDC = 1 MUSD
+            </span>
           </div>
           <div className="relative">
             <input
@@ -136,56 +134,43 @@ export const BridgeCard: React.FC<BridgeCardProps> = ({
               step="any"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full px-4 py-3 rounded-2xl bg-surface-card border border-surface-border focus:border-mezo focus:ring-1 focus:ring-mezo text-sm font-mono text-white placeholder-slate-500 transition-colors"
-              placeholder="Enter amount..."
+              className="w-full px-4 py-3 rounded-xl bg-white border-2 border-black shadow-brutal text-base font-mono font-black text-black placeholder-slate-400 focus:outline-none focus:shadow-brutal-lg transition-all"
+              placeholder="0.00"
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setAmount("250")}
-                className="text-[11px] font-mono px-2 py-1 rounded-lg bg-surface-light border border-surface-border text-slate-300 hover:text-white hover:border-slate-500"
-              >
-                250
-              </button>
-              <button
-                type="button"
-                onClick={() => setAmount("500")}
-                className="text-[11px] font-mono px-2 py-1 rounded-lg bg-surface-light border border-surface-border text-slate-300 hover:text-white hover:border-slate-500"
-              >
-                500
-              </button>
-              <button
-                type="button"
-                onClick={() => setAmount("1000")}
-                className="text-[11px] font-mono px-2 py-1 rounded-lg bg-surface-light border border-surface-border text-slate-300 hover:text-white hover:border-slate-500"
-              >
-                1000
-              </button>
+              {["250", "500", "1000"].map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => setAmount(preset)}
+                  className="text-xs font-mono font-black px-2.5 py-1 rounded bg-[#F4EFE6] hover:bg-[#FFE600] border-2 border-black text-black shadow-brutal-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                >
+                  {preset}
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Submit */}
-        <motion.button
+        {/* Submit Button */}
+        <button
           type="submit"
           disabled={isBridging}
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-mezo via-orange-500 to-mezo hover:from-orange-400 hover:to-orange-500 text-black font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-mezo/20 transition-all disabled:opacity-50"
+          className="neo-btn w-full py-4 px-4 rounded-xl bg-[#FF9900] hover:bg-[#FF8800] text-black font-black text-sm uppercase tracking-wide flex items-center justify-center gap-2 shadow-brutal active:shadow-none disabled:opacity-50"
         >
           {isBridging ? (
             <>
-              <RefreshCw className="w-4 h-4 animate-spin text-black" />
-              <span>Routing USDC to MUSD Treasury...</span>
+              <RefreshCw className="w-4 h-4 animate-spin text-black stroke-[3]" />
+              <span>ROUTING VIA WORMHOLE NTT...</span>
             </>
           ) : (
             <>
-              <span>Bridge {amount || "0"} USDC → MUSD</span>
-              <ArrowRight className="w-4 h-4 text-black stroke-[2.5]" />
+              <span>BRIDGE {amount || "0"} USDC → MUSD</span>
+              <ArrowRight className="w-5 h-5 text-black stroke-[3]" />
             </>
           )}
-        </motion.button>
+        </button>
       </form>
-    </motion.div>
+    </div>
   );
 };
