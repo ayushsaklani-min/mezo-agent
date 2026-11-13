@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, X, Lock, Bug, Award, CheckCircle2 } from "lucide-react";
+import { ShieldCheck, X, Check, Lock, Bug, Terminal, FileCode2, ExternalLink, ShieldAlert, Award } from "lucide-react";
+import { MEZO_CONFIG } from "@/lib/constants";
 
 interface SecurityAuditModalProps {
   isOpen: boolean;
@@ -16,98 +17,98 @@ export const SecurityAuditModal: React.FC<SecurityAuditModalProps> = ({ isOpen, 
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="w-full max-w-2xl bg-white border-[3px] border-black rounded-2xl p-6 sm:p-8 shadow-[10px_10px_0px_0px_#000000] relative max-h-[90vh] overflow-y-auto"
+          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+          className="w-full max-w-2xl bg-surface border border-surface-border rounded-3xl p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto"
         >
           {/* Header */}
-          <div className="flex items-center justify-between pb-4 border-b-2 border-black mb-6">
+          <div className="flex items-center justify-between pb-4 border-b border-surface-border mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-[#99E885] border-2 border-black shadow-brutal-sm flex items-center justify-center text-black">
-                <ShieldCheck className="w-6 h-6 stroke-[3]" />
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
+                <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
               </div>
               <div>
-                <h3 className="text-lg font-black text-black tracking-tight flex items-center gap-2 uppercase">
-                  <span>Security & Audit Readiness</span>
-                  <span className="neo-badge bg-[#F7CB46] text-black text-[10px] px-2 py-0.5 rounded">
-                    25/25 VERIFIED
+                <h3 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                  <span>Enterprise Security & Audit Readiness</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    25/25 Tests Passing
                   </span>
                 </h3>
-                <p className="text-xs font-bold text-slate-700">
-                  Cryptographic verification, formal invariant proofs & threat modeling
+                <p className="text-xs text-slate-400">
+                  Cryptographic verification, formal invariant proofs, and bug bounty policy
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-1 rounded-lg border-2 border-black bg-[#FAF7F0] hover:bg-[#FF4757] hover:text-white transition-colors"
+              className="p-1.5 rounded-xl hover:bg-surface-card text-slate-400 hover:text-white transition-colors"
             >
-              <X className="w-4 h-4 stroke-[3]" />
+              <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Tab Navigation */}
-          <div className="grid grid-cols-3 gap-2 mb-6 p-1 rounded-xl bg-[#FAF7F0] border-2 border-black text-xs font-black">
+          <div className="grid grid-cols-3 gap-2 mb-6 p-1 rounded-xl bg-surface-card border border-surface-border text-xs font-semibold">
             <button
               onClick={() => setActiveTab("invariants")}
-              className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 uppercase ${
-                activeTab === "invariants" ? "bg-[#F7CB46] text-black border-2 border-black shadow-brutal-sm" : "text-slate-700 hover:text-black"
+              className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                activeTab === "invariants" ? "bg-mezo text-black font-bold shadow-sm" : "text-slate-400 hover:text-white"
               }`}
             >
-              <Award className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Invariants</span>
+              <Award className="w-3.5 h-3.5" />
+              <span>Formal Invariants</span>
             </button>
             <button
               onClick={() => setActiveTab("threat-model")}
-              className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 uppercase ${
-                activeTab === "threat-model" ? "bg-[#F7CB46] text-black border-2 border-black shadow-brutal-sm" : "text-slate-700 hover:text-black"
+              className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                activeTab === "threat-model" ? "bg-mezo text-black font-bold shadow-sm" : "text-slate-400 hover:text-white"
               }`}
             >
-              <Lock className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Threats</span>
+              <Lock className="w-3.5 h-3.5" />
+              <span>Threat Model</span>
             </button>
             <button
               onClick={() => setActiveTab("bounty")}
-              className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 uppercase ${
-                activeTab === "bounty" ? "bg-[#F7CB46] text-black border-2 border-black shadow-brutal-sm" : "text-slate-700 hover:text-black"
+              className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                activeTab === "bounty" ? "bg-mezo text-black font-bold shadow-sm" : "text-slate-400 hover:text-white"
               }`}
             >
-              <Bug className="w-3.5 h-3.5 stroke-[2.5]" />
+              <Bug className="w-3.5 h-3.5" />
               <span>Bug Bounty</span>
             </button>
           </div>
 
           {/* Tab Content */}
-          <div className="space-y-4 text-xs leading-relaxed text-black">
+          <div className="space-y-4 text-xs leading-relaxed text-slate-300">
             {activeTab === "invariants" && (
               <div className="space-y-3.5">
-                <div className="p-3.5 rounded-xl bg-[#121212] border-2 border-black font-mono text-[11px] text-white shadow-brutal-sm">
-                  <div className="text-[#99E885] font-black mb-1">FOUNDRY INVARIANT HARNESS VERIFICATION:</div>
+                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 font-mono text-[11px] text-slate-300">
+                  <div className="text-emerald-400 font-bold mb-1">Foundry Invariant Harness Verification:</div>
                   <div>Runs: 256 | Stateful Calls: 128,000 | Reverts Handled: 50,921</div>
-                  <div className="text-[#FFE600] mt-1 font-bold">Suite Result: OK. 25 passed; 0 failed; 0 skipped.</div>
+                  <div className="text-slate-500 mt-1">Suite Result: OK. 25 passed; 0 failed; 0 skipped.</div>
                 </div>
 
                 <div className="space-y-2.5">
-                  <div className="p-3.5 rounded-xl bg-[#FAF7F0] border-2 border-black shadow-brutal-sm">
-                    <span className="font-black text-black block mb-1 uppercase">1. Sliding-Window Continuous Bound Invariant</span>
-                    <p className="text-slate-700 text-xs font-semibold">
+                  <div className="p-3 rounded-xl bg-surface-card border border-surface-border">
+                    <span className="font-bold text-white block mb-0.5">1. Sliding-Window Continuous Bound Invariant</span>
+                    <p className="text-slate-400 text-[11px]">
                       Mathematical proof that across any continuous 3,600s rolling window, no agent can spend more than its designated hourly limit, eliminating the classic 59m/61m double-spend exploit.
                     </p>
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-[#FAF7F0] border-2 border-black shadow-brutal-sm">
-                    <span className="font-black text-black block mb-1 uppercase">2. Granular Call Selector Invariant</span>
-                    <p className="text-slate-700 text-xs font-semibold">
-                      Guarantees agents cannot execute arbitrary calls or invoke <code className="bg-white px-1 py-0.5 rounded border border-black font-mono font-bold">IERC20.approve()</code> on treasury funds, preventing indirect allowance draining.
+                  <div className="p-3 rounded-xl bg-surface-card border border-surface-border">
+                    <span className="font-bold text-white block mb-0.5">2. Granular Call Selector Invariant</span>
+                    <p className="text-slate-400 text-[11px]">
+                      Guarantees agents cannot execute arbitrary calls or invoke <code className="text-mezo font-mono">IERC20.approve()</code> on treasury funds, preventing indirect allowance draining.
                     </p>
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-[#FAF7F0] border-2 border-black shadow-brutal-sm">
-                    <span className="font-black text-black block mb-1 uppercase">3. Treasury Solvency & Custody Invariant</span>
-                    <p className="text-slate-700 text-xs font-semibold">
+                  <div className="p-3 rounded-xl bg-surface-card border border-surface-border">
+                    <span className="font-bold text-white block mb-0.5">3. Treasury Solvency & Custody Invariant</span>
+                    <p className="text-slate-400 text-[11px]">
                       The contract balance always remains strictly greater than or equal to unreserved obligations. Master keys remain entirely isolated in the human or DAO multisig.
                     </p>
                   </div>
@@ -117,24 +118,24 @@ export const SecurityAuditModal: React.FC<SecurityAuditModalProps> = ({ isOpen, 
 
             {activeTab === "threat-model" && (
               <div className="space-y-3">
-                <div className="p-3.5 rounded-xl bg-[#FFF1F2] border-2 border-black shadow-brutal-sm">
-                  <strong className="block text-[#FF4757] font-black mb-1 uppercase">Vector 1: Prompt Injection / Memory Hijack</strong>
-                  <p className="text-xs font-bold text-slate-800">
-                    If an attacker prompts the agent to drain the treasury to a rogue address, the contract halts execution instantly on-chain: target is not whitelisted, and velocity envelope is capped.
+                <div className="p-3.5 rounded-xl bg-red-950/20 border border-red-900/40 text-red-200">
+                  <strong className="block text-white mb-1">Attack Vector 1: Prompt Injection / Memory Hijack</strong>
+                  <p className="text-[11px] text-slate-300">
+                    If an attacker prompts the agent to drain the treasury to a rogue address, the contract halts execution instantly on-chain: the target is not whitelisted, and hourly velocity is capped.
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#FFFDF0] border-2 border-black shadow-brutal-sm">
-                  <strong className="block text-black font-black mb-1 uppercase">Vector 2: Compromised Owner Key</strong>
-                  <p className="text-xs font-bold text-slate-800">
-                    If owner key is compromised, an attacker cannot immediately inflate spend limits. Limit increases require a 24-hour timelock delay, allowing security guardian to pause.
+                <div className="p-3.5 rounded-xl bg-amber-950/20 border border-amber-900/40 text-amber-200">
+                  <strong className="block text-white mb-1">Attack Vector 2: Compromised Owner Key</strong>
+                  <p className="text-[11px] text-slate-300">
+                    If the owner key is compromised, an attacker cannot immediately inflate spend limits. Limit increases require a 24-hour timelock delay, allowing the security guardian to pause the account.
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#F0FDF4] border-2 border-black shadow-brutal-sm">
-                  <strong className="block text-emerald-800 font-black mb-1 uppercase">Zero-Knowledge Key Handshake</strong>
-                  <p className="text-xs font-bold text-slate-800">
-                    The bot generates its ECDSA private key within an isolated Docker container, AWS KMS, or hardware TEE. Only public address is authorized on-chain.
+                <div className="p-3.5 rounded-xl bg-cyan-950/20 border border-cyan-900/40 text-cyan-200">
+                  <strong className="block text-white mb-1">Zero-Knowledge Key Handshake</strong>
+                  <p className="text-[11px] text-slate-300">
+                    The bot generates its ECDSA private key within an isolated Docker container, AWS KMS, or hardware TEE. Only the public address is authorized on-chain.
                   </p>
                 </div>
               </div>
@@ -142,28 +143,28 @@ export const SecurityAuditModal: React.FC<SecurityAuditModalProps> = ({ isOpen, 
 
             {activeTab === "bounty" && (
               <div className="space-y-3.5">
-                <div className="p-3.5 rounded-xl bg-[#FAF7F0] border-2 border-black shadow-brutal-sm">
-                  <span className="font-black text-black block mb-1 uppercase">Responsible Disclosure Policy</span>
-                  <p className="text-slate-700 text-xs font-semibold">
-                    We welcome security researchers and white-hat hackers to review our smart contracts and SDK:
+                <div className="p-3.5 rounded-xl bg-surface-card border border-surface-border">
+                  <span className="font-bold text-white block mb-1">Responsible Disclosure Policy</span>
+                  <p className="text-slate-300 text-[11px]">
+                    We welcome security researchers and white-hat hackers to review our smart contracts and SDK. Vulnerabilities reported responsibly will be rewarded based on severity:
                   </p>
-                  <ul className="mt-2 space-y-1 font-mono text-xs font-black text-black">
+                  <ul className="mt-2 space-y-1 text-[11px] font-mono text-slate-400">
                     <li>• Critical (Treasury Drain / Invariant Breach): Up to $10,000 MUSD</li>
                     <li>• High (Bypass of Whitelist / Velocity Limit): Up to $5,000 MUSD</li>
                     <li>• Medium (DoS / Griefing): Up to $1,500 MUSD</li>
                   </ul>
                 </div>
 
-                <div className="p-3 rounded-xl bg-white border-2 border-black shadow-brutal-sm flex items-center justify-between">
+                <div className="p-3 rounded-xl bg-surface-light border border-surface-border flex items-center justify-between">
                   <div>
-                    <span className="block font-black text-black text-xs uppercase">Security Contact</span>
-                    <span className="text-xs font-mono font-bold text-slate-700">security@mezoagent.xyz</span>
+                    <span className="block font-bold text-white text-xs">Security Contact</span>
+                    <span className="text-[11px] text-slate-400 font-mono">security@mezoagent.xyz</span>
                   </div>
                   <a
                     href="mailto:security@mezoagent.xyz"
-                    className="neo-btn px-3 py-1.5 rounded-lg bg-[#F7CB46] text-black text-xs font-black"
+                    className="px-3 py-1.5 rounded-xl bg-mezo text-black text-xs font-bold shadow-sm"
                   >
-                    REPORT FINDING
+                    Report Finding
                   </a>
                 </div>
               </div>
@@ -171,12 +172,12 @@ export const SecurityAuditModal: React.FC<SecurityAuditModalProps> = ({ isOpen, 
           </div>
 
           {/* Footer */}
-          <div className="pt-5 mt-6 border-t-2 border-black flex items-center justify-end">
+          <div className="pt-5 mt-6 border-t border-surface-border flex items-center justify-end">
             <button
               onClick={onClose}
-              className="neo-btn px-5 py-2.5 rounded-xl bg-[#000000] text-white text-xs font-black uppercase tracking-wide"
+              className="px-5 py-2 rounded-xl bg-surface-light hover:bg-surface-card border border-surface-border text-white text-xs font-bold transition-colors"
             >
-              CLOSE AUDIT VIEW
+              Close Security View
             </button>
           </div>
         </motion.div>

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { DollarSign, ArrowDownUp, Flame, KeyRound } from "lucide-react";
+import { DollarSign, ArrowDownUp, Flame, KeyRound, TrendingUp, ShieldCheck } from "lucide-react";
 
 interface MetricsProps {
   musdBalance: number;
@@ -20,53 +20,53 @@ export const TreasuryMetrics: React.FC<MetricsProps> = ({
 }) => {
   const cards = [
     {
-      label: "TOTAL TREASURY",
+      label: "Total Treasury (MUSD)",
       value: `$${musdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       unit: "MUSD",
       subtext: "Mezo Bitcoin-backed stablecoin",
       icon: DollarSign,
-      badge: "COLLATERALIZED",
-      cardBg: "bg-white",
-      badgeBg: "bg-[#FFE600]",
-      iconBg: "bg-[#FF9900]",
+      color: "mezo",
+      badge: "Collateralized",
+      borderGlow: "hover:border-mezo/50 hover:shadow-mezo/15",
+      iconBg: "bg-mezo/10 text-mezo ring-1 ring-mezo/25",
     },
     {
-      label: "CROSS-CHAIN INBOUND",
+      label: "Cross-Chain Inbound",
       value: `$${usdcBridged.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       unit: "USDC",
       subtext: "Bridged from Base via Wormhole NTT",
       icon: ArrowDownUp,
-      badge: "1:1 ROUTED",
-      cardBg: "bg-white",
-      badgeBg: "bg-[#BAE6FD]",
-      iconBg: "bg-[#38BDF8]",
+      color: "cyan",
+      badge: "1:1 Routed",
+      borderGlow: "hover:border-cyan-500/50 hover:shadow-cyan-500/15",
+      iconBg: "bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/25",
     },
     {
-      label: "STACKED BITCOIN YIELD",
+      label: "Stacked Bitcoin Yield",
       value: stackedBtcYield.toFixed(6),
       unit: "BTC",
       subtext: "Auto-harvested into native Satoshis",
       icon: Flame,
-      badge: "SATOSHIS",
-      cardBg: "bg-white",
-      badgeBg: "bg-[#FEF08A]",
-      iconBg: "bg-[#FACC15]",
+      color: "amber",
+      badge: "Real Satoshis",
+      borderGlow: "hover:border-amber-500/50 hover:shadow-amber-500/15",
+      iconBg: "bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/25",
     },
     {
-      label: "ACTIVE SESSION KEYS",
+      label: "Autonomous Session Keys",
       value: activeAgentsCount.toString(),
-      unit: "KEYS",
-      subtext: "12-bucket sliding window velocity",
+      unit: "Active Keys",
+      subtext: "Enforcing rolling hourly velocity caps",
       icon: KeyRound,
-      badge: "ERC-4337",
-      cardBg: "bg-white",
-      badgeBg: "bg-[#BBF7D0]",
-      iconBg: "bg-[#4ADE80]",
+      color: "emerald",
+      badge: "ERC-4337 Scoped",
+      borderGlow: "hover:border-emerald-500/50 hover:shadow-emerald-500/15",
+      iconBg: "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/25",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map((card, idx) => {
         const Icon = card.icon;
 
@@ -75,33 +75,34 @@ export const TreasuryMetrics: React.FC<MetricsProps> = ({
             key={card.label}
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: idx * 0.05 }}
-            whileHover={{ x: -2, y: -2 }}
-            className={`p-5 rounded-2xl ${card.cardBg} border-[3px] border-black shadow-brutal hover:shadow-brutal-lg transition-all relative overflow-hidden flex flex-col justify-between`}
+            transition={{ duration: 0.35, delay: idx * 0.08 }}
+            whileHover={{ y: -3, transition: { duration: 0.2 } }}
+            className={`p-5 rounded-3xl bg-surface border border-surface-border relative overflow-hidden transition-all shadow-lg ${card.borderGlow}`}
           >
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[11px] font-mono font-black text-black tracking-wider uppercase">
-                  {card.label}
-                </span>
-                <div className={`w-9 h-9 rounded-xl ${card.iconBg} border-2 border-black shadow-brutal-sm flex items-center justify-center text-black`}>
-                  <Icon className="w-5 h-5 stroke-[2.5]" />
-                </div>
-              </div>
+            {/* Ambient Background Radial */}
+            <div className="absolute top-0 right-0 w-28 h-28 bg-white/[0.02] rounded-full blur-2xl pointer-events-none" />
 
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-3xl font-black font-mono text-black tracking-tight">
-                  {card.value}
-                </span>
-                <span className="text-xs font-mono font-black text-black bg-[#FAF7F0] px-1.5 py-0.5 rounded border border-black">
-                  {card.unit}
-                </span>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-400 tracking-tight">
+                {card.label}
+              </span>
+              <div className={`p-2.5 rounded-2xl ${card.iconBg}`}>
+                <Icon className="w-4 h-4 stroke-[2.2]" />
               </div>
             </div>
 
-            <div className="flex items-center justify-between mt-4 pt-3 border-t-2 border-black/80 text-[11px]">
-              <span className="text-slate-700 font-semibold truncate max-w-[160px]">{card.subtext}</span>
-              <span className={`text-[10px] font-mono font-black px-2 py-0.5 rounded-md ${card.badgeBg} border-2 border-black shadow-brutal-sm text-black shrink-0`}>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-2xl sm:text-3xl font-extrabold font-mono text-white tracking-tight">
+                {card.value}
+              </span>
+              <span className="text-xs font-bold text-mezo font-mono">
+                {card.unit}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-surface-border/50 text-[11px]">
+              <span className="text-slate-400 truncate max-w-[170px]">{card.subtext}</span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-surface-card border border-surface-border text-slate-300 shrink-0 font-medium">
                 {card.badge}
               </span>
             </div>

@@ -1,129 +1,55 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 244, 239, 230;
-  --background-end-rgb: 244, 239, 230;
+  --foreground-rgb: 248, 250, 252;
+  --background-start-rgb: 7, 8, 14;
+  --background-end-rgb: 10, 12, 19;
 }
 
 body {
-  color: #000000;
-  background-color: #FFFDF8;
-  background-image: radial-gradient(rgba(0, 0, 0, 0.18) 1.2px, transparent 1.2px);
-  background-size: 20px 20px;
-  background-attachment: fixed;
+  color: rgb(var(--foreground-rgb));
+  background-color: #07080E;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(247, 147, 26, 0.12), transparent),
+    radial-gradient(circle at 100% 20%, rgba(56, 189, 248, 0.05), transparent),
+    linear-gradient(to bottom, #07080E, #0A0D16);
   min-height: 100vh;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-::selection {
-  background: #F7CB46;
-  color: #000000;
+/* Subtle background grid pattern */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
 }
 
-/* Neo-Brutalism Utility Classes */
-@layer components {
-  .neo-box {
-    border: 2px solid #000000;
-    box-shadow: 4px 4px 0px 0px #000000;
-    background-color: #FFFFFF;
-  }
-  
-  .neo-box-lg {
-    border: 3px solid #000000;
-    box-shadow: 6px 6px 0px 0px #000000;
-    background-color: #FFFFFF;
-  }
-
-  .neo-box-xl {
-    border: 3px solid #000000;
-    box-shadow: 8px 8px 0px 0px #000000;
-    background-color: #FFFFFF;
-  }
-
-  .neo-btn {
-    border: 2px solid #000000;
-    box-shadow: 3px 3px 0px 0px #000000;
-    font-weight: 800;
-    transition: all 0.12s cubic-bezier(0, 0, 0.2, 1);
-  }
-
-  .neo-btn:hover {
-    transform: translate(-1.5px, -1.5px);
-    box-shadow: 5px 5px 0px 0px #000000;
-  }
-
-  .neo-btn:active {
-    transform: translate(2px, 2px);
-    box-shadow: 1px 1px 0px 0px #000000;
-  }
-
-  .neo-badge {
-    border: 2px solid #000000;
-    box-shadow: 2px 2px 0px 0px #000000;
-    font-weight: 800;
-  }
-
-  .neo-input {
-    border: 2px solid #000000;
-    box-shadow: 3px 3px 0px 0px #000000;
-    background-color: #FFFFFF;
-    color: #000000;
-    font-weight: 700;
-    outline: none;
-    transition: all 0.12s ease;
-  }
-
-  .neo-input:focus {
-    box-shadow: 5px 5px 0px 0px #000000;
-    transform: translate(-1px, -1px);
-  }
-
-  /* Wireframe Bounding Box with Anchor Points from Reference */
-  .neo-wireframe {
-    border: 2px solid #000000;
-    position: relative;
-  }
-  .neo-wireframe::before {
-    content: '';
-    position: absolute;
-    top: -5px;
-    left: -5px;
-    width: 8px;
-    height: 8px;
-    background: #FFFFFF;
-    border: 2px solid #000000;
-  }
-  .neo-wireframe::after {
-    content: '';
-    position: absolute;
-    bottom: -5px;
-    right: -5px;
-    width: 8px;
-    height: 8px;
-    background: #FFFFFF;
-    border: 2px solid #000000;
-  }
+/* Glow effects */
+.glow-mezo {
+  box-shadow: 0 0 35px -5px rgba(247, 147, 26, 0.25);
 }
 
-/* Custom retro scrollbar */
+.glow-cyan {
+  box-shadow: 0 0 35px -5px rgba(56, 189, 248, 0.25);
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #FFFDF8;
-  border-left: 2px solid #000000;
+  background: #07080E;
 }
 ::-webkit-scrollbar-thumb {
-  background: #F7CB46;
-  border: 2px solid #000000;
-  box-shadow: 2px 2px 0px 0px #000000;
+  background: #1E2436;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #FE9CE8;
+  background: #F7931A;
 }

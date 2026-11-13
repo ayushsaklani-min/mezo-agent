@@ -560,7 +560,7 @@ export default function CockpitPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FFFDF8] text-black font-sans selection:bg-[#F7CB46] selection:text-black">
+    <div className="min-h-screen flex flex-col bg-[#07080E] text-slate-100 font-sans selection:bg-mezo/30 selection:text-orange-200">
       {/* Top Application Header */}
       <Header
         ownerAddress={account.ownerAddress}
@@ -571,37 +571,37 @@ export default function CockpitPage() {
       />
 
       {/* Cockpit Sub-Navbar with Navigation Breadcrumbs & View Tabs */}
-      <div className="border-b-[3px] border-black bg-white sticky top-18 z-30 shadow-brutal-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="border-b border-surface-border bg-surface/70 backdrop-blur-md sticky top-18 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-col sm:flex-row items-center justify-between gap-3">
           {/* Breadcrumb & Home Link */}
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border-2 border-black shadow-brutal-sm hover:bg-[#FFDC9B] text-xs font-black text-black active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-card border border-surface-border hover:border-slate-500 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
             >
-              <ArrowLeft className="w-4 h-4 text-black stroke-[2.5]" />
+              <ArrowLeft className="w-3.5 h-3.5 text-mezo" />
               <span>Landing Page</span>
             </Link>
-            <div className="h-5 w-[2px] bg-black" />
+            <div className="h-4 w-px bg-surface-border" />
             <div className="flex items-center gap-2">
-              <span className="text-xs font-black text-black uppercase tracking-wider">Mezo EVM Cockpit</span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#99E885] border-2 border-black text-black font-black shadow-brutal-sm">
+              <span className="text-xs font-bold text-white tracking-wide">Mezo EVM Cockpit</span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 font-bold">
                 ONLINE
               </span>
               <button
                 onClick={() => refreshAllOnChainData()}
                 disabled={isSyncingOnChain}
                 title="Sync live blockchain balances and registered session keys"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F7CB46] border-2 border-black hover:bg-[#eec038] text-xs font-black text-black shadow-brutal-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50 ml-1"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-card border border-surface-border hover:border-mezo/50 text-xs font-medium text-slate-300 hover:text-white transition-all disabled:opacity-50 ml-1"
               >
-                <RotateCw className={`w-3.5 h-3.5 stroke-[2.5] ${isSyncingOnChain ? "animate-spin" : ""}`} />
-                <span className="text-[11px] font-mono font-black">{isSyncingOnChain ? "Syncing..." : "Sync Chain"}</span>
+                <RotateCw className={`w-3 h-3 text-mezo ${isSyncingOnChain ? "animate-spin" : ""}`} />
+                <span className="text-[11px] font-mono">{isSyncingOnChain ? "Syncing..." : "Sync Chain"}</span>
               </button>
             </div>
           </div>
 
           {/* View Tab Selector */}
-          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
             {[
               { id: "all", label: "All-in-One", icon: Layers },
               { id: "overview", label: "Liquidity & Terminal", icon: Terminal },
@@ -615,16 +615,16 @@ export default function CockpitPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as CockpitTab)}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black border-2 border-black transition-all whitespace-nowrap active:translate-x-0.5 active:translate-y-0.5 active:shadow-none ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                     isActive
-                      ? "bg-[#F7CB46] text-black shadow-brutal-sm ring-2 ring-black"
-                      : "bg-white text-black hover:bg-[#C0F7FE] shadow-brutal-sm"
+                      ? "bg-mezo text-black shadow-md shadow-mezo/20"
+                      : "bg-surface-card border border-surface-border text-slate-400 hover:text-white hover:border-slate-500"
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <Icon className="w-3.5 h-3.5" />
                   <span>{tab.label}</span>
                   {tab.badge !== undefined && tab.badge > 0 && (
-                    <span className="ml-1 px-1.5 py-0.2 rounded-md bg-[#FE9CE8] text-black text-[10px] font-mono font-black border border-black">
+                    <span className="ml-1 px-1.5 py-0.2 rounded-full bg-red-500 text-white text-[10px] font-mono">
                       {tab.badge}
                     </span>
                   )}
@@ -711,18 +711,18 @@ export default function CockpitPage() {
       />
 
       {/* Footer */}
-      <footer className="border-t-[3px] border-black bg-white py-8 mt-12 shadow-[0px_-4px_0px_0px_#000000]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold text-black">
+      <footer className="border-t border-surface-border bg-surface/50 py-8 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-[#F7CB46] border-2 border-black flex items-center justify-center font-black">
-              ⚡
-            </div>
-            <span className="text-black font-black uppercase tracking-wider">MezoAgent Institutional Cockpit</span>
+            <Code2 className="w-4 h-4 text-mezo" />
+            <span className="text-slate-400 font-medium">MezoAgent Institutional Cockpit</span>
           </div>
-          <div className="flex items-center gap-3 font-mono text-[11px]">
-            <span className="px-2 py-1 rounded-md bg-[#C0F7FE] border-2 border-black font-black">Mezo Testnet (31611)</span>
-            <span className="px-2 py-1 rounded-md bg-[#FFDC9B] border-2 border-black font-black">BTC Native Gas</span>
-            <span className="px-2 py-1 rounded-md bg-[#99E885] border-2 border-black font-black">MUSD Stablecoin</span>
+          <div className="flex items-center gap-4 font-mono text-[11px]">
+            <span>Mezo Testnet (31611)</span>
+            <span>•</span>
+            <span>BTC Native Gas</span>
+            <span>•</span>
+            <span>MUSD Stablecoin</span>
           </div>
         </div>
       </footer>

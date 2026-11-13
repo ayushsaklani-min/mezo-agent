@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Key, Clock, Check, Copy, Ban, Sparkles, X, ShieldCheck, Cpu, Lock } from "lucide-react";
+import { Plus, Key, Clock, ShieldAlert, Check, Copy, Ban, Sparkles, X, ShieldCheck, Cpu, Lock } from "lucide-react";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import type { SessionKeyItem } from "@/lib/types";
 
@@ -77,7 +77,7 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
       validUntil: Date.now() + parseInt(durationDays, 10) * 86400 * 1000,
       active: true,
       restrictTargets: restrictTargets,
-      allowedTargets: restrictTargets ? ["0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"] : [],
+      allowedTargets: restrictTargets ? ["0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b"] : [],
     };
 
     onCreateKey(newKeyItem);
@@ -87,46 +87,49 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
   };
 
   return (
-    <div className="p-6 sm:p-7 rounded-2xl bg-white border-[3px] border-black shadow-brutal hover:shadow-brutal-lg transition-all relative overflow-hidden">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b-2 border-black">
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: 0.15 }}
+      className="p-6 sm:p-7 rounded-3xl bg-surface border border-surface-border shadow-xl relative overflow-hidden"
+    >
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-8 h-8 rounded-lg bg-[#FFE600] border-2 border-black shadow-brutal-sm flex items-center justify-center text-black">
-              <Key className="w-4 h-4 stroke-[3]" />
-            </div>
-            <h2 className="text-lg font-black text-black tracking-tight uppercase">
-              Agent Session Keys
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
+              AI Agent Session Keys
             </h2>
-            <span className="neo-badge bg-[#BBF7D0] text-black text-[10px] px-2 py-0.5 rounded uppercase">
-              EIP-7715 INSPIRED
+            <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-800/40">
+              Custom Smart Account (EIP-7715 Inspired)
             </span>
           </div>
-          <p className="text-xs font-bold text-slate-700">
+          <p className="text-xs text-slate-400">
             Cryptographic ephemeral keys with 12-bucket sliding window velocity controls
           </p>
         </div>
 
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => {
             setKeyInputMode("enclave");
             setCustomKey("");
             setIsModalOpen(true);
           }}
-          className="neo-btn flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FF9900] hover:bg-[#FF8800] text-black text-xs font-black shadow-brutal self-start sm:self-auto uppercase tracking-wide"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-mezo hover:bg-mezo-hover text-black text-xs font-extrabold shadow-lg shadow-mezo/20 transition-all self-start sm:self-auto"
         >
           <Plus className="w-4 h-4 text-black stroke-[3]" />
-          <span>AUTHORIZE NEW KEY</span>
-        </button>
+          <span>Authorize Session Key</span>
+        </motion.button>
       </div>
 
       {/* Keys List */}
-      <div className="space-y-4">
+      <div className="space-y-3.5">
         {sessionKeys.length === 0 ? (
-          <div className="text-center py-10 border-2 border-dashed border-black rounded-xl bg-[#FAF7F0]">
-            <Key className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-            <p className="text-sm font-black text-black">NO ACTIVE SESSION KEYS FOUND</p>
-            <p className="text-xs font-bold text-slate-600 mt-1">
+          <div className="text-center py-10 border border-dashed border-surface-border rounded-2xl">
+            <Key className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+            <p className="text-sm text-slate-400 font-semibold">No active session keys found</p>
+            <p className="text-xs text-slate-500 mt-1">
               Authorize a session key to delegate safe MUSD spending to an AI agent.
             </p>
           </div>
@@ -137,58 +140,59 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
             const daysLeft = Math.max(0, Math.ceil((item.validUntil - Date.now()) / (86400 * 1000)));
 
             return (
-              <div
+              <motion.div
                 key={item.id}
-                className={`p-5 rounded-xl border-2 border-black transition-all ${
+                layout
+                className={`p-4 sm:p-5 rounded-2xl border transition-all ${
                   item.active
-                    ? "bg-white shadow-brutal hover:shadow-brutal-lg"
-                    : "bg-[#FFF1F2] border-black/80 opacity-75 shadow-brutal-sm"
+                    ? "bg-surface-card border-surface-border hover:border-slate-600 shadow-md"
+                    : "bg-red-950/15 border-red-900/40 opacity-75"
                 }`}
               >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border-2 border-black shadow-brutal-sm ${
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                         item.active
-                          ? "bg-[#FFE600] text-black"
-                          : "bg-[#FF4757] text-white"
+                          ? "bg-mezo/10 text-mezo ring-1 ring-mezo/25"
+                          : "bg-red-500/10 text-red-400 ring-1 ring-red-500/25"
                       }`}
                     >
-                      <Key className="w-5 h-5 stroke-[2.5]" />
+                      <Key className="w-5 h-5 stroke-[2.2]" />
                     </div>
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-black text-sm text-black">{item.label}</span>
+                        <span className="font-bold text-sm text-white">{item.label}</span>
                         {item.active ? (
-                          <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded bg-[#4ADE80] text-black border border-black shadow-brutal-sm">
-                            ACTIVE
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold">
+                            Active
                           </span>
                         ) : (
-                          <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded bg-[#FF6B6B] text-black border border-black shadow-brutal-sm">
-                            REVOKED
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/30 font-semibold">
+                            Revoked
                           </span>
                         )}
                         {item.restrictTargets ? (
-                          <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded bg-[#BAE6FD] text-black border border-black shadow-brutal-sm">
-                            WHITELISTED
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30 font-medium">
+                            Whitelisted Targets
                           </span>
                         ) : (
-                          <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded bg-[#FAF7F0] text-black border border-black">
-                            UNRESTRICTED
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 font-medium">
+                            Unrestricted
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-1 text-xs font-mono font-bold text-slate-700">
+                      <div className="flex items-center gap-2 mt-1 text-xs font-mono text-slate-400">
                         <span>
                           {item.keyAddress.slice(0, 10)}...{item.keyAddress.slice(-6)}
                         </span>
                         <button
                           onClick={() => handleCopy(item.id, item.keyAddress)}
-                          className="hover:text-black transition-colors p-0.5 bg-[#FAF7F0] rounded border border-black"
+                          className="hover:text-white transition-colors p-0.5"
                           title="Copy Public Key"
                         >
                           {copiedKeyId === item.id ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
                           ) : (
                             <Copy className="w-3.5 h-3.5" />
                           )}
@@ -199,63 +203,69 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
 
                   {/* Actions & Meta */}
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-black bg-[#FAF7F0] px-2.5 py-1 rounded border border-black">
-                      <Clock className="w-3.5 h-3.5 stroke-[2.5]" />
-                      <span>{daysLeft} DAYS LEFT</span>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                      <Clock className="w-3.5 h-3.5 text-slate-500" />
+                      <span>{daysLeft} days left</span>
                     </div>
 
                     {item.active && (
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
                         onClick={() => onRevokeKey(item.id)}
-                        className="neo-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FF4757] hover:bg-red-600 text-white text-xs font-black shadow-brutal-sm"
-                        title="Instant on-chain revocation"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 border border-red-800/40 text-xs font-bold text-red-300 transition-colors shadow-sm"
+                        title="Instant on-chain revocation (effective in next block)"
                       >
-                        <Ban className="w-3.5 h-3.5 stroke-[2.5]" />
-                        <span>REVOKE KEY</span>
-                      </button>
+                        <Ban className="w-3.5 h-3.5 stroke-[2.2]" />
+                        <span>Revoke</span>
+                      </motion.button>
                     )}
                   </div>
                 </div>
 
                 {/* Progress Bars for Hourly & Daily limits */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t-2 border-black/40">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-surface-border/60">
                   {/* Hourly Limit */}
                   <div>
-                    <div className="flex items-center justify-between text-xs font-mono font-black mb-1.5 text-black">
-                      <span>SLIDING HOURLY CAP</span>
-                      <span>
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <span className="text-slate-400 font-medium">Sliding Hourly Velocity Cap</span>
+                      <span className="font-mono text-slate-200 font-semibold">
                         ${item.hourlySpent.toFixed(2)} / ${item.hourlyLimit.toFixed(2)} MUSD
                       </span>
                     </div>
-                    <div className="w-full h-3.5 bg-[#FAF7F0] rounded-md overflow-hidden border-2 border-black p-0.5 shadow-brutal-sm">
-                      <div
-                        className={`h-full rounded-xs transition-all ${
-                          hourlyPct > 80 ? "bg-[#FF4757]" : "bg-[#FF9900]"
+                    <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-surface-border/50">
+                      <motion.div
+                        className={`h-full rounded-full transition-all ${
+                          hourlyPct > 80 ? "bg-amber-500" : "bg-mezo"
                         }`}
-                        style={{ width: `${hourlyPct}%` }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${hourlyPct}%` }}
+                        transition={{ duration: 0.5 }}
                       />
                     </div>
                   </div>
 
                   {/* Daily Limit */}
                   <div>
-                    <div className="flex items-center justify-between text-xs font-mono font-black mb-1.5 text-black">
-                      <span>DAILY SAFETY CAP</span>
-                      <span>
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <span className="text-slate-400 font-medium">Daily Safety Cap</span>
+                      <span className="font-mono text-slate-200 font-semibold">
                         ${item.dailySpent.toFixed(2)} / ${item.dailyLimit.toFixed(2)} MUSD
                       </span>
                     </div>
-                    <div className="w-full h-3.5 bg-[#FAF7F0] rounded-md overflow-hidden border-2 border-black p-0.5 shadow-brutal-sm">
-                      <div
-                        className={`h-full rounded-xs transition-all ${
-                          dailyPct > 80 ? "bg-[#FF4757]" : "bg-[#38BDF8]"
+                    <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-surface-border/50">
+                      <motion.div
+                        className={`h-full rounded-full transition-all ${
+                          dailyPct > 80 ? "bg-red-500" : "bg-cyan-400"
                         }`}
-                        style={{ width: `${dailyPct}%` }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${dailyPct}%` }}
+                        transition={{ duration: 0.5 }}
                       />
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })
         )}
@@ -270,34 +280,30 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsModalOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+              className="fixed inset-0 bg-black/80 backdrop-blur-md"
             />
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="bg-white border-[3px] border-black rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-[10px_10px_0px_0px_#000000] relative z-10"
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-[#0B0F19] border border-surface-border rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl relative z-10"
             >
-              <div className="flex items-center justify-between pb-3 mb-4 border-b-2 border-black">
+              <div className="flex items-center justify-between pb-3 mb-4 border-b border-surface-border">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-md bg-[#FFE600] border-2 border-black flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-                  <h3 className="text-base font-black text-black uppercase">
-                    Authorize AI Agent Key
-                  </h3>
+                  <Sparkles className="w-5 h-5 text-mezo" />
+                  <h3 className="text-base font-bold text-white">Authorize AI Agent Session Key</h3>
                 </div>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="p-1 rounded-md border-2 border-black bg-[#FAF7F0] hover:bg-[#FF4757] hover:text-white transition-colors"
+                  className="p-1 rounded-xl text-slate-400 hover:text-white hover:bg-white/5"
                 >
-                  <X className="w-4 h-4 stroke-[3]" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Mode Selector Tabs */}
-              <div className="grid grid-cols-2 gap-2 mb-4 p-1 rounded-xl bg-[#FAF7F0] border-2 border-black text-xs font-black">
+              <div className="grid grid-cols-2 gap-2 mb-4 p-1 rounded-xl bg-surface-card border border-surface-border text-xs font-semibold">
                 <button
                   type="button"
                   onClick={() => {
@@ -306,12 +312,12 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                   }}
                   className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
                     keyInputMode === "enclave"
-                      ? "bg-[#FFE600] text-black border-2 border-black shadow-brutal-sm"
-                      : "text-slate-700 hover:text-black"
+                      ? "bg-mezo text-black shadow-sm font-bold"
+                      : "text-slate-400 hover:text-white"
                   }`}
                 >
-                  <Lock className="w-3.5 h-3.5 stroke-[2.5]" />
-                  <span>ENCLAVE PUBLIC KEY</span>
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Enclave Public Key</span>
                 </button>
 
                 <button
@@ -322,29 +328,29 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                   }}
                   className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
                     keyInputMode === "sandbox"
-                      ? "bg-[#FFE600] text-black border-2 border-black shadow-brutal-sm"
-                      : "text-slate-700 hover:text-black"
+                      ? "bg-mezo text-black shadow-sm font-bold"
+                      : "text-slate-400 hover:text-white"
                   }`}
                 >
-                  <Cpu className="w-3.5 h-3.5 stroke-[2.5]" />
-                  <span>MINT NEW KEYPAIR</span>
+                  <Cpu className="w-3.5 h-3.5" />
+                  <span>Sandbox Generator</span>
                 </button>
               </div>
 
               {/* Security Context Banner */}
               {keyInputMode === "enclave" ? (
-                <div className="p-3 rounded-xl bg-[#DCFCE7] border-2 border-black text-xs text-black font-semibold mb-4 shadow-brutal-sm">
-                  🔒 <strong>Zero-Knowledge Handshake:</strong> Agent generates private key in isolated enclave (Docker/AWS KMS). Enter only public address. Private key never leaves agent environment.
+                <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40 text-[11px] text-emerald-300 leading-relaxed mb-4">
+                  🔒 <strong>Zero-Knowledge Key Handshake:</strong> The autonomous agent generates its ECDSA private key within its local secure enclave, Docker runner, or AWS KMS. Enter only its public address below. Your master account signs on-chain authorization without the private key ever leaving the agent environment.
                 </div>
               ) : (
-                <div className="p-3 rounded-xl bg-[#E0F2FE] border-2 border-black text-xs text-black font-semibold mb-4 shadow-brutal-sm">
-                  🧪 <strong>Live Testnet Keypair:</strong> Generates fresh cryptographic keypair for autonomous micro-payment execution.
+                <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-800/40 text-[11px] text-cyan-300 leading-relaxed mb-4">
+                  🧪 <strong>Interactive Sandbox Mode:</strong> A random mock address is generated for live browser demonstrations and velocity testing.
                 </div>
               )}
 
               <form onSubmit={handleSubmitNewKey} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-mono font-black text-black mb-1 uppercase">
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
                     Agent Label / Purpose
                   </label>
                   <input
@@ -353,12 +359,12 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                     placeholder="e.g. LangChain Search & Retrieval Worker"
                     value={label}
                     onChange={(e) => setLabel(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border-2 border-black font-bold text-xs text-black focus:outline-none focus:shadow-brutal-sm"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-surface-card border border-surface-border text-xs text-white placeholder-slate-500 focus:outline-none focus:border-mezo"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-black text-black mb-1 uppercase">
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
                     {keyInputMode === "enclave" ? "Agent Public Address (0x...)" : "Generated Demo Address"}
                   </label>
                   <div className="flex items-center gap-2">
@@ -368,15 +374,15 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                       placeholder="0x..."
                       value={customKey}
                       onChange={(e) => setCustomKey(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border-2 border-black font-mono font-bold text-xs text-black focus:outline-none focus:shadow-brutal-sm"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-surface-card border border-surface-border text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-mezo"
                     />
                     {keyInputMode === "sandbox" && (
                       <button
                         type="button"
                         onClick={handleGenerateRandomKey}
-                        className="neo-btn px-3 py-2.5 rounded-xl bg-[#FFE600] text-xs font-black text-black shrink-0"
+                        className="px-3 py-2.5 rounded-xl bg-surface-light border border-surface-border text-[11px] font-bold text-slate-200 hover:text-white shrink-0"
                       >
-                        NEW
+                        New
                       </button>
                     )}
                   </div>
@@ -384,19 +390,19 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs font-mono font-black text-black mb-1 uppercase">
-                      Hourly (MUSD)
+                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                      Hourly Limit (MUSD)
                     </label>
                     <input
                       type="number"
                       min="1"
                       value={hourlyLimit}
                       onChange={(e) => setHourlyLimit(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-white border-2 border-black font-mono font-bold text-xs text-black focus:outline-none focus:shadow-brutal-sm"
+                      className="w-full px-3 py-2 rounded-xl bg-surface-card border border-surface-border text-xs font-mono text-white focus:outline-none focus:border-mezo"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-mono font-black text-black mb-1 uppercase">
+                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
                       Daily Cap (MUSD)
                     </label>
                     <input
@@ -404,12 +410,12 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                       min="1"
                       value={dailyLimit}
                       onChange={(e) => setDailyLimit(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-white border-2 border-black font-mono font-bold text-xs text-black focus:outline-none focus:shadow-brutal-sm"
+                      className="w-full px-3 py-2 rounded-xl bg-surface-card border border-surface-border text-xs font-mono text-white focus:outline-none focus:border-mezo"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-mono font-black text-black mb-1 uppercase">
-                      Max / Tx (MUSD)
+                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                      Max Per Tx (MUSD)
                     </label>
                     <input
                       type="number"
@@ -417,34 +423,35 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                       step="0.1"
                       value={maxPerTx}
                       onChange={(e) => setMaxPerTx(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-white border-2 border-black font-mono font-bold text-xs text-black focus:outline-none focus:shadow-brutal-sm"
+                      placeholder="0 = none"
+                      className="w-full px-3 py-2 rounded-xl bg-surface-card border border-surface-border text-xs font-mono text-white focus:outline-none focus:border-mezo"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-black text-black mb-1 uppercase">
-                    Expiration Window
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    Key Expiration Window
                   </label>
                   <select
                     value={durationDays}
                     onChange={(e) => setDurationDays(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border-2 border-black text-xs font-bold text-black focus:outline-none cursor-pointer"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-surface-card border border-surface-border text-xs text-white focus:outline-none focus:border-mezo cursor-pointer"
                   >
-                    <option value="1">24 Hours (High Security / Short Task)</option>
-                    <option value="7">7 Days (Standard Autonomous Worker)</option>
-                    <option value="30">30 Days (Production Agent Service)</option>
-                    <option value="90">90 Days (Enterprise Infrastructure)</option>
+                    <option value="1" className="bg-[#0B0F19]">24 Hours (High Security / Short Task)</option>
+                    <option value="7" className="bg-[#0B0F19]">7 Days (Standard Autonomous Worker)</option>
+                    <option value="30" className="bg-[#0B0F19]">30 Days (Production Agent Service)</option>
+                    <option value="90" className="bg-[#0B0F19]">90 Days (Enterprise Infrastructure)</option>
                   </select>
                 </div>
 
                 <div className="pt-2">
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-black">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
                     <input
                       type="checkbox"
                       checked={restrictTargets}
                       onChange={(e) => setRestrictTargets(e.target.checked)}
-                      className="rounded border-2 border-black text-black focus:ring-0 w-4 h-4 cursor-pointer"
+                      className="rounded text-mezo focus:ring-mezo w-4 h-4 bg-slate-900 border-slate-700"
                     />
                     <span>Restrict calls to Whitelisted Target Contracts & Function Selectors</span>
                   </label>
@@ -454,15 +461,15 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2.5 rounded-xl text-xs font-black text-slate-700 hover:text-black transition-colors"
+                    className="px-4 py-2.5 rounded-xl text-xs text-slate-400 hover:text-white transition-colors"
                   >
-                    CANCEL
+                    Cancel
                   </button>
                   <button
                     type="submit"
-                    className="neo-btn px-5 py-2.5 rounded-xl bg-[#FF9900] hover:bg-[#FF8800] text-black text-xs font-black shadow-brutal uppercase tracking-wide"
+                    className="px-5 py-2.5 rounded-xl bg-mezo hover:bg-mezo-hover text-black text-xs font-extrabold shadow-lg shadow-mezo/20 transition-all"
                   >
-                    AUTHORIZE ON MEZO
+                    Authorize on Mezo
                   </button>
                 </div>
               </form>
@@ -470,6 +477,6 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 };
