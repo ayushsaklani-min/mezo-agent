@@ -19,6 +19,7 @@ interface SandboxProps {
     isRevert?: boolean,
     revertReason?: string
   ) => void;
+  onQuarantineKey?: (keyId: string, reason: string) => void;
 }
 
 export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
@@ -26,6 +27,7 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
   isLiveMode = true,
   accountAddress,
   onExecuteAction,
+  onQuarantineKey,
 }) => {
   const [selectedKeyId, setSelectedKeyId] = useState<string>(sessionKeys[0]?.id || "");
   const [isExecuting, setIsExecuting] = useState(false);
@@ -33,10 +35,32 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
   const [consoleLogs, setConsoleLogs] = useState<string[]>([
     "[SYSTEM] MezoAgent Autonomous Engine initialized on Chain ID 31611 (Mezo Testnet).",
     "[SYSTEM] Session Key cryptographic policy verifier: ACTIVE.",
+    "[CIRCUIT BREAKER] Anti-Hallucination Anomaly Guardrail: ARMED (auto-quarantine on 3 consecutive reverts).",
     "[SYSTEM] Select an action below to execute live on-chain agent micro-payments.",
   ]);
 
   const currentKey = sessionKeys.find((k) => k.id === selectedKeyId) || sessionKeys[0];
+
+  const triggerCircuitBreakerSim = async () => {
+    if (!currentKey) return;
+    setIsExecuting(true);
+    logMessage(`[ANOMALY TRIGGER] Simulating rapid prompt-injection loop on "${currentKey.label}"...`);
+    await new Promise((r) => setTimeout(r, 450));
+    logMessage(`[TRACE 1/3] Tx 0x48b... -> attempted transfer(0xattacker, $100.00) -> [REVERT] HourlyLimitExceeded`);
+    await new Promise((r) => setTimeout(r, 450));
+    logMessage(`[TRACE 2/3] Tx 0x72c... -> attempted approve(0xmalicious, MAX_UINT) -> [REVERT] TargetNotAllowlisted`);
+    await new Promise((r) => setTimeout(r, 450));
+    logMessage(`[TRACE 3/3] Tx 0x91e... -> attempted sweepAll() -> [REVERT] FunctionSelectorRestricted`);
+    await new Promise((r) => setTimeout(r, 450));
+    logMessage(`🚨 [CIRCUIT BREAKER TRIPPED] 3 consecutive reverts within 5-minute bucket!`);
+    logMessage(`🛡️ [AUTO-QUARANTINE ACTIVATED] Key "${currentKey.label}" state changed to QUARANTINED.`);
+    logMessage(`[SHIELD] $0.00 treasury outflow. Key execution halted until admin disinfects in Session Keys tab.`);
+
+    if (onQuarantineKey) {
+      onQuarantineKey(currentKey.id, "Prompt Injection Anomaly: 3 Consecutive Reverts");
+    }
+    setIsExecuting(false);
+  };
 
   useEffect(() => {
     terminalEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -156,14 +180,32 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
         </div>
       </div>
 
+      {/* Quarantined Warning Notice */}
+      {currentKey?.status === "QUARANTINED" && (
+        <div className="mb-4 p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+            <div>
+              <span className="font-bold text-amber-300 block">Agent Execution Locked: Circuit Breaker Quarantined</span>
+              <span className="text-slate-300 text-[11px]">
+                3 consecutive reverts detected. Spending frozen to protect treasury. Inspect and disinfect in the Session Keys tab.
+              </span>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-mono text-[10px] font-bold border border-amber-500/30 whitespace-nowrap">
+            FROZEN
+          </span>
+        </div>
+      )}
+
       {/* Action Buttons Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
         {/* Action 1: Search API */}
         <motion.button
           whileHover={{ y: -2 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => executeAction("Pay LLM Search API", 0.50, false)}
-          disabled={isExecuting || !currentKey}
+          disabled={isExecuting || !currentKey || currentKey.status === "QUARANTINED"}
           className="p-4 rounded-2xl bg-surface-card border border-surface-border hover:border-cyan-500/50 text-left transition-all group disabled:opacity-50 shadow-sm"
         >
           <div className="flex items-center justify-between mb-2">
@@ -183,7 +225,7 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
           whileHover={{ y: -2 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => executeAction("Pay GPU Compute Node", 2.25, false)}
-          disabled={isExecuting || !currentKey}
+          disabled={isExecuting || !currentKey || currentKey.status === "QUARANTINED"}
           className="p-4 rounded-2xl bg-surface-card border border-surface-border hover:border-purple-500/50 text-left transition-all group disabled:opacity-50 shadow-sm"
         >
           <div className="flex items-center justify-between mb-2">
@@ -203,7 +245,7 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
           whileHover={{ y: -2 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => executeAction("Auto-DCA Yield to BTC", 5.00, false)}
-          disabled={isExecuting || !currentKey}
+          disabled={isExecuting || !currentKey || currentKey.status === "QUARANTINED"}
           className="p-4 rounded-2xl bg-surface-card border border-surface-border hover:border-amber-500/50 text-left transition-all group disabled:opacity-50 shadow-sm"
         >
           <div className="flex items-center justify-between mb-2">
@@ -223,7 +265,7 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
           whileHover={{ y: -2 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => executeAction("Exceed Hourly Limit Test", 500.0, true)}
-          disabled={isExecuting || !currentKey}
+          disabled={isExecuting || !currentKey || currentKey.status === "QUARANTINED"}
           className="p-4 rounded-2xl bg-red-950/20 border border-red-900/40 hover:border-red-500/50 text-left transition-all group disabled:opacity-50 shadow-sm"
         >
           <div className="flex items-center justify-between mb-2">
@@ -235,8 +277,39 @@ export const AgentExecutionSandbox: React.FC<SandboxProps> = ({
           <span className="text-xs font-bold text-white group-hover:text-red-300 block">
             Test Velocity Limit
           </span>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">Simulate on-chain revert</span>
+          <span className="text-[11px] text-slate-400 mt-0.5 block">Simulate single on-chain revert</span>
         </motion.button>
+      </div>
+
+      {/* Differentiator 2: Circuit Breaker Hallucination Simulator Button */}
+      <div className="mb-4">
+        <button
+          onClick={triggerCircuitBreakerSim}
+          disabled={isExecuting || !currentKey || currentKey.status === "QUARANTINED"}
+          className="w-full flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-amber-500/15 via-red-500/10 to-surface-card border border-amber-500/30 hover:border-amber-400 text-left transition-all group disabled:opacity-50 shadow-sm"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 group-hover:scale-105 transition-transform">
+              <ShieldAlert className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-extrabold text-amber-300">
+                  Differentiator 2: Simulate Prompt-Injection Attack (Auto-Quarantine Circuit Breaker)
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-bold">
+                  3x Revert Trip
+                </span>
+              </div>
+              <span className="text-[11px] text-slate-400 block mt-0.5">
+                Simulates 3 rapid unauthorized spends in 5m bucket → Smart contract auto-quarantines key & alerts treasury
+              </span>
+            </div>
+          </div>
+          <span className="text-xs font-bold text-amber-400 group-hover:translate-x-1 transition-transform hidden sm:inline-block">
+            Simulate Attack →
+          </span>
+        </button>
       </div>
 
       {/* Live Monospace Terminal */}

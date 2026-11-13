@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Key, Clock, ShieldAlert, Check, Copy, Ban, Sparkles, X, ShieldCheck, Cpu, Lock } from "lucide-react";
+import { Plus, Key, Clock, ShieldAlert, Check, Copy, Ban, Sparkles, X, ShieldCheck, Cpu, Lock, AlertTriangle } from "lucide-react";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import type { SessionKeyItem } from "@/lib/types";
 
@@ -10,15 +10,18 @@ interface SessionKeysManagerProps {
   sessionKeys: SessionKeyItem[];
   onCreateKey: (newKey: SessionKeyItem) => void;
   onRevokeKey: (keyId: string) => void;
+  onReactivateKey?: (keyId: string) => void;
 }
 
 export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
   sessionKeys,
   onCreateKey,
   onRevokeKey,
+  onReactivateKey,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null);
+  const [selectedQuarantineKey, setSelectedQuarantineKey] = useState<SessionKeyItem | null>(null);
 
   // New Key Form State
   const [keyInputMode, setKeyInputMode] = useState<"enclave" | "sandbox">("enclave");
@@ -163,7 +166,12 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-bold text-sm text-white">{item.label}</span>
-                        {item.active ? (
+                        {item.status === "QUARANTINED" ? (
+                          <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold animate-pulse flex items-center gap-1 shadow-sm">
+                            <AlertTriangle className="w-3 h-3 text-amber-400" />
+                            <span>QUARANTINED (CIRCUIT BREAKER)</span>
+                          </span>
+                        ) : item.active ? (
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold">
                             Active
                           </span>
@@ -208,7 +216,17 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                       <span>{daysLeft} days left</span>
                     </div>
 
-                    {item.active && (
+                    {item.status === "QUARANTINED" ? (
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setSelectedQuarantineKey(item)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-bold text-amber-300 transition-colors shadow-sm"
+                      >
+                        <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Inspect & Disinfect</span>
+                      </motion.button>
+                    ) : item.active ? (
                       <motion.button
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
@@ -219,7 +237,7 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                         <Ban className="w-3.5 h-3.5 stroke-[2.2]" />
                         <span>Revoke</span>
                       </motion.button>
-                    )}
+                    ) : null}
                   </div>
                 </div>
 
@@ -473,6 +491,92 @@ export const SessionKeysManager: React.FC<SessionKeysManagerProps> = ({
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+        {/* Inspect Incident & Disinfect Modal */}
+        {selectedQuarantineKey && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-lg bg-surface border border-amber-500/40 rounded-3xl p-6 sm:p-7 shadow-2xl relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-surface-border mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                    <ShieldAlert className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">Circuit Breaker Anomaly Report</h3>
+                    <p className="text-xs text-amber-300">Key Quarantined via On-Chain Anomaly Rule</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedQuarantineKey(null)}
+                  className="text-slate-400 hover:text-white p-1 rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4 text-xs">
+                <div className="p-3.5 rounded-2xl bg-amber-950/20 border border-amber-500/30 text-slate-300 space-y-2">
+                  <div className="flex justify-between font-mono text-[11px]">
+                    <span className="text-slate-400">Agent Identifier:</span>
+                    <span className="text-white font-bold">{selectedQuarantineKey.label}</span>
+                  </div>
+                  <div className="flex justify-between font-mono text-[11px]">
+                    <span className="text-slate-400">Consecutive Reverts:</span>
+                    <span className="text-red-400 font-bold">{selectedQuarantineKey.consecutiveReverts || 3} Failed Traces</span>
+                  </div>
+                  <div className="flex justify-between font-mono text-[11px]">
+                    <span className="text-slate-400">Trip Cause:</span>
+                    <span className="text-amber-300 font-semibold">{selectedQuarantineKey.quarantineReason || "Prompt Injection / Rapid Velocity Breach"}</span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-[#04060A] border border-surface-border font-mono text-[11px] text-slate-300 space-y-1">
+                  <div className="text-slate-500 text-[10px] pb-1 border-b border-slate-800">LAST TRACED CALLDATA IN SANDBOX</div>
+                  <div className="text-red-400 break-all">
+                    0xa9059cbb000000000000000000000000attacker999900000000000000000000000000000064
+                  </div>
+                  <div className="text-slate-500 text-[10px] pt-1">
+                    Status: <span className="text-amber-400">Isolated</span>. Smart account halted execution before state modification.
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-surface-light border border-surface-border text-slate-300 text-[11px]">
+                  <strong>Admin Guidance:</strong> If this was an LLM hallucination or benchmark test, you can disinfect the agent key (clearing the revert counter). If this was a compromised signer, slash and permanently revoke it.
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-surface-border gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onRevokeKey) onRevokeKey(selectedQuarantineKey.id);
+                      setSelectedQuarantineKey(null);
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 border border-red-800/40 text-red-300 text-xs font-bold transition-all"
+                  >
+                    <Ban className="w-3.5 h-3.5" />
+                    <span>Slash & Revoke Key</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onReactivateKey) onReactivateKey(selectedQuarantineKey.id);
+                      setSelectedQuarantineKey(null);
+                    }}
+                    className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-extrabold shadow-lg shadow-emerald-500/20 transition-all"
+                  >
+                    <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
+                    <span>Disinfect & Reactivate Key</span>
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}

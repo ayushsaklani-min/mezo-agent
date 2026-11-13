@@ -29,6 +29,7 @@ import {
   Coins,
   Scale,
   GitBranch,
+  Bot,
 } from "lucide-react";
 import { MEZO_CONFIG } from "@/lib/constants";
 import { DeveloperQuickstartModal } from "@/components/DeveloperQuickstartModal";
@@ -621,6 +622,48 @@ curl -X POST https://rpc.test.mezo.org \\
             </div>
             <div className="p-2.5 rounded-xl bg-surface-light font-mono text-[11px] text-orange-300">
               Mezo Testnet (31611) • MUSD Stablecoin
+            </div>
+          </div>
+
+          {/* Bento 6: Self-Funding Endowment Vault (Differentiator 1) */}
+          <div className="rounded-3xl bg-surface-card border border-amber-500/30 p-7 space-y-4 hover:border-amber-400/60 transition-colors shadow-lg shadow-amber-500/5">
+            <div className="flex items-center justify-between">
+              <div className="p-3 rounded-2xl bg-amber-500/10 text-mezo w-fit border border-amber-500/25">
+                <Coins className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-mezo border border-amber-500/40 font-bold">
+                8.4% APY Yield
+              </span>
+            </div>
+            <div>
+              <h3 className="text-lg font-extrabold text-white">Self-Funding Endowment Mode</h3>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                Lock principal capital into cold custody. The agent's 12-bucket sliding window envelope strictly draws from <strong>accrued Bitcoin staking yield</strong>. Perpetual operation with 0% risk to principal.
+              </p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-surface-light font-mono text-[11px] text-amber-300">
+              ΔPrincipal == 0 • Safe Cold Storage
+            </div>
+          </div>
+
+          {/* Bento 7: Autonomous Multi-Agent Invoicing (Differentiator 3) */}
+          <div className="rounded-3xl bg-surface-card border border-purple-500/30 p-7 space-y-4 hover:border-purple-400/60 transition-colors shadow-lg shadow-purple-500/5">
+            <div className="flex items-center justify-between">
+              <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-400 w-fit border border-purple-500/25">
+                <Bot className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/40 font-bold">
+                EIP-712 Invoices
+              </span>
+            </div>
+            <div>
+              <h3 className="text-lg font-extrabold text-white">Agent-to-Agent (A2A) Settlement</h3>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                Autonomous machine-to-machine coordination. Worker agents emit cryptographic invoices with IPFS proofs; orchestrator session keys verify deliverables and disburse sub-cent MUSD.
+              </p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-surface-light font-mono text-[11px] text-purple-300">
+              Zero-Human P2P Micro-Payments on Bitcoin
             </div>
           </div>
         </div>

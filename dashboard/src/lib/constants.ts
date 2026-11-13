@@ -37,3 +37,64 @@ export const INITIAL_ACCOUNT_DATA = {
 };
 
 export const INITIAL_SESSION_KEYS: any[] = [];
+
+// Differentiator 1: Self-Funding Endowment Vault Initial State
+export const INITIAL_ENDOWMENT_VAULT = {
+  principalMUSD: 5000.0,
+  btcPrincipal: 0.15,
+  apy: 8.4, // 8.4% APY on Mezo Bitcoin staking & MUSD yield
+  accruedYieldMUSD: 42.68,
+  accruedBtcYield: 0.00126,
+  autoCompound: false,
+  yieldDrawnTotal: 18.25,
+  isActive: true,
+  lastUpdated: Date.now(),
+};
+
+// Differentiator 3: Agent-to-Agent (A2A) Micro-Invoices Initial State
+export const INITIAL_A2A_INVOICES = [
+  {
+    id: "inv_1",
+    invoiceNumber: "INV-2026-0891",
+    sellerAgent: "DeepSeek Formal Invariant Auditor",
+    sellerAddress: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+    buyerAgent: "Autonomous Research Orchestrator",
+    buyerAddress: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+    serviceName: "Formal Bytecode Verification & Invariant Proof",
+    deliverableCid: "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+    deliverableSummary: "128,000 invariant fuzz states passed; zero reentrancy or double-spend vectors detected.",
+    amountMUSD: 1.5,
+    timestamp: Date.now() - 3600000,
+    status: "SETTLED" as const,
+    txHash: "0x98f4e247e8c1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7",
+  },
+  {
+    id: "inv_2",
+    invoiceNumber: "INV-2026-0892",
+    sellerAgent: "Perplexity Web-Search Oracle",
+    sellerAddress: "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+    buyerAgent: "Autonomous Research Orchestrator",
+    buyerAddress: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+    serviceName: "Live Bitcoin Mempool & Macro Sentiment Scrape",
+    deliverableCid: "ipfs://bafybeifxace239kfj20fj290fj209fj209fkslsfjk2938jsldf",
+    deliverableSummary: "Fetched 142 live transaction traces & fee estimates from Bitcoin L1 mempool.",
+    amountMUSD: 0.75,
+    timestamp: Date.now() - 1800000,
+    status: "SETTLED" as const,
+    txHash: "0x12c4b8e99d0123456789abcdef0123456789abcdef0123456789abcdef012345",
+  },
+  {
+    id: "inv_3",
+    invoiceNumber: "INV-2026-0893",
+    sellerAgent: "Wormhole NTT Fast Liquidity Relayer",
+    sellerAddress: "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+    buyerAgent: "Autonomous Research Orchestrator",
+    buyerAddress: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+    serviceName: "Cross-Chain Relayer Gas Hedging & Routing",
+    deliverableCid: "ipfs://bafybeicm37dnqp20948fh10293h47g019284h019284hf",
+    deliverableSummary: "Relayed 250 USDC inbound payload from Base to Mezo Testnet (Chain ID 31611).",
+    amountMUSD: 2.2,
+    timestamp: Date.now() - 600000,
+    status: "ISSUED" as const,
+  },
+];

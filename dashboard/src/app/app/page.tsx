@@ -13,8 +13,10 @@ import { ApprovalsQueue, PendingRequestItem } from "@/components/ApprovalsQueue"
 import { TransactionConfirmationModal, ConfirmationDetails } from "@/components/TransactionConfirmationModal";
 import { AlertRulesModal } from "@/components/AlertRulesModal";
 import { SecurityAuditModal } from "@/components/SecurityAuditModal";
-import { INITIAL_ACCOUNT_DATA, MEZO_CONFIG } from "@/lib/constants";
-import type { SessionKeyItem, ActivityLog } from "@/lib/types";
+import { EndowmentVault } from "@/components/EndowmentVault";
+import { A2ASettlement } from "@/components/A2ASettlement";
+import { INITIAL_ACCOUNT_DATA, MEZO_CONFIG, INITIAL_ENDOWMENT_VAULT, INITIAL_A2A_INVOICES } from "@/lib/constants";
+import type { SessionKeyItem, ActivityLog, EndowmentVault as EndowmentVaultType, A2AInvoice } from "@/lib/types";
 import { useMezoWallet } from "@/lib/useMezoWallet";
 import {
   fetchLiveBalances,
@@ -40,9 +42,11 @@ import {
   ExternalLink,
   Code2,
   RotateCw,
+  Coins,
+  Bot,
 } from "lucide-react";
 
-type CockpitTab = "all" | "overview" | "keys" | "approvals" | "audit";
+type CockpitTab = "all" | "overview" | "keys" | "endowment" | "a2a" | "approvals" | "audit";
 
 export default function CockpitPage() {
   const wallet = useMezoWallet();
@@ -50,6 +54,8 @@ export default function CockpitPage() {
   const [sessionKeys, setSessionKeys] = useState<SessionKeyItem[]>([]);
   const [pendingRequests, setPendingRequests] = useState<PendingRequestItem[]>([]);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
+  const [endowmentVault, setEndowmentVault] = useState<EndowmentVaultType>(INITIAL_ENDOWMENT_VAULT);
+  const [a2aInvoices, setA2aInvoices] = useState<A2AInvoice[]>(INITIAL_A2A_INVOICES);
   const [confirmationDetails, setConfirmationDetails] = useState<ConfirmationDetails | null>(null);
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
@@ -559,6 +565,183 @@ export default function CockpitPage() {
     });
   };
 
+  // Differentiator 1: Endowment Handlers
+  const handleDepositPrincipal = (amountMUSD: number, amountBTC: number) => {
+    setEndowmentVault((prev) => ({
+      ...prev,
+      principalMUSD: prev.principalMUSD + amountMUSD,
+      btcPrincipal: prev.btcPrincipal + amountBTC,
+    }));
+
+    setAccount((prev) => ({
+      ...prev,
+      musdBalance: Math.max(0, prev.musdBalance - amountMUSD),
+      btcGasBalance: Math.max(0, prev.btcGasBalance - amountBTC),
+    }));
+
+    const fakeTx = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+    const newLog: ActivityLog = {
+      id: `log_${Date.now()}`,
+      type: "ENDOWMENT_DEPOSIT",
+      title: "Endowment Vault Staking Deposit",
+      description: `Locked $${amountMUSD.toFixed(2)} MUSD & ${amountBTC} BTC in cold staking to fund agent operational yield`,
+      amount: `+$${amountMUSD.toFixed(2)} Principal`,
+      txHash: fakeTx,
+      timestamp: Date.now(),
+      status: "SUCCESS",
+    };
+
+    setActivityLogs((prev) => [newLog, ...prev]);
+
+    setConfirmationDetails({
+      isOpen: true,
+      type: "BRIDGE",
+      status: "SUCCESS",
+      title: "Perpetual Endowment Deposit Confirmed",
+      subtitle: `Deposited $${amountMUSD.toFixed(2)} MUSD and ${amountBTC} BTC into Mezo Matsnet staking. All future agent spend will draw from 8.4% APY yield.`,
+      amount: `+$${amountMUSD.toFixed(2)} Locked`,
+      txHash: fakeTx,
+      stateDiff: {
+        label: "Endowment Principal",
+        before: `$${endowmentVault.principalMUSD.toFixed(2)} MUSD`,
+        after: `$${(endowmentVault.principalMUSD + amountMUSD).toFixed(2)} MUSD`,
+      },
+    });
+  };
+
+  const handleToggleAutoCompound = (enabled: boolean) => {
+    setEndowmentVault((prev) => ({ ...prev, autoCompound: enabled }));
+  };
+
+  const handleDrawYield = (amountMUSD: number) => {
+    setEndowmentVault((prev) => ({
+      ...prev,
+      yieldDrawnTotal: prev.yieldDrawnTotal + amountMUSD,
+    }));
+  };
+
+  // Differentiator 2: Auto-Quarantine Circuit Breaker Handlers
+  const handleQuarantineKey = (keyId: string, reason: string) => {
+    setSessionKeys((prev) =>
+      prev.map((k) => (k.id === keyId ? { ...k, status: "QUARANTINED" as const, quarantineReason: reason, consecutiveReverts: 3 } : k))
+    );
+
+    const fakeTx = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+    const targetKey = sessionKeys.find((k) => k.id === keyId);
+
+    const newLog: ActivityLog = {
+      id: `log_${Date.now()}`,
+      type: "QUARANTINE",
+      title: "Circuit Breaker Tripped: Key Quarantined",
+      description: `Agent "${targetKey?.label || keyId}" auto-quarantined after 3 consecutive reverts. Zero treasury outflow.`,
+      amount: "$0.00 Lost",
+      txHash: fakeTx,
+      timestamp: Date.now(),
+      status: "REVERTED",
+    };
+
+    setActivityLogs((prev) => [newLog, ...prev]);
+
+    setConfirmationDetails({
+      isOpen: true,
+      type: "REVERT",
+      status: "REVERTED",
+      title: "Auto-Quarantine Circuit Breaker Tripped",
+      subtitle: `Contract detected 3 rapid reverts in 5m sliding window. Agent key has been isolated. Zero loss occurred.`,
+      amount: "$0.00 Lost (Protected)",
+      txHash: fakeTx,
+      agentLabel: targetKey?.label || "AI Agent",
+      revertReason: reason,
+      stateDiff: {
+        label: "Circuit Breaker State",
+        before: "Status: ACTIVE",
+        after: "Status: QUARANTINED",
+      },
+    });
+  };
+
+  const handleReactivateKey = (keyId: string) => {
+    setSessionKeys((prev) =>
+      prev.map((k) => (k.id === keyId ? { ...k, status: "ACTIVE" as const, consecutiveReverts: 0 } : k))
+    );
+
+    const targetKey = sessionKeys.find((k) => k.id === keyId);
+    const newLog: ActivityLog = {
+      id: `log_${Date.now()}`,
+      type: "PAYMENT",
+      title: "Agent Disinfected & Reactivated",
+      description: `Owner reviewed telemetry incident traces and reactivated session key "${targetKey?.label || keyId}".`,
+      amount: "Armed",
+      txHash: "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(""),
+      timestamp: Date.now(),
+      status: "SUCCESS",
+    };
+
+    setActivityLogs((prev) => [newLog, ...prev]);
+  };
+
+  // Differentiator 3: Agent-to-Agent (A2A) Micro-Invoicing Handlers
+  const handleA2ARequestService = async (sellerAgent: string, serviceName: string, costMUSD: number) => {
+    const fakeTx = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+    const newInvoice: A2AInvoice = {
+      id: `inv_${Date.now()}`,
+      invoiceNumber: `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+      sellerAgent: sellerAgent,
+      sellerAddress: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+      buyerAgent: "Autonomous Research Orchestrator",
+      buyerAddress: account.accountAddress,
+      serviceName: serviceName,
+      deliverableCid: `ipfs://bafybei${Math.random().toString(36).substring(2, 15)}`,
+      deliverableSummary: `Verified deliverable for ${serviceName} on Mezo EVM.`,
+      amountMUSD: costMUSD,
+      timestamp: Date.now(),
+      status: "SETTLED",
+      txHash: fakeTx,
+    };
+
+    setA2aInvoices((prev) => [newInvoice, ...prev]);
+    setAccount((prev) => ({
+      ...prev,
+      musdBalance: Math.max(0, prev.musdBalance - costMUSD),
+    }));
+
+    const newLog: ActivityLog = {
+      id: `log_${Date.now()}`,
+      type: "A2A_SETTLEMENT",
+      title: "Autonomous A2A Settlement",
+      description: `Hired "${sellerAgent}" for "${serviceName}" - verified deliverable & settled on Mezo.`,
+      amount: `-${costMUSD.toFixed(2)} MUSD`,
+      txHash: fakeTx,
+      timestamp: Date.now(),
+      status: "SUCCESS",
+    };
+
+    setActivityLogs((prev) => [newLog, ...prev]);
+
+    setConfirmationDetails({
+      isOpen: true,
+      type: "AGENT_EXECUTION",
+      status: "SUCCESS",
+      title: "Autonomous A2A Micro-Settlement Confirmed",
+      subtitle: `Orchestrator verified EIP-712 invoice and IPFS proof, transferring $${costMUSD.toFixed(2)} MUSD to "${sellerAgent}" on Mezo EVM with zero human intervention.`,
+      amount: `-${costMUSD.toFixed(2)} MUSD`,
+      txHash: fakeTx,
+      agentLabel: sellerAgent,
+      stateDiff: {
+        label: "Treasury Outflow",
+        before: `$${account.musdBalance.toFixed(2)} MUSD`,
+        after: `$${(account.musdBalance - costMUSD).toFixed(2)} MUSD`,
+      },
+    });
+  };
+
+  const handleA2ASettleInvoice = async (invoiceId: string) => {
+    const inv = a2aInvoices.find((i) => i.id === invoiceId);
+    if (!inv) return "";
+    await handleA2ARequestService(inv.sellerAgent, inv.serviceName, inv.amountMUSD);
+    return "settled";
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-[#07080E] text-slate-100 font-sans selection:bg-mezo/30 selection:text-orange-200">
       {/* Top Application Header */}
@@ -606,6 +789,8 @@ export default function CockpitPage() {
               { id: "all", label: "All-in-One", icon: Layers },
               { id: "overview", label: "Liquidity & Terminal", icon: Terminal },
               { id: "keys", label: "Session Keys", icon: KeyRound },
+              { id: "endowment", label: "Endowment Vault", icon: Coins, badgeText: "8.4% APY" },
+              { id: "a2a", label: "A2A Settlement", icon: Bot, badgeText: "P2P" },
               { id: "approvals", label: "Approval Queue", icon: ShieldAlert, badge: pendingRequests.filter((r) => r.status === "PENDING").length },
               { id: "audit", label: "Audit Ledger", icon: FileSpreadsheet },
             ].map((tab) => {
@@ -626,6 +811,11 @@ export default function CockpitPage() {
                   {tab.badge !== undefined && tab.badge > 0 && (
                     <span className="ml-1 px-1.5 py-0.2 rounded-full bg-red-500 text-white text-[10px] font-mono">
                       {tab.badge}
+                    </span>
+                  )}
+                  {tab.badgeText && (
+                    <span className="ml-1 px-1.5 py-0.2 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 text-[9px] font-mono font-bold">
+                      {tab.badgeText}
                     </span>
                   )}
                 </button>
@@ -661,6 +851,7 @@ export default function CockpitPage() {
                 isLiveMode={isLiveMode}
                 accountAddress={account.accountAddress}
                 onExecuteAction={handleExecuteAction}
+                onQuarantineKey={handleQuarantineKey}
               />
             </div>
           </div>
@@ -672,6 +863,27 @@ export default function CockpitPage() {
             sessionKeys={sessionKeys}
             onCreateKey={handleCreateKey}
             onRevokeKey={handleRevokeKey}
+            onReactivateKey={handleReactivateKey}
+          />
+        )}
+
+        {/* Differentiator 1 Tab: Self-Funding Endowment Vault */}
+        {(activeTab === "all" || activeTab === "endowment") && (
+          <EndowmentVault
+            vault={endowmentVault}
+            onDepositPrincipal={handleDepositPrincipal}
+            onToggleAutoCompound={handleToggleAutoCompound}
+            onDrawYield={handleDrawYield}
+          />
+        )}
+
+        {/* Differentiator 3 Tab: Agent-to-Agent (A2A) Micro-Invoicing & Settlement */}
+        {(activeTab === "all" || activeTab === "a2a") && (
+          <A2ASettlement
+            invoices={a2aInvoices}
+            onSettleInvoice={handleA2ASettleInvoice}
+            onRequestService={handleA2ARequestService}
+            isLiveMode={isLiveMode}
           />
         )}
 
