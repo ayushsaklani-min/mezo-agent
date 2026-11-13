@@ -2,8 +2,7 @@
 
 [![Live App](https://img.shields.io/badge/Live%20Demo-dashboard--iota--blue--90.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://dashboard-iota-blue-90.vercel.app)
 [![npm version](https://img.shields.io/badge/npm-mezo--agent--sdk%20v1.0.0-CB3837?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/mezo-agent-sdk)
-[![Mezo Network](https://img.shields.io/badge/Mezo-Testnet%20(31611)-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white)](https://mezo.org)
-[![Akindo Buildathon](https://img.shields.io/badge/Akindo-Build%20with%20MUSD%20%26%20MEZO-FF7A00?style=for-the-badge)](https://app.akindo.io)
+[![Bitcoin L2](https://img.shields.io/badge/Bitcoin%20L2-Testnet%20(31611)-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white)](https://mezo.org)
 [![Solidity Tests](https://img.shields.io/badge/Foundry%20Tests-25%2F25%20Passing-emerald?style=for-the-badge)](contracts/)
 [![Formal Invariants](https://img.shields.io/badge/Fuzz%20Invariants-128k%20Calls%20Passed-blue?style=for-the-badge)](contracts/test/MezoAgentAccountInvariants.t.sol)
 [![SDK Tests](https://img.shields.io/badge/SDK%20Tests-17%2F17%20Passing-indigo?style=for-the-badge)](sdk/)
@@ -12,9 +11,6 @@
 > **⚡ Live Institutional Cockpit:** [https://dashboard-iota-blue-90.vercel.app/app](https://dashboard-iota-blue-90.vercel.app/app)  
 > **📦 Official npm SDK:** [https://www.npmjs.com/package/mezo-agent-sdk](https://www.npmjs.com/package/mezo-agent-sdk)  
 > **📄 Product & Security Specification:** [Google Docs Link](https://docs.google.com/document/d/1SyiFX6o2_Cy-hZ8FGZHAh82iRf-9LeO0AsDHEwSRIV4/edit)  
-> **🏆 AKINDO Buildathon Track:** "Build with MUSD and MEZO" ($7,000 USD Prize Pool)  
-> • *Track 1: Access & Distribution for MUSD/MEZO (Agentic Tools / AI Wallets)*  
-> • *Track 2: DeFi Yield Stacking*
 
 ### Deployed Smart Contracts (Mezo Testnet Chain ID: `31611`)
 

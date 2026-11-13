@@ -27,7 +27,7 @@ export const mezoChain = defineChain({
     default: { http: [MEZO_CONFIG.localRpcUrl, MEZO_CONFIG.rpcUrl] },
   },
   blockExplorers: {
-    default: { name: "MezoScan", url: MEZO_CONFIG.explorerUrl },
+    default: { name: "Explorer", url: MEZO_CONFIG.explorerUrl },
   },
 });
 
@@ -420,7 +420,7 @@ export async function fetchLivePendingRequests(accountAddress: Address): Promise
         id: `req_${r.id.toString()}`,
         onChainId: Number(r.id),
         sessionKey: r.sessionKey,
-        agentLabel: "Autonomous Mezo Agent",
+        agentLabel: "Autonomous Agent",
         target: r.target,
         musdAmount: parseFloat(formatEther(r.musdAmount)),
         memo: r.memo || "High-value spend request requiring approval",
@@ -461,7 +461,7 @@ export async function fetchLiveActivityLogs(accountAddress: Address): Promise<Ac
           id: `log_evt_${log.transactionHash}_${log.logIndex}`,
           type: "CREATE_KEY",
           title: "Session Key Created On-Chain",
-          description: `Authorized agent key with cryptographic limits on Mezo Testnet (Block #${log.blockNumber})`,
+          description: `Authorized agent key with cryptographic limits on Bitcoin L2 Testnet (Block #${log.blockNumber})`,
           txHash: log.transactionHash!,
           timestamp: Date.now() - (logs.length - i) * 60000,
           status: "SUCCESS",

@@ -13,13 +13,11 @@ import {
   Check,
   ExternalLink,
   Code2,
-  Lock,
-  RefreshCw,
+  Coins,
+  Bot,
+  Zap,
   CheckCircle2,
   AlertTriangle,
-  Coins,
-  Scale,
-  Bot,
 } from "lucide-react";
 import { MEZO_CONFIG } from "@/lib/constants";
 import { DeveloperQuickstartModal } from "@/components/DeveloperQuickstartModal";
@@ -29,16 +27,15 @@ export default function LandingPage() {
   const [copiedInstall, setCopiedInstall] = useState(false);
   const [isSdkModalOpen, setIsSdkModalOpen] = useState(false);
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
-  const [activeCodeTab, setActiveCodeTab] = useState<"ts" | "langchain" | "eliza" | "curl">("ts");
+  const [activeCodeTab, setActiveCodeTab] = useState<"ts" | "langchain" | "curl">("ts");
 
   // Hero Live Interactive Simulation State
   const [simStep, setSimStep] = useState<"idle" | "spending" | "blocked" | "queued">("idle");
-  const [simSpendAmount, setSimSpendAmount] = useState(0.25);
   const [simTotalSpent, setSimTotalSpent] = useState(2.5);
   const simHourlyLimit = 15.0;
 
   const handleCopyInstall = () => {
-    navigator.clipboard.writeText("npm install mezo-agent-sdk viem");
+    navigator.clipboard.writeText("npm install bitagent-sdk viem");
     setCopiedInstall(true);
     setTimeout(() => setCopiedInstall(false), 2000);
   };
@@ -46,27 +43,24 @@ export default function LandingPage() {
   const runSimulation = (type: "valid" | "attack" | "threshold") => {
     if (type === "valid") {
       setSimStep("spending");
-      setSimSpendAmount(0.25);
       setTimeout(() => {
         setSimTotalSpent((prev) => Math.min(simHourlyLimit, prev + 0.25));
       }, 300);
     } else if (type === "attack") {
       setSimStep("blocked");
-      setSimSpendAmount(100.0);
     } else if (type === "threshold") {
       setSimStep("queued");
-      setSimSpendAmount(15.0);
     }
   };
 
   const codeSnippets = {
-    ts: `import { MezoAgentClient, MEZO_TESTNET } from "mezo-agent-sdk";
+    ts: `import { AgentClient, BITCOIN_L2 } from "bitagent-sdk";
 
 // Initialize client with agent's scoped session key
-const agent = new MezoAgentClient({
+const agent = new AgentClient({
   accountAddress: "${MEZO_CONFIG.accountAddress}",
   sessionPrivateKey: process.env.AGENT_SESSION_PRIVATE_KEY!,
-  network: MEZO_TESTNET,
+  network: BITCOIN_L2,
 });
 
 // Check remaining hourly allowance in MUSD
@@ -82,31 +76,20 @@ const receipt = await agent.payService({
 
 console.log(\`Paid! Tx: \${receipt.txHash}\`);`,
 
-    langchain: `import { MezoAgentClient } from "mezo-agent-sdk";
-import { createMezoPaymentTool } from "mezo-agent-sdk/langchain";
+    langchain: `import { AgentClient } from "bitagent-sdk";
+import { createAgentPaymentTool } from "bitagent-sdk/langchain";
 import { ChatOpenAI } from "@langchain/openai";
 
-const client = new MezoAgentClient({ ... });
-const mezoTool = createMezoPaymentTool(client);
+const client = new AgentClient({ ... });
+const paymentTool = createAgentPaymentTool(client);
 
 // Give the tool to your autonomous LangChain agent
-const tools = [mezoTool];
+const tools = [paymentTool];
 const model = new ChatOpenAI({ modelName: "gpt-4o" });
 // Agent now autonomously spends within hard session key caps!`,
 
-    eliza: `import { createElizaMezoAction } from "mezo-agent-sdk/eliza";
-import { MezoAgentClient } from "mezo-agent-sdk";
-
-export const mezoPlugin = {
-  name: "mezo-agent-plugin",
-  description: "Spend MUSD safely on Mezo Bitcoin Layer",
-  actions: [
-    createElizaMezoAction(new MezoAgentClient({ ... }))
-  ],
-};`,
-
-    curl: `# Query remaining hourly budget directly via Mezo RPC
-curl -X POST https://rpc.test.mezo.org \\
+    curl: `# Query remaining hourly budget directly via Bitcoin L2 RPC
+curl -X POST https://rpc.testnet.bitcoin-l2.org \\
   -H "Content-Type: application/json" \\
   -d '{
     "jsonrpc":"2.0",
@@ -120,116 +103,103 @@ curl -X POST https://rpc.test.mezo.org \\
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#07080E] text-slate-100 font-sans selection:bg-mezo/30 selection:text-orange-200">
-      {/* 1. FLOATING NAVIGATION BAR */}
-      <header className="border-b border-surface-border/80 bg-[#07080E]/80 backdrop-blur-xl sticky top-0 z-40 transition-all">
+    <div className="min-h-screen flex flex-col bg-[#08090D] text-slate-100 font-sans selection:bg-mezo selection:text-black">
+      {/* 1. NEO-BRUTALIST TOP NAVIGATION */}
+      <header className="border-b-2 border-black bg-[#0E1119] sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 py-3.5 flex items-center justify-between">
           {/* Brand */}
-          <Link href="/" className="flex items-center gap-3.5 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-mezo via-orange-500 to-mezo flex items-center justify-center shadow-lg shadow-mezo/25 ring-1 ring-orange-400/40 shrink-0 group-hover:scale-105 transition-transform">
-              <Shield className="w-5 h-5 text-black stroke-[2.5]" />
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-xl bg-mezo border-2 border-black flex items-center justify-center shadow-brutal group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 group-hover:shadow-brutal-lg transition-all shrink-0">
+              <Shield className="w-5 h-5 text-black stroke-[3]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-lg tracking-tight text-white">MezoAgent</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-mezo/15 text-mezo border border-mezo/30 font-bold uppercase tracking-wider">
-                  Autonomous OS
+                <span className="font-black text-xl tracking-tight text-white">BitAgent</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-amber-400 text-black border-2 border-black font-black uppercase shadow-brutal-sm">
+                  AgentOS
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block">
-                AI Agent Treasury on Bitcoin
+              <p className="text-[11px] font-mono text-slate-400 hidden sm:block">
+                AI Agent Treasury on Bitcoin L2
               </p>
             </div>
           </Link>
 
-          {/* Navigation Anchors */}
-          <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold text-slate-300">
-            <a href="#architecture" className="hover:text-mezo transition-colors">
-              Architecture
+          {/* Center Links */}
+          <nav className="hidden lg:flex items-center gap-6 text-xs font-mono font-bold text-slate-300">
+            <a href="#simulator" className="hover:text-mezo transition-colors">
+              Live Simulator
             </a>
-            <a href="#sliding-window" className="hover:text-mezo transition-colors">
-              Sliding Window
-            </a>
-            <a href="#human-in-the-loop" className="hover:text-mezo transition-colors">
-              Approvals Queue
+            <a href="#superpowers" className="hover:text-mezo transition-colors">
+              Superpowers
             </a>
             <a href="#sdk" className="hover:text-mezo transition-colors">
-              SDK & Tooling
+              Developer SDK
             </a>
             <button
               onClick={() => setIsSecurityModalOpen(true)}
-              className="hover:text-emerald-400 transition-colors flex items-center gap-1"
+              className="hover:text-emerald-400 transition-colors flex items-center gap-1.5"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
               <span>Formal Security</span>
             </button>
           </nav>
 
-          {/* Right Action Buttons */}
+          {/* Right Action Cluster */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Mezo Testnet Badge */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-card border border-surface-border text-xs font-mono">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span className="text-slate-300 text-[11px]">Mezo 31611</span>
+            {/* L2 Testnet Badge */}
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-400 text-black border-2 border-black font-mono font-black text-xs shadow-brutal-sm">
+              <span className="w-2 h-2 rounded-full bg-black animate-pulse" />
+              <span>BTC L2 #31611</span>
             </div>
 
-            {/* SDK Modal Trigger */}
+            {/* SDK Trigger */}
             <button
               onClick={() => setIsSdkModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-card border border-surface-border hover:border-slate-500 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-card border-2 border-black text-xs font-bold text-slate-200 hover:text-white shadow-brutal-sm hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
             >
               <Code2 className="w-3.5 h-3.5 text-mezo" />
-              <span className="hidden md:inline">SDK</span>
+              <span>SDK Docs</span>
             </button>
 
-            {/* Primary Action: Launch Cockpit */}
+            {/* Primary Action Button */}
             <Link
               href="/app"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-mezo to-orange-500 text-black font-extrabold text-xs shadow-lg shadow-mezo/25 hover:brightness-110 active:scale-95 transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-mezo text-black font-black text-xs border-2 border-black shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
             >
-              <span>Launch Cockpit</span>
-              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>LAUNCH COCKPIT</span>
+              <ArrowRight className="w-4 h-4 stroke-[3]" />
             </Link>
           </div>
         </div>
       </header>
 
       {/* 2. HERO SECTION */}
-      <section className="relative pt-16 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
-        {/* Ambient Gradient Lighting */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-gradient-to-tr from-mezo/20 via-orange-500/10 to-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
-
+      <section className="relative pt-12 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
         <div className="relative z-10 text-center max-w-4xl mx-auto space-y-6">
-          {/* AKINDO Buildathon Badge */}
+          {/* Tag Pill */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
-            className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-surface-card border border-surface-border text-xs font-semibold shadow-lg"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-amber-400 text-black border-2 border-black font-black text-xs shadow-brutal"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mezo opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-mezo"></span>
-            </span>
-            <span className="text-white">AKINDO Buildathon:</span>
-            <span className="text-mezo font-bold">Build with MUSD and MEZO</span>
-            <span className="text-slate-500">•</span>
-            <span className="text-slate-400 font-mono text-[11px]">$7,000 Track</span>
+            <Zap className="w-3.5 h-3.5 fill-black" />
+            <span>AUTONOMOUS AGENT TREASURY • BITCOIN L2</span>
           </motion.div>
 
           {/* Master Headline */}
           <motion.h1
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.08 }}
-            className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.1]"
+            transition={{ duration: 0.4 }}
+            className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.08]"
           >
-            Autonomous AI Agents Need Capital to Act.{" "}
-            <span className="block mt-2 bg-gradient-to-r from-mezo via-amber-300 to-orange-400 bg-clip-text text-transparent">
-              Giving Them Master Keys is Unacceptable.
+            Autonomous AI Agents.{" "}
+            <span className="block mt-2 text-mezo underline decoration-black decoration-4">
+              Yield-Funded Execution.
+            </span>
+            <span className="block mt-1 text-slate-100">
+              Zero Principal Risk.
             </span>
           </motion.h1>
 
@@ -237,37 +207,37 @@ curl -X POST https://rpc.test.mezo.org \\
           <motion.p
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.16 }}
-            className="text-base sm:text-lg text-slate-300 max-w-3xl mx-auto leading-relaxed"
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed"
           >
-            MezoAgent is the programmable treasury layer for autonomous AI agents on Mezo's Bitcoin economic layer.
-            Empower agents with scoped, ephemeral session keys bounded by mathematical 12-bucket sliding-window velocity
-            envelopes, selector-level permissions, and human-in-the-loop approvals.
+            The institutional execution and treasury management OS on Bitcoin L2.
+            Grant agents ephemeral scoped session keys, automatic circuit breakers, and 
+            operational gas funded 100% by native 8.4% APY Bitcoin staking yield.
           </motion.p>
 
-          {/* Primary Action Buttons & Install Pill */}
+          {/* Primary Action Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.24 }}
-            className="flex flex-wrap items-center justify-center gap-3 pt-3"
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="flex flex-wrap items-center justify-center gap-3 pt-2"
           >
             <Link
               href="/app"
-              className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-mezo to-orange-500 text-black font-extrabold text-sm shadow-xl shadow-mezo/25 hover:brightness-110 active:scale-95 transition-all"
+              className="flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-mezo text-black font-black text-sm border-2 border-black shadow-brutal-lg hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[8px_8px_0px_0px_#000000] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
             >
-              <span>Launch Live Cockpit</span>
-              <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+              <span>ENTER AGENT COCKPIT</span>
+              <ArrowRight className="w-4 h-4 stroke-[3]" />
             </Link>
 
             {/* 1-Click Copy Install */}
             <div
               onClick={handleCopyInstall}
-              className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-surface-card border border-surface-border hover:border-slate-500 cursor-pointer text-xs font-mono text-slate-300 hover:text-white transition-all shadow-sm group"
+              className="flex items-center gap-2.5 px-4 py-3.5 rounded-xl bg-[#121622] text-slate-200 border-2 border-black font-mono text-xs font-bold shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer transition-all group"
             >
-              <Terminal className="w-3.5 h-3.5 text-mezo" />
-              <span>npm install mezo-agent-sdk viem</span>
-              <div className="p-1 rounded-md bg-white/5 group-hover:bg-white/10 transition-colors ml-1">
+              <Terminal className="w-4 h-4 text-mezo" />
+              <span>npm i bitagent-sdk viem</span>
+              <div className="p-1 rounded-md bg-white/10 group-hover:bg-white/20 transition-colors ml-1">
                 {copiedInstall ? (
                   <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[3]" />
                 ) : (
@@ -276,42 +246,42 @@ curl -X POST https://rpc.test.mezo.org \\
               </div>
             </div>
 
-            {/* Direct npm package link */}
+            {/* Explorer Link */}
             <a
-              href="https://www.npmjs.com/package/mezo-agent-sdk"
+              href={`${MEZO_CONFIG.explorerUrl}/address/${MEZO_CONFIG.accountAddress}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-4 py-3 rounded-2xl bg-surface-card border border-surface-border hover:border-slate-500 text-xs font-semibold text-slate-300 hover:text-white transition-colors shadow-sm"
+              className="flex items-center gap-1.5 px-4 py-3.5 rounded-xl bg-surface-card text-slate-300 border-2 border-black text-xs font-bold shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
             >
-              <span className="w-2 h-2 rounded-full bg-red-500" />
-              <span>npm v1.0.2</span>
-              <ExternalLink className="w-3 h-3 text-slate-500 ml-0.5" />
+              <span>Block Explorer</span>
+              <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
             </a>
           </motion.div>
 
-          {/* 3. HERO LIVE INTERACTIVE SIMULATION SANDBOX CARD */}
+          {/* 3. HERO LIVE INTERACTIVE SIMULATION SANDBOX */}
           <motion.div
+            id="simulator"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.32 }}
-            className="pt-8 max-w-3xl mx-auto"
+            transition={{ duration: 0.45, delay: 0.28 }}
+            className="pt-6 max-w-3xl mx-auto"
           >
-            <div className="rounded-3xl bg-surface-card/90 border border-surface-border p-6 shadow-2xl backdrop-blur-md relative overflow-hidden text-left space-y-4">
+            <div className="rounded-2xl bg-[#0E121D] border-2 border-black p-6 shadow-brutal-lg text-left space-y-4">
               {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-surface-border">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b-2 border-black">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-mezo/15 text-mezo border border-mezo/30">
-                    <Terminal className="w-4 h-4" />
+                  <div className="p-2 rounded-xl bg-amber-400 text-black border-2 border-black shadow-brutal-sm">
+                    <Terminal className="w-4 h-4 stroke-[2.5]" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-extrabold text-white">Interactive Session Key Engine Preview</h3>
-                    <p className="text-[11px] text-slate-400">Test how the 12-bucket sliding window defends against attacks</p>
+                    <h3 className="text-sm font-black text-white">Live On-Chain Policy Simulator</h3>
+                    <p className="text-[11px] font-mono text-slate-400">Test autonomous execution guardrails in real time</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 text-xs font-mono">
-                  <span className="text-slate-400 text-[11px]">Sliding Window:</span>
-                  <span className="px-2.5 py-0.5 rounded-lg bg-surface-light border border-surface-border text-emerald-400 font-bold text-[11px]">
+                  <span className="text-slate-400 text-[11px]">Rolling Envelope:</span>
+                  <span className="px-2.5 py-1 rounded-lg bg-surface-light border-2 border-black text-emerald-400 font-black text-[11px] shadow-brutal-sm">
                     ${simTotalSpent.toFixed(2)} / ${simHourlyLimit}.00 MUSD
                   </span>
                 </div>
@@ -319,13 +289,13 @@ curl -X POST https://rpc.test.mezo.org \\
 
               {/* Progress Envelope Bar */}
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
+                <div className="flex items-center justify-between text-[11px] font-mono font-bold text-slate-400">
                   <span>1-Hour Rolling Spend Envelope (12 x 300s Buckets)</span>
-                  <span>{((simTotalSpent / simHourlyLimit) * 100).toFixed(0)}% Utilized</span>
+                  <span className="text-white">{((simTotalSpent / simHourlyLimit) * 100).toFixed(0)}% Utilized</span>
                 </div>
-                <div className="h-2.5 w-full bg-surface-light rounded-full overflow-hidden p-0.5 border border-surface-border">
+                <div className="h-3 w-full bg-[#05060A] rounded-lg overflow-hidden p-0.5 border-2 border-black shadow-inner">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-emerald-500 via-amber-500 to-mezo rounded-full"
+                    className="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-mezo rounded-md"
                     animate={{ width: `${Math.min(100, (simTotalSpent / simHourlyLimit) * 100)}%` }}
                     transition={{ duration: 0.3 }}
                   />
@@ -333,61 +303,61 @@ curl -X POST https://rpc.test.mezo.org \\
               </div>
 
               {/* Interactive Simulation Buttons */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
                 <button
                   onClick={() => runSimulation("valid")}
-                  className="flex items-center justify-between p-3 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 hover:bg-emerald-950/60 transition-all text-left group"
+                  className="flex items-center justify-between p-3 rounded-xl bg-emerald-950/40 border-2 border-emerald-500/80 hover:bg-emerald-900/50 shadow-brutal-sm hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all text-left group"
                 >
                   <div>
-                    <span className="block text-[11px] font-bold text-emerald-400">Valid Micro-Payment</span>
-                    <span className="block text-[10px] text-slate-400">$0.25 LLM Search API</span>
+                    <span className="block text-xs font-black text-emerald-400">1. Micro-Payment</span>
+                    <span className="block text-[10px] font-mono text-slate-300">$0.25 LLM Query</span>
                   </div>
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
                 </button>
 
                 <button
                   onClick={() => runSimulation("attack")}
-                  className="flex items-center justify-between p-3 rounded-2xl bg-red-950/30 border border-red-500/40 hover:bg-red-950/60 transition-all text-left group"
+                  className="flex items-center justify-between p-3 rounded-xl bg-red-950/40 border-2 border-red-500/80 hover:bg-red-900/50 shadow-brutal-sm hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all text-left group"
                 >
                   <div>
-                    <span className="block text-[11px] font-bold text-red-400">Prompt Injection</span>
-                    <span className="block text-[10px] text-slate-400">Simulate $100 Drain</span>
+                    <span className="block text-xs font-black text-red-400">2. Prompt Injection</span>
+                    <span className="block text-[10px] font-mono text-slate-300">$100 Drain Attempt</span>
                   </div>
                   <AlertTriangle className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
                 </button>
 
                 <button
                   onClick={() => runSimulation("threshold")}
-                  className="flex items-center justify-between p-3 rounded-2xl bg-amber-950/30 border border-amber-500/40 hover:bg-amber-950/60 transition-all text-left group"
+                  className="flex items-center justify-between p-3 rounded-xl bg-amber-950/40 border-2 border-amber-500/80 hover:bg-amber-900/50 shadow-brutal-sm hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all text-left group"
                 >
                   <div>
-                    <span className="block text-[11px] font-bold text-amber-400">Threshold Trigger</span>
-                    <span className="block text-[10px] text-slate-400">$15.00 GPU Cluster Lease</span>
+                    <span className="block text-xs font-black text-amber-400">3. Multisig Queue</span>
+                    <span className="block text-[10px] font-mono text-slate-300">$15.00 GPU Cluster</span>
                   </div>
                   <ShieldAlert className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
                 </button>
               </div>
 
-              {/* Reactive Simulation Telemetry Feed */}
-              <div className="p-3.5 rounded-2xl bg-[#04060A] border border-surface-border text-xs font-mono space-y-1">
+              {/* Console Feedback */}
+              <div className="p-3.5 rounded-xl bg-[#05060A] border-2 border-black text-xs font-mono space-y-1 shadow-inner">
                 {simStep === "idle" && (
                   <p className="text-slate-500">
-                    &gt; Engine standby. Click any button above to test on-chain verification.
+                    &gt; Simulator ready. Click any action button above to test on-chain verification.
                   </p>
                 )}
                 {simStep === "spending" && (
-                  <p className="text-emerald-400">
-                    &gt; [SUCCESS] $0.25 MUSD authorized. Disbursed to 0x1a2b... within rolling window. Next bucket in 240s.
+                  <p className="text-emerald-400 font-bold">
+                    &gt; [SUCCESS] $0.25 MUSD authorized. Disbursed instantly within rolling window. Tx verified on-chain.
                   </p>
                 )}
                 {simStep === "blocked" && (
-                  <p className="text-red-400 font-bold">
-                    &gt; [ON-CHAIN REVERT] HourlyLimitExceeded: Attempted $100.00 exceeds envelope. Zero outflow. Agent key isolated.
+                  <p className="text-red-400 font-black">
+                    &gt; [CIRCUIT BREAKER TRIPPED] $100.00 exceeds $15.00 envelope. Zero outflow. Agent key quarantined!
                   </p>
                 )}
                 {simStep === "queued" && (
-                  <p className="text-amber-400 font-bold">
-                    &gt; [QUEUED FOR HUMAN APPROVAL] Spend $15.00 &gt; $10.00 micro-threshold. Routed to Safe multisig queue.
+                  <p className="text-amber-400 font-black">
+                    &gt; [ROUTED TO HUMAN MULTISIG] Spend $15.00 &gt; $10.00 micro-cap. Placed into on-chain approvals queue.
                   </p>
                 )}
               </div>
@@ -396,323 +366,190 @@ curl -X POST https://rpc.test.mezo.org \\
         </div>
       </section>
 
-      {/* 4. METRIC TRUST TICKER */}
-      <section className="border-y border-surface-border/80 bg-surface/40 py-6">
+      {/* 4. NEO-BRUTALIST METRIC RIBBON */}
+      <section className="border-y-2 border-black bg-[#0C0F17] py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-            <div className="p-3">
-              <span className="block text-2xl font-extrabold text-white font-mono">31611</span>
-              <span className="text-xs text-slate-400 font-medium">Mezo Testnet Chain ID</span>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
+            <div className="p-3 rounded-xl bg-[#121622] border-2 border-black shadow-brutal-sm">
+              <span className="block text-2xl font-black text-white font-mono">31611</span>
+              <span className="text-[11px] font-mono text-slate-400 font-bold">Bitcoin L2 Chain</span>
             </div>
-            <div className="p-3">
-              <span className="block text-2xl font-extrabold text-emerald-400 font-mono">25 / 25</span>
-              <span className="text-xs text-slate-400 font-medium">Foundry Tests Passing</span>
+            <div className="p-3 rounded-xl bg-[#121622] border-2 border-black shadow-brutal-sm">
+              <span className="block text-2xl font-black text-emerald-400 font-mono">8.4% APY</span>
+              <span className="text-[11px] font-mono text-slate-400 font-bold">Native Bitcoin Staking</span>
             </div>
-            <div className="p-3">
-              <span className="block text-2xl font-extrabold text-cyan-400 font-mono">128,000</span>
-              <span className="text-xs text-slate-400 font-medium">Invariant Fuzz Runs</span>
+            <div className="p-3 rounded-xl bg-[#121622] border-2 border-black shadow-brutal-sm">
+              <span className="block text-2xl font-black text-amber-400 font-mono">0% RISK</span>
+              <span className="text-[11px] font-mono text-slate-400 font-bold">Cold Principal Locked</span>
             </div>
-            <div className="p-3">
-              <span className="block text-2xl font-extrabold text-mezo font-mono">v1.0.2</span>
-              <span className="text-xs text-slate-400 font-medium">npm Published SDK</span>
+            <div className="p-3 rounded-xl bg-[#121622] border-2 border-black shadow-brutal-sm">
+              <span className="block text-2xl font-black text-cyan-400 font-mono">25 / 25</span>
+              <span className="text-[11px] font-mono text-slate-400 font-bold">Invariant Fuzz Passes</span>
             </div>
-            <div className="p-3 col-span-2 md:col-span-1">
-              <span className="block text-2xl font-extrabold text-amber-300 font-mono">BTC + MUSD</span>
-              <span className="text-xs text-slate-400 font-medium">Bitcoin Gas & Stablecoin</span>
+            <div className="p-3 rounded-xl bg-[#121622] border-2 border-black shadow-brutal-sm col-span-2 md:col-span-1">
+              <span className="block text-2xl font-black text-purple-400 font-mono">EIP-712</span>
+              <span className="text-[11px] font-mono text-slate-400 font-bold">A2A Micro-Settlement</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 5. THE PROBLEM VS THE SOLUTION CHAPTER */}
-      <section id="architecture" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
+      {/* 5. THE 3 CORE SUPERPOWERS (PRODUCT FEATURES) */}
+      <section id="superpowers" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="text-xs font-mono font-bold text-mezo uppercase tracking-wider">
-            THE ARCHITECTURAL SHIFT
-          </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Why Autonomous Agents Fail Without On-Chain Guardrails
-          </h2>
-          <p className="text-sm text-slate-400">
-            Current Web3 tooling assumes human confirmation on every signature. Giving an autonomous agent raw keys
-            exposes your entire treasury to catastrophic prompt-injection and loop drain vulnerabilities.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Bad: Raw Keys */}
-          <div className="rounded-3xl bg-red-950/10 border border-red-500/20 p-8 space-y-5">
-            <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400">
-              <ShieldAlert className="w-6 h-6 stroke-[2.2]" />
-            </div>
-            <div>
-              <h3 className="text-xl font-extrabold text-white">The Danger: Raw Keys in .env</h3>
-              <p className="text-xs text-slate-400 mt-1">What most AI agent frameworks use today</p>
-            </div>
-            <ul className="space-y-3 text-xs text-slate-300">
-              <li className="flex items-start gap-2.5">
-                <span className="text-red-400 font-bold">✕</span>
-                <span><strong>Single Point of Failure:</strong> 1 prompt injection exploit transfers 100% of treasury capital.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-red-400 font-bold">✕</span>
-                <span><strong>No Velocity Limiting:</strong> Infinite loops drain gas and funds in minutes.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-red-400 font-bold">✕</span>
-                <span><strong>Arbitrary Target Exploits:</strong> Agent can invoke <code>approve(attacker, max)</code> on any token.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-red-400 font-bold">✕</span>
-                <span><strong>Zero Governance:</strong> High-value transactions cannot be routed to human review.</span>
-              </li>
-            </ul>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-mezo text-black border-2 border-black font-mono font-black text-xs shadow-brutal-sm">
+            <Zap className="w-3.5 h-3.5 fill-black" />
+            <span>BUILT DIFFERENT</span>
           </div>
-
-          {/* Good: MezoAgent Smart Accounts */}
-          <div className="rounded-3xl bg-emerald-950/10 border border-emerald-500/30 p-8 space-y-5 shadow-lg shadow-emerald-500/5">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-              <ShieldCheck className="w-6 h-6 stroke-[2.2]" />
-            </div>
-            <div>
-              <h3 className="text-xl font-extrabold text-white">The MezoAgent Guardrail</h3>
-              <p className="text-xs text-slate-400 mt-1">Institutional smart account policy engine on Mezo</p>
-            </div>
-            <ul className="space-y-3 text-xs text-slate-300">
-              <li className="flex items-start gap-2.5">
-                <span className="text-emerald-400 font-bold">✓</span>
-                <span><strong>Vault Stays in Cold Storage:</strong> Safe multisig or owner EOA holds custody; agents receive scoped session keys.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-emerald-400 font-bold">✓</span>
-                <span><strong>12-Bucket Sliding-Window Spend:</strong> Mathematical velocity enforcement eliminates 59m/61m double spends.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-emerald-400 font-bold">✓</span>
-                <span><strong>Selector-Level Authorization:</strong> Strict <code>(target, bytes4)</code> whitelist blocks rogue token approvals.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-emerald-400 font-bold">✓</span>
-                <span><strong>Human-in-the-Loop Thresholds:</strong> Micro-spends execute instantly; high-value calls route to approval queue.</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. FEATURE BENTO GRID (HIGH-CRAFT INSTITUTIONAL ARCHITECTURE) */}
-      <section id="sliding-window" className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="text-xs font-mono font-bold text-mezo uppercase tracking-wider">
-            CORE PLATFORM PRIMITIVES
-          </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Engineered for Mathematical Correctness
+          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+            The Three Pillars of BitAgent
           </h2>
-          <p className="text-sm text-slate-400">
-            Every security invariant is enforced at the smart contract level on Mezo EVM, proven by 128,000 stateful invariant runs.
+          <p className="text-sm text-slate-400 max-w-xl mx-auto">
+            Engineered from first principles for autonomous AI agents operating on Bitcoin's economic layer.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Bento 1: 12-Bucket Sliding Window */}
-          <div className="md:col-span-2 rounded-3xl bg-surface-card border border-surface-border p-7 space-y-4 relative overflow-hidden group hover:border-slate-500 transition-colors">
-            <div className="p-3 rounded-2xl bg-mezo/10 text-mezo w-fit border border-mezo/25">
-              <RefreshCw className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-extrabold text-white">12-Bucket Sliding-Window Velocity Envelope</h3>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                Naive time windows reset every hour, allowing agents to spend 100% at 0:59 and 100% at 1:01 (200% double-spend).
-                MezoAgent slices each hour into 12 circular 300-second sub-buckets. Spending velocity is continuously bounded across any 60-minute window.
-              </p>
-            </div>
-            <div className="grid grid-cols-6 sm:grid-cols-12 gap-1.5 pt-2">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-8 rounded-lg flex flex-col items-center justify-center text-[10px] font-mono font-bold border transition-colors ${
-                    i < 4
-                      ? "bg-mezo/20 border-mezo/50 text-mezo"
-                      : "bg-surface-light border-surface-border text-slate-500"
-                  }`}
-                >
-                  <span>{i * 5}m</span>
+          {/* Superpower 1: Self-Funding Endowment Vault */}
+          <div className="rounded-2xl bg-[#0E121E] border-2 border-black p-6 shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg transition-all space-y-4 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="p-3 rounded-xl bg-amber-400 text-black border-2 border-black shadow-brutal-sm">
+                  <Coins className="w-6 h-6 stroke-[2.5]" />
                 </div>
-              ))}
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-amber-400/20 text-amber-300 border-2 border-black font-black">
+                  8.4% APY
+                </span>
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-white">Self-Funding Endowment Vault</h3>
+                <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+                  Lock base capital in cold custody. Your autonomous agents draw gas and API payment allowances purely from accrued Bitcoin staking yield. If an agent loops, zero principal is touched.
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Bento 2: Human-in-the-Loop Queue */}
-          <div id="human-in-the-loop" className="rounded-3xl bg-surface-card border border-surface-border p-7 space-y-4 hover:border-slate-500 transition-colors">
-            <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-400 w-fit border border-amber-500/25">
-              <Scale className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-extrabold text-white">Human-in-the-Loop Thresholds</h3>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                Autonomous micro-payments under $10 MUSD disburse instantly with zero latency. Allocations above the threshold route to an on-chain queue for multi-party human sign-off.
-              </p>
-            </div>
-            <div className="p-3 rounded-2xl bg-surface-light border border-surface-border text-[11px] font-mono text-slate-300">
-              <div className="flex justify-between pb-1 border-b border-surface-border">
-                <span>Threshold:</span>
-                <span className="text-amber-400 font-bold">$10.00 MUSD</span>
+            <div className="p-3 rounded-xl bg-[#05060A] border-2 border-black font-mono text-[11px] text-amber-400">
+              <div className="flex justify-between pb-1 border-b border-zinc-800">
+                <span>Principal Lock:</span>
+                <span className="font-bold text-white">Cold Safe Multisig</span>
               </div>
               <div className="flex justify-between pt-1">
-                <span>High-Value Flow:</span>
-                <span className="text-emerald-400 font-bold">Safe Multisig Approval</span>
+                <span>Operational Outflow:</span>
+                <span className="font-bold text-emerald-400">100% Staking Yield</span>
               </div>
             </div>
           </div>
 
-          {/* Bento 3: Granular Selector Allowlist */}
-          <div className="rounded-3xl bg-surface-card border border-surface-border p-7 space-y-4 hover:border-slate-500 transition-colors">
-            <div className="p-3 rounded-2xl bg-cyan-500/10 text-cyan-400 w-fit border border-cyan-500/25">
-              <Lock className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-extrabold text-white">Granular Function Filtering</h3>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                Session keys are bound to explicit <code>(target, bytes4 selector)</code> tuples. Rogue <code>approve()</code> calls on token contracts are blocked on-chain.
-              </p>
-            </div>
-            <div className="p-2.5 rounded-xl bg-surface-light font-mono text-[11px] text-cyan-300">
-              0xa9059cbb → transfer() Allowed<br />
-              0x095ea7b3 → approve() BLOCKED
-            </div>
-          </div>
-
-          {/* Bento 4: EIP-1271 Safe Multisig Native */}
-          <div className="rounded-3xl bg-surface-card border border-surface-border p-7 space-y-4 hover:border-slate-500 transition-colors">
-            <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-400 w-fit border border-emerald-500/25">
-              <Shield className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-extrabold text-white">EIP-1271 Safe Multisig Native</h3>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                Full contract wallet compatibility. DAOs, Gnosis Safe, and institutional multisig treasuries can hold ownership over agent accounts directly.
-              </p>
-            </div>
-            <div className="p-2.5 rounded-xl bg-surface-light font-mono text-[11px] text-emerald-300">
-              IERC1271.isValidSignature() Supported
-            </div>
-          </div>
-
-          {/* Bento 5: Bitcoin Native Gas & Yield */}
-          <div className="rounded-3xl bg-surface-card border border-surface-border p-7 space-y-4 hover:border-slate-500 transition-colors">
-            <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-400 w-fit border border-orange-500/25">
-              <Coins className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-extrabold text-white">Bitcoin Native Gas & Yield</h3>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                Natively built for Mezo. Accounts hold MUSD reserves and pay gas in native Bitcoin (Satoshis), with automated idle yield stacking.
-              </p>
-            </div>
-            <div className="p-2.5 rounded-xl bg-surface-light font-mono text-[11px] text-orange-300">
-              Mezo Testnet (31611) • MUSD Stablecoin
-            </div>
-          </div>
-
-          {/* Bento 6: Self-Funding Endowment Vault (Differentiator 1) */}
-          <div className="rounded-3xl bg-surface-card border border-amber-500/30 p-7 space-y-4 hover:border-amber-400/60 transition-colors shadow-lg shadow-amber-500/5">
-            <div className="flex items-center justify-between">
-              <div className="p-3 rounded-2xl bg-amber-500/10 text-mezo w-fit border border-amber-500/25">
-                <Coins className="w-5 h-5" />
+          {/* Superpower 2: Auto-Quarantine Circuit Breaker */}
+          <div className="rounded-2xl bg-[#0E121E] border-2 border-black p-6 shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg transition-all space-y-4 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="p-3 rounded-xl bg-red-400 text-black border-2 border-black shadow-brutal-sm">
+                  <ShieldAlert className="w-6 h-6 stroke-[2.5]" />
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-red-400/20 text-red-300 border-2 border-black font-black">
+                  TRIPWIRE ACTIVE
+                </span>
               </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-mezo border border-amber-500/40 font-bold">
-                8.4% APY Yield
-              </span>
+              <div>
+                <h3 className="text-xl font-black text-white">Auto-Quarantine Circuit Breaker</h3>
+                <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+                  On-chain rolling velocity envelopes restrict per-transaction and daily limits. If prompt-injected or hallucinating, 3 consecutive reverts immediately quarantine the session key on-chain.
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-extrabold text-white">Self-Funding Endowment Mode</h3>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                Lock principal capital into cold custody. The agent's 12-bucket sliding window envelope strictly draws from <strong>accrued Bitcoin staking yield</strong>. Perpetual operation with 0% risk to principal.
-              </p>
-            </div>
-            <div className="p-2.5 rounded-xl bg-surface-light font-mono text-[11px] text-amber-300">
-              ΔPrincipal == 0 • Safe Cold Storage
+
+            <div className="p-3 rounded-xl bg-[#05060A] border-2 border-black font-mono text-[11px] text-red-400">
+              <div className="flex justify-between pb-1 border-b border-zinc-800">
+                <span>Revert Threshold:</span>
+                <span className="font-bold text-white">3 Consecutive Trips</span>
+              </div>
+              <div className="flex justify-between pt-1">
+                <span>Intervention:</span>
+                <span className="font-bold text-red-400">Instant On-Chain Isolation</span>
+              </div>
             </div>
           </div>
 
-          {/* Bento 7: Autonomous Multi-Agent Invoicing (Differentiator 3) */}
-          <div className="rounded-3xl bg-surface-card border border-purple-500/30 p-7 space-y-4 hover:border-purple-400/60 transition-colors shadow-lg shadow-purple-500/5">
-            <div className="flex items-center justify-between">
-              <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-400 w-fit border border-purple-500/25">
-                <Bot className="w-5 h-5" />
+          {/* Superpower 3: Agent-to-Agent (A2A) Micro-Settlement */}
+          <div className="rounded-2xl bg-[#0E121E] border-2 border-black p-6 shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg transition-all space-y-4 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="p-3 rounded-xl bg-purple-400 text-black border-2 border-black shadow-brutal-sm">
+                  <Bot className="w-6 h-6 stroke-[2.5]" />
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-purple-400/20 text-purple-300 border-2 border-black font-black">
+                  EIP-712 MUSD
+                </span>
               </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/40 font-bold">
-                EIP-712 Invoices
-              </span>
+              <div>
+                <h3 className="text-xl font-black text-white">Agent-to-Agent (A2A) Settlement</h3>
+                <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+                  Autonomous peer agents negotiate and bill each other for specialized compute. Invoices are cryptographically signed with EIP-712 and settle in native MUSD without human intervention.
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-extrabold text-white">Agent-to-Agent (A2A) Settlement</h3>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                Autonomous machine-to-machine coordination. Worker agents emit cryptographic invoices with IPFS proofs; orchestrator session keys verify deliverables and disburse sub-cent MUSD.
-              </p>
-            </div>
-            <div className="p-2.5 rounded-xl bg-surface-light font-mono text-[11px] text-purple-300">
-              Zero-Human P2P Micro-Payments on Bitcoin
+
+            <div className="p-3 rounded-xl bg-[#05060A] border-2 border-black font-mono text-[11px] text-purple-400">
+              <div className="flex justify-between pb-1 border-b border-zinc-800">
+                <span>Invoice Standard:</span>
+                <span className="font-bold text-white">EIP-712 Typed Data</span>
+              </div>
+              <div className="flex justify-between pt-1">
+                <span>Settlement Currency:</span>
+                <span className="font-bold text-cyan-400">Native MUSD Stablecoin</span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 7. DEVELOPER SDK SECTION */}
+      {/* 6. DEVELOPER SDK SECTION */}
       <section id="sdk" className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <span className="text-xs font-mono font-bold text-mezo uppercase tracking-wider">
-              DEVELOPER INFRASTRUCTURE
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mt-1">
-              Plug-and-Play AI Agent SDK
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-cyan-400 text-black border-2 border-black font-mono font-black text-xs shadow-brutal-sm">
+              <Code2 className="w-3.5 h-3.5" />
+              <span>3 LINES OF CODE</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-2">
+              Integrate Budget-Controlled Agents
             </h2>
             <p className="text-xs sm:text-sm text-slate-400 mt-1">
-              Integrate budget-controlled execution into LangChain, ElizaOS, or standalone Node bots in 3 lines.
+              Supports TypeScript, LangChain tools, and standard JSON-RPC calls.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <a
-              href="https://www.npmjs.com/package/mezo-agent-sdk"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-card border border-surface-border hover:border-slate-500 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
-            >
-              <span>View on npm</span>
-              <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
-            </a>
-            <a
               href="https://github.com/ayushsaklani-min/mezo-agent"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-card border border-surface-border hover:border-slate-500 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-card border-2 border-black text-xs font-bold text-slate-200 hover:text-white shadow-brutal-sm hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
             >
-              <span>GitHub Repo</span>
-              <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+              <span>GitHub</span>
+              <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
             </a>
           </div>
         </div>
 
         {/* Code Container */}
-        <div className="rounded-3xl bg-[#04060A] border border-surface-border p-6 shadow-2xl relative overflow-hidden">
-          {/* Code Tabs */}
-          <div className="flex items-center gap-2 pb-4 border-b border-surface-border">
-            {(["ts", "langchain", "eliza", "curl"] as const).map((tab) => (
+        <div className="rounded-2xl bg-[#05060A] border-2 border-black p-6 shadow-brutal-lg relative overflow-hidden">
+          {/* Tabs */}
+          <div className="flex items-center gap-2 pb-4 border-b-2 border-black">
+            {(["ts", "langchain", "curl"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveCodeTab(tab)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border-2 border-black ${
                   activeCodeTab === tab
-                    ? "bg-mezo text-black shadow-md shadow-mezo/20"
-                    : "bg-surface-card text-slate-400 hover:text-white hover:bg-surface-light"
+                    ? "bg-mezo text-black shadow-brutal-sm"
+                    : "bg-[#121622] text-slate-400 hover:text-white"
                 }`}
               >
                 {tab === "ts" && "TypeScript SDK"}
-                {tab === "langchain" && "LangChain Tool"}
-                {tab === "eliza" && "ElizaOS Action"}
+                {tab === "langchain" && "LangChain Agent Tool"}
                 {tab === "curl" && "cURL JSON-RPC"}
               </button>
             ))}
@@ -725,39 +562,37 @@ curl -X POST https://rpc.test.mezo.org \\
         </div>
       </section>
 
-      {/* 8. CALL TO ACTION SECTION */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="rounded-3xl bg-gradient-to-br from-surface-card via-surface-card to-surface-light border border-surface-border p-8 sm:p-12 text-center relative overflow-hidden shadow-2xl space-y-6">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-mezo/10 rounded-full blur-[90px] pointer-events-none" />
-
+      {/* 7. NEO-BRUTAL CALL TO ACTION BANNER */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="rounded-3xl bg-mezo border-2 border-black p-8 sm:p-12 text-center text-black relative overflow-hidden shadow-brutal-lg space-y-6">
           <div className="max-w-2xl mx-auto space-y-3 relative z-10">
-            <span className="text-xs font-mono font-bold text-mezo uppercase tracking-wider">
-              READY FOR PRODUCTION
+            <span className="text-xs font-mono font-black uppercase tracking-wider px-3 py-1 rounded-md bg-black text-white inline-block">
+              ENTERPRISE READY
             </span>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Give Your AI Agents Autonomous Capital on Bitcoin.
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+              Test the Autonomous Agent Cockpit on Bitcoin L2.
             </h2>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Launch the live interactive cockpit now to mint ephemeral session keys, bridge testnet liquidity,
-              and watch rate limits protect your funds in real time.
+            <p className="text-sm font-medium text-black/80 leading-relaxed max-w-xl mx-auto">
+              Launch the live command center to issue scoped session keys, trigger circuit breakers, 
+              and inspect real-time staking yield streaming on Bitcoin L2.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3 relative z-10 pt-2">
             <Link
               href="/app"
-              className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-mezo to-orange-500 text-black font-extrabold text-sm shadow-xl shadow-mezo/25 hover:brightness-110 active:scale-95 transition-all"
+              className="flex items-center gap-2 px-6 py-4 rounded-xl bg-black text-white font-black text-sm border-2 border-black shadow-[4px_4px_0px_0px_#FFFFFF] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_#FFFFFF] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
             >
-              <span>Launch Live Cockpit</span>
-              <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+              <span>LAUNCH LIVE COCKPIT NOW</span>
+              <ArrowRight className="w-4 h-4 stroke-[3]" />
             </Link>
 
             <button
               onClick={() => setIsSecurityModalOpen(true)}
-              className="flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-surface-card border border-surface-border hover:border-slate-500 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+              className="flex items-center gap-2 px-5 py-4 rounded-xl bg-white text-black font-black text-xs border-2 border-black shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
             >
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Inspect Formal Invariants</span>
+              <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
+              <span>INSPECT FORMAL INVARIANTS</span>
             </button>
           </div>
         </div>
@@ -774,35 +609,23 @@ curl -X POST https://rpc.test.mezo.org \\
         onClose={() => setIsSecurityModalOpen(false)}
       />
 
-      {/* 9. FOOTER */}
-      <footer className="border-t border-surface-border bg-surface/50 py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-500">
+      {/* 8. NEO-BRUTALIST FOOTER */}
+      <footer className="border-t-2 border-black bg-[#0A0D15] py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-400">
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-xl bg-mezo/20 border border-mezo/40 flex items-center justify-center text-mezo">
-              <Shield className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-xl bg-mezo border-2 border-black flex items-center justify-center text-black shadow-brutal-sm">
+              <Shield className="w-4 h-4 stroke-[3]" />
             </div>
             <div>
-              <span className="font-extrabold text-white text-sm">MezoAgent</span>
-              <p className="text-[11px] text-slate-400">Budget-Controlled AI Agent Smart Accounts on Bitcoin</p>
+              <span className="font-black text-white text-sm">BitAgent</span>
+              <p className="text-[11px] font-mono text-slate-400">Autonomous Execution Layer on Bitcoin L2</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 text-[11px] font-mono">
-            <a
-              href="https://dashboard-iota-blue-90.vercel.app"
-              className="hover:text-mezo transition-colors"
-            >
-              Live App
-            </a>
-            <span>•</span>
-            <a
-              href="https://www.npmjs.com/package/mezo-agent-sdk"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-mezo transition-colors"
-            >
-              npm SDK
-            </a>
+          <div className="flex flex-wrap items-center gap-4 text-xs font-mono font-bold">
+            <Link href="/app" className="hover:text-mezo transition-colors">
+              Cockpit App
+            </Link>
             <span>•</span>
             <a
               href="https://github.com/ayushsaklani-min/mezo-agent"
@@ -819,10 +642,10 @@ curl -X POST https://rpc.test.mezo.org \\
               rel="noopener noreferrer"
               className="hover:text-mezo transition-colors"
             >
-              Mezo Explorer
+              Block Explorer (31611)
             </a>
             <span>•</span>
-            <span>MIT License</span>
+            <span className="text-slate-500">MIT License</span>
           </div>
         </div>
       </footer>

@@ -20,48 +20,44 @@ export const TreasuryMetrics: React.FC<MetricsProps> = ({
 }) => {
   const cards = [
     {
-      label: "Total Treasury (MUSD)",
+      label: "TOTAL TREASURY (MUSD)",
       value: `$${musdBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       unit: "MUSD",
-      subtext: "Mezo Bitcoin-backed stablecoin",
+      subtext: "Bitcoin-backed USD stablecoin",
       icon: DollarSign,
-      color: "mezo",
       badge: "Collateralized",
-      borderGlow: "hover:border-mezo/50 hover:shadow-mezo/15",
-      iconBg: "bg-mezo/10 text-mezo ring-1 ring-mezo/25",
+      badgeClass: "bg-amber-400 text-black",
+      iconBg: "bg-mezo text-black border-2 border-black shadow-brutal-sm",
     },
     {
-      label: "Cross-Chain Inbound",
+      label: "CROSS-CHAIN INBOUND",
       value: `$${usdcBridged.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       unit: "USDC",
       subtext: "Bridged from Base via Wormhole NTT",
       icon: ArrowDownUp,
-      color: "cyan",
       badge: "1:1 Routed",
-      borderGlow: "hover:border-cyan-500/50 hover:shadow-cyan-500/15",
-      iconBg: "bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-500/25",
+      badgeClass: "bg-cyan-400 text-black",
+      iconBg: "bg-cyan-400 text-black border-2 border-black shadow-brutal-sm",
     },
     {
-      label: "Stacked Bitcoin Yield",
+      label: "STACKED BITCOIN YIELD",
       value: stackedBtcYield.toFixed(6),
       unit: "BTC",
       subtext: "Auto-harvested into native Satoshis",
       icon: Flame,
-      color: "amber",
       badge: "Real Satoshis",
-      borderGlow: "hover:border-amber-500/50 hover:shadow-amber-500/15",
-      iconBg: "bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/25",
+      badgeClass: "bg-emerald-400 text-black",
+      iconBg: "bg-emerald-400 text-black border-2 border-black shadow-brutal-sm",
     },
     {
-      label: "Autonomous Session Keys",
+      label: "AUTONOMOUS SESSION KEYS",
       value: activeAgentsCount.toString(),
       unit: "Active Keys",
       subtext: "Enforcing rolling hourly velocity caps",
       icon: KeyRound,
-      color: "emerald",
       badge: "ERC-4337 Scoped",
-      borderGlow: "hover:border-emerald-500/50 hover:shadow-emerald-500/15",
-      iconBg: "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/25",
+      badgeClass: "bg-purple-400 text-black",
+      iconBg: "bg-purple-400 text-black border-2 border-black shadow-brutal-sm",
     },
   ];
 
@@ -76,33 +72,31 @@ export const TreasuryMetrics: React.FC<MetricsProps> = ({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: idx * 0.08 }}
-            whileHover={{ y: -3, transition: { duration: 0.2 } }}
-            className={`p-5 rounded-3xl bg-surface border border-surface-border relative overflow-hidden transition-all shadow-lg ${card.borderGlow}`}
+            className="p-5 rounded-2xl bg-[#0E121E] border-2 border-black shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg transition-all flex flex-col justify-between"
           >
-            {/* Ambient Background Radial */}
-            <div className="absolute top-0 right-0 w-28 h-28 bg-white/[0.02] rounded-full blur-2xl pointer-events-none" />
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[11px] font-mono font-black text-slate-400 tracking-wider">
+                  {card.label}
+                </span>
+                <div className={`p-2 rounded-xl ${card.iconBg}`}>
+                  <Icon className="w-4 h-4 stroke-[3]" />
+                </div>
+              </div>
 
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-400 tracking-tight">
-                {card.label}
-              </span>
-              <div className={`p-2.5 rounded-2xl ${card.iconBg}`}>
-                <Icon className="w-4 h-4 stroke-[2.2]" />
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">
+                  {card.value}
+                </span>
+                <span className="text-xs font-mono font-black text-mezo">
+                  {card.unit}
+                </span>
               </div>
             </div>
 
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-2xl sm:text-3xl font-extrabold font-mono text-white tracking-tight">
-                {card.value}
-              </span>
-              <span className="text-xs font-bold text-mezo font-mono">
-                {card.unit}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-surface-border/50 text-[11px]">
-              <span className="text-slate-400 truncate max-w-[170px]">{card.subtext}</span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-surface-card border border-surface-border text-slate-300 shrink-0 font-medium">
+            <div className="flex items-center justify-between mt-4 pt-3 border-t-2 border-black text-[11px]">
+              <span className="text-slate-400 font-mono truncate max-w-[170px]">{card.subtext}</span>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md border-2 border-black font-black uppercase shadow-brutal-sm ${card.badgeClass}`}>
                 {card.badge}
               </span>
             </div>

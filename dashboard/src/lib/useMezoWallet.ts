@@ -156,7 +156,7 @@ export function useMezoWallet() {
             isMezoTestnet: true,
           }));
         } catch (addError) {
-          console.error("Failed to add Mezo network:", addError);
+          console.error("Failed to add Bitcoin L2 network:", addError);
         }
       }
     }

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MezoAgent | Autonomous AI Agent Treasury & Session Keys on Mezo",
-  description: "Budget-controlled smart accounts with cryptographic session keys for autonomous AI agents on Mezo's Bitcoin economic layer.",
+  title: "BitAgent | Autonomous AI Agent Treasury & Session Keys on Bitcoin L2",
+  description: "Budget-controlled smart accounts with cryptographic session keys for autonomous AI agents on Bitcoin's economic layer.",
   icons: {
     icon: "/favicon.ico",
   },

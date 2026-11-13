@@ -18,15 +18,15 @@ export const DeveloperQuickstartModal: React.FC<ModalProps> = ({ isOpen, onClose
 
   const codeSnippets = {
     ts: `// 1. Install via npm:
-// npm install mezo-agent-sdk viem
+// npm install bitagent-sdk viem
 
-import { MezoAgentClient, MEZO_TESTNET } from "mezo-agent-sdk";
+import { BitAgentClient, BITCOIN_L2_TESTNET } from "bitagent-sdk";
 
 // Initialize client with agent's ephemeral session key
-const agent = new MezoAgentClient({
+const agent = new BitAgentClient({
   accountAddress: "${MEZO_CONFIG.accountAddress}",
   sessionPrivateKey: process.env.AGENT_SESSION_PRIVATE_KEY!,
-  network: MEZO_TESTNET,
+  network: BITCOIN_L2_TESTNET,
 });
 
 // Check remaining hourly allowance in MUSD
@@ -42,31 +42,31 @@ const receipt = await agent.payService({
 
 console.log(\`Paid! Tx: \${receipt.txHash}\`);`,
 
-    langchain: `import { MezoAgentClient } from "mezo-agent-sdk";
-import { createMezoPaymentTool } from "mezo-agent-sdk/langchain";
+    langchain: `import { BitAgentClient } from "bitagent-sdk";
+import { createBitAgentPaymentTool } from "bitagent-sdk/langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
 
-const client = new MezoAgentClient({ ... });
-const mezoTool = createMezoPaymentTool(client);
+const client = new BitAgentClient({ ... });
+const agentTool = createBitAgentPaymentTool(client);
 
 // Give the tool to your autonomous LangChain agent
-const tools = [mezoTool];
+const tools = [agentTool];
 const model = new ChatOpenAI({ modelName: "gpt-4o" });
 // Agent now autonomously spends within hard session key caps!`,
 
-    eliza: `import { createElizaMezoAction } from "mezo-agent-sdk/eliza";
-import { MezoAgentClient } from "mezo-agent-sdk";
+    eliza: `import { createElizaBitAgentAction } from "bitagent-sdk/eliza";
+import { BitAgentClient } from "bitagent-sdk";
 
-export const mezoPlugin = {
-  name: "mezo-agent-plugin",
-  description: "Spend MUSD safely on Mezo Bitcoin Layer",
+export const bitAgentPlugin = {
+  name: "bitagent-plugin",
+  description: "Spend MUSD safely on Bitcoin L2",
   actions: [
-    createElizaMezoAction(new MezoAgentClient({ ... }))
+    createElizaBitAgentAction(new BitAgentClient({ ... }))
   ],
 };`,
 
-    curl: `# Query remaining hourly budget directly via Mezo RPC
+    curl: `# Query remaining hourly budget directly via Bitcoin L2 RPC
 curl -X POST https://rpc.test.mezo.org \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -171,7 +171,7 @@ curl -X POST https://rpc.test.mezo.org \\
           <div className="mt-4 pt-3 border-t border-surface-border/60 flex items-center justify-between text-xs text-slate-400">
             <span className="flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5 text-mezo" />
-              Package: <a href="https://www.npmjs.com/package/mezo-agent-sdk" target="_blank" rel="noopener noreferrer" className="text-mezo font-bold font-mono underline hover:text-orange-400">mezo-agent-sdk</a>
+              Package: <a href="https://www.npmjs.com/package/bitagent-sdk" target="_blank" rel="noopener noreferrer" className="text-mezo font-bold font-mono underline hover:text-orange-400">bitagent-sdk</a>
             </span>
             <span className="font-mono text-slate-500">Node.js 18+ / Browser</span>
           </div>

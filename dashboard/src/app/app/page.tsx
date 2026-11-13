@@ -144,7 +144,7 @@ export default function CockpitPage() {
       id: `log_${Date.now()}`,
       type: "BRIDGE",
       title: isLive ? "On-Chain Bridge Deposit" : "Cross-Chain Deposit",
-      description: `Bridged ${usdcAmount} USDC from Base → Minted ${musdAmount} MUSD on Mezo`,
+      description: `Bridged ${usdcAmount} USDC from Base → Minted ${musdAmount} MUSD on Bitcoin L2`,
       amount: `+${musdAmount.toFixed(2)} MUSD`,
       txHash: finalTxHash,
       timestamp: Date.now(),
@@ -158,11 +158,11 @@ export default function CockpitPage() {
       type: "BRIDGE",
       status: "SUCCESS",
       title: isLive ? "Live Cross-Chain Bridge Deposit Confirmed" : "Cross-Chain Deposit Confirmed",
-      subtitle: `Successfully converted ${usdcAmount} USDC from Base into ${musdAmount} native MUSD on Mezo via Wormhole NTT routing.`,
+      subtitle: `Successfully converted ${usdcAmount} USDC from Base into ${musdAmount} native MUSD on Bitcoin L2 via Wormhole NTT routing.`,
       amount: `+${musdAmount.toFixed(2)} MUSD`,
       txHash: finalTxHash,
       stateDiff: {
-        label: "Mezo MUSD Treasury Vault",
+        label: "MUSD Treasury Vault",
         before: `$${prevBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })} MUSD`,
         after: `$${nextBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })} MUSD`,
       },
@@ -204,7 +204,7 @@ export default function CockpitPage() {
       type: "BRIDGE",
       title: isLiveTx ? "On-Chain MUSD Faucet Mint" : "USDC Testnet Faucet",
       description: isLiveTx
-        ? `Minted 1,000 MUSD on Mezo Testnet (Chain ID 31611)`
+        ? `Minted 1,000 MUSD on Bitcoin L2 Testnet (Chain ID 31611)`
         : `Claimed ${claimedAmount} Mock USDC for cross-chain simulation`,
       amount: `+${claimedAmount} MUSD`,
       txHash: finalTxHash,
@@ -218,9 +218,9 @@ export default function CockpitPage() {
       isOpen: true,
       type: "FAUCET",
       status: "SUCCESS",
-      title: isLiveTx ? "Live Mezo Testnet Mint Confirmed" : "Mock USDC Faucet Drip Confirmed",
+      title: isLiveTx ? "Live Testnet Mint Confirmed" : "Mock USDC Faucet Drip Confirmed",
       subtitle: isLiveTx
-        ? `Successfully broadcasted to Mezo Testnet and confirmed on-chain (Chain ID 31611).`
+        ? `Successfully broadcasted to Bitcoin L2 Testnet and confirmed on-chain (Chain ID 31611).`
         : `Allocated ${claimedAmount} Mock USDC to simulate cross-chain treasury deposits and agent liquidity delegation.`,
       amount: `+${claimedAmount} MUSD`,
       txHash: finalTxHash,
@@ -280,7 +280,7 @@ export default function CockpitPage() {
       status: "SUCCESS",
       title: isLiveTx ? "On-Chain Session Key Active" : "Agent Session Key Active",
       subtitle: isLiveTx
-        ? `Broadcasted to Mezo Testnet smart account. Guarded by 12-bucket sliding window velocity controls.`
+        ? `Broadcasted to Bitcoin L2 Testnet smart account. Guarded by 12-bucket sliding window velocity controls.`
         : `Successfully authorized cryptographic session key for "${newKey.label}". Key is bounded by a mathematical 12-bucket sliding window.`,
       amount: `$${newKey.hourlyLimit}/h Limit`,
       txHash: finalTxHash,
@@ -327,7 +327,7 @@ export default function CockpitPage() {
       id: `log_${Date.now()}`,
       type: "REVOKE",
       title: isLiveTx ? "On-Chain Key Revocation" : "Session Key Revoked",
-      description: `Revoked session key for "${keyLabel}". Effective immediately on Mezo.`,
+      description: `Revoked session key for "${keyLabel}". Effective immediately on-chain.`,
       txHash: finalTxHash,
       timestamp: Date.now(),
       status: "SUCCESS",
@@ -341,7 +341,7 @@ export default function CockpitPage() {
       status: "SUCCESS",
       title: "Session Key Revocation Enforced",
       subtitle: isLiveTx
-        ? `Revocation transaction confirmed on Mezo Testnet (Chain ID 31611). Key invalidated.`
+        ? `Revocation transaction confirmed on Bitcoin L2 Testnet (Chain ID 31611). Key invalidated.`
         : `Session key for "${keyLabel}" has been invalidated. Cryptographic execution attempts will now revert on-chain.`,
       amount: "0.00 MUSD Spend Allowed",
       txHash: finalTxHash,
@@ -440,7 +440,7 @@ export default function CockpitPage() {
         type: "REVERT",
         status: "REVERTED",
         title: "Unauthorized Execution Reverted On-Chain",
-        subtitle: `Attack blocked by MezoAgentAccount smart contract. Zero treasury loss occurred.`,
+        subtitle: `Attack blocked by BitAgentAccount smart contract. Zero treasury loss occurred.`,
         amount: `$${costMUSD.toFixed(2)} Protected`,
         txHash: txHash,
         agentLabel: keyLabel,
@@ -505,8 +505,8 @@ export default function CockpitPage() {
       status: "SUCCESS",
       title: isLiveTx ? "On-Chain Approval Disbursed" : "Human Approval Executed",
       subtitle: isLiveTx
-        ? `Transaction confirmed on Mezo Testnet (Chain ID 31611). Funds released to target.`
-        : `Successfully authorized and disbursed ${targetReq.musdAmount.toFixed(2)} MUSD to ${targetReq.target.slice(0, 10)}... on Mezo Testnet.`,
+        ? `Transaction confirmed on Bitcoin L2 Testnet (Chain ID 31611). Funds released to target.`
+        : `Successfully authorized and disbursed ${targetReq.musdAmount.toFixed(2)} MUSD to ${targetReq.target.slice(0, 10)}... on Bitcoin L2 Testnet.`,
       amount: `-${targetReq.musdAmount.toFixed(2)} MUSD`,
       txHash: finalTxHash,
       agentLabel: targetReq.agentLabel,
@@ -595,7 +595,7 @@ export default function CockpitPage() {
       type: "BRIDGE",
       status: "SUCCESS",
       title: "Perpetual Endowment Deposit Confirmed",
-      subtitle: `Deposited $${amountMUSD.toFixed(2)} MUSD and ${amountBTC} BTC into Mezo Matsnet staking. All future agent spend will draw from 8.4% APY yield.`,
+      subtitle: `Deposited $${amountMUSD.toFixed(2)} MUSD and ${amountBTC} BTC into Bitcoin staking. All future agent spend will draw from 8.4% APY yield.`,
       amount: `+$${amountMUSD.toFixed(2)} Locked`,
       txHash: fakeTx,
       stateDiff: {
@@ -689,7 +689,7 @@ export default function CockpitPage() {
       buyerAddress: account.accountAddress,
       serviceName: serviceName,
       deliverableCid: `ipfs://bafybei${Math.random().toString(36).substring(2, 15)}`,
-      deliverableSummary: `Verified deliverable for ${serviceName} on Mezo EVM.`,
+      deliverableSummary: `Verified deliverable for ${serviceName} on Bitcoin L2 EVM.`,
       amountMUSD: costMUSD,
       timestamp: Date.now(),
       status: "SETTLED",
@@ -706,7 +706,7 @@ export default function CockpitPage() {
       id: `log_${Date.now()}`,
       type: "A2A_SETTLEMENT",
       title: "Autonomous A2A Settlement",
-      description: `Hired "${sellerAgent}" for "${serviceName}" - verified deliverable & settled on Mezo.`,
+      description: `Hired "${sellerAgent}" for "${serviceName}" - verified deliverable & settled on Bitcoin L2.`,
       amount: `-${costMUSD.toFixed(2)} MUSD`,
       txHash: fakeTx,
       timestamp: Date.now(),
@@ -720,7 +720,7 @@ export default function CockpitPage() {
       type: "AGENT_EXECUTION",
       status: "SUCCESS",
       title: "Autonomous A2A Micro-Settlement Confirmed",
-      subtitle: `Orchestrator verified EIP-712 invoice and IPFS proof, transferring $${costMUSD.toFixed(2)} MUSD to "${sellerAgent}" on Mezo EVM with zero human intervention.`,
+      subtitle: `Orchestrator verified EIP-712 invoice and IPFS proof, transferring $${costMUSD.toFixed(2)} MUSD to "${sellerAgent}" on Bitcoin L2 EVM with zero human intervention.`,
       amount: `-${costMUSD.toFixed(2)} MUSD`,
       txHash: fakeTx,
       agentLabel: sellerAgent,
@@ -740,7 +740,7 @@ export default function CockpitPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#07080E] text-slate-100 font-sans selection:bg-mezo/30 selection:text-orange-200">
+    <div className="min-h-screen flex flex-col bg-[#08090D] text-slate-100 font-sans selection:bg-mezo selection:text-black">
       {/* Top Application Header */}
       <Header
         ownerAddress={account.ownerAddress}
@@ -751,28 +751,28 @@ export default function CockpitPage() {
       />
 
       {/* Cockpit Sub-Navbar with Navigation Breadcrumbs & View Tabs */}
-      <div className="border-b border-surface-border bg-surface/70 backdrop-blur-md sticky top-18 z-30">
+      <div className="border-b-2 border-black bg-[#0D1018] sticky top-18 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-col sm:flex-row items-center justify-between gap-3">
           {/* Breadcrumb & Home Link */}
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-card border border-surface-border hover:border-slate-500 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-card border-2 border-black text-xs font-mono font-bold text-slate-200 hover:text-white shadow-brutal-sm hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all"
             >
-              <ArrowLeft className="w-3.5 h-3.5 text-mezo" />
-              <span>Landing Page</span>
+              <ArrowLeft className="w-3.5 h-3.5 text-mezo stroke-[3]" />
+              <span>HOME</span>
             </Link>
-            <div className="h-4 w-px bg-surface-border" />
+            <div className="h-4 w-0.5 bg-black" />
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-white tracking-wide">Mezo EVM Cockpit</span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 font-bold">
+              <span className="text-xs font-black text-white tracking-wide font-mono">BITCOIN L2 COCKPIT</span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-400 text-black border-2 border-black font-black shadow-brutal-sm">
                 ONLINE
               </span>
               <button
                 onClick={() => refreshAllOnChainData()}
                 disabled={isSyncingOnChain}
                 title="Sync live blockchain balances and registered session keys"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-card border border-surface-border hover:border-mezo/50 text-xs font-medium text-slate-300 hover:text-white transition-all disabled:opacity-50 ml-1"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-surface-card border-2 border-black text-xs font-mono font-bold text-slate-200 hover:text-white shadow-brutal-sm hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all disabled:opacity-50 ml-1"
               >
                 <RotateCw className={`w-3 h-3 text-mezo ${isSyncingOnChain ? "animate-spin" : ""}`} />
                 <span className="text-[11px] font-mono">{isSyncingOnChain ? "Syncing..." : "Sync Chain"}</span>
@@ -797,21 +797,21 @@ export default function CockpitPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as CockpitTab)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border-2 border-black shadow-brutal-sm whitespace-nowrap hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none ${
                     isActive
-                      ? "bg-mezo text-black shadow-md shadow-mezo/20"
-                      : "bg-surface-card border border-surface-border text-slate-400 hover:text-white hover:border-slate-500"
+                      ? "bg-mezo text-black font-black"
+                      : "bg-[#121622] text-slate-300 hover:text-white"
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
+                  <Icon className="w-3.5 h-3.5 stroke-[2.5]" />
                   <span>{tab.label}</span>
                   {tab.badge !== undefined && tab.badge > 0 && (
-                    <span className="ml-1 px-1.5 py-0.2 rounded-full bg-red-500 text-white text-[10px] font-mono">
+                    <span className="ml-1 px-1.5 py-0.2 rounded-md bg-red-500 text-white text-[10px] font-mono font-black border border-black">
                       {tab.badge}
                     </span>
                   )}
                   {tab.badgeText && (
-                    <span className="ml-1 px-1.5 py-0.2 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 text-[9px] font-mono font-bold">
+                    <span className="ml-1 px-1.5 py-0.2 rounded-md bg-amber-400 text-black border border-black text-[9px] font-mono font-black">
                       {tab.badgeText}
                     </span>
                   )}
@@ -924,10 +924,10 @@ export default function CockpitPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div className="flex items-center gap-2">
             <Code2 className="w-4 h-4 text-mezo" />
-            <span className="text-slate-400 font-medium">MezoAgent Institutional Cockpit</span>
+            <span className="text-slate-400 font-medium">BitAgent Institutional Cockpit</span>
           </div>
           <div className="flex items-center gap-4 font-mono text-[11px]">
-            <span>Mezo Testnet (31611)</span>
+            <span>Bitcoin L2 Testnet (31611)</span>
             <span>•</span>
             <span>BTC Native Gas</span>
             <span>•</span>

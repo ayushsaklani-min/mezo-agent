@@ -41,7 +41,7 @@ export const TransactionConfirmationModal: React.FC<Props> = ({ details, onClose
           colors: ["#F7931A", "#38BDF8", "#10B981", "#FFA834"],
         });
       } catch (e) {
-        // Safe fallback if canvas not available
+        // Safe fallback
       }
     }
   }, [details?.isOpen, details?.status]);
@@ -59,39 +59,18 @@ export const TransactionConfirmationModal: React.FC<Props> = ({ details, onClose
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-black/80 backdrop-blur-md"
-        />
-
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
         {/* Modal Card */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          transition={{ type: "spring", duration: 0.45, bounce: 0.2 }}
-          className={`relative z-10 w-full max-w-lg rounded-3xl p-6 sm:p-7 shadow-2xl border ${
-            isSuccess
-              ? "bg-[#0B0F19] border-emerald-500/30 shadow-emerald-950/40"
-              : "bg-[#140C0E] border-red-500/40 shadow-red-950/40"
-          }`}
+          exit={{ opacity: 0, scale: 0.95, y: 15 }}
+          className="relative z-10 w-full max-w-lg rounded-2xl p-6 sm:p-7 shadow-brutal-lg border-2 border-black bg-[#0E121E] font-mono"
         >
-          {/* Ambient Corner Glow */}
-          <div
-            className={`absolute -top-16 -right-16 w-44 h-44 rounded-full blur-3xl pointer-events-none ${
-              isSuccess ? "bg-emerald-500/15" : "bg-red-500/20"
-            }`}
-          />
-
           {/* Close Icon */}
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            className="absolute top-5 right-5 p-1.5 rounded-md bg-[#121622] border-2 border-black text-slate-300 hover:text-white font-bold"
           >
             <X className="w-4 h-4" />
           </button>
@@ -99,103 +78,103 @@ export const TransactionConfirmationModal: React.FC<Props> = ({ details, onClose
           {/* Top Status Header */}
           <div className="flex items-center gap-4 mb-5">
             <div
-              className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border ${
+              className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 border-2 border-black shadow-brutal-sm ${
                 isSuccess
-                  ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-400 shadow-lg shadow-emerald-500/20"
-                  : "bg-red-500/10 border-red-500/40 text-red-400 shadow-lg shadow-red-500/20"
+                  ? "bg-emerald-400 text-black"
+                  : "bg-red-400 text-black"
               }`}
             >
               {isSuccess ? (
-                <CheckCircle2 className="w-7 h-7 stroke-[2.2]" />
+                <CheckCircle2 className="w-7 h-7 stroke-[3]" />
               ) : (
-                <AlertOctagon className="w-7 h-7 stroke-[2.2]" />
+                <AlertOctagon className="w-7 h-7 stroke-[3]" />
               )}
             </div>
 
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span
-                  className={`text-[11px] font-mono font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full border ${
+                  className={`text-[10px] font-mono font-black uppercase px-2.5 py-0.5 rounded-md border-2 border-black shadow-brutal-sm ${
                     isSuccess
-                      ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
-                      : "bg-red-500/15 text-red-300 border-red-500/30"
+                      ? "bg-emerald-400 text-black"
+                      : "bg-red-400 text-black"
                   }`}
                 >
-                  {isSuccess ? "Confirmed on Mezo EVM" : "EVM Security Reverted"}
+                  {isSuccess ? "Confirmed on Bitcoin L2 EVM" : "EVM Security Reverted"}
                 </span>
-                <span className="text-[10px] text-slate-500 font-mono">Chain 31611</span>
+                <span className="text-[10px] text-slate-400 font-bold">CHAIN 31611</span>
               </div>
-              <h3 className="text-xl font-extrabold text-white tracking-tight">{details.title}</h3>
+              <h3 className="text-xl font-black text-white tracking-tight">{details.title}</h3>
             </div>
           </div>
 
-          <p className="text-xs text-slate-300 leading-relaxed mb-5">
+          <p className="text-xs text-slate-300 leading-relaxed mb-5 font-bold">
             {details.subtitle}
           </p>
 
-          {/* Amount Badge (if applicable) */}
+          {/* Amount Badge */}
           {details.amount && (
-            <div className="mb-4 p-3.5 rounded-2xl bg-surface-light/80 border border-surface-border flex items-center justify-between">
-              <span className="text-xs text-slate-400">Value Transferred</span>
-              <span className="text-lg font-mono font-extrabold text-mezo">
+            <div className="mb-4 p-3.5 rounded-xl bg-[#05060A] border-2 border-black flex items-center justify-between">
+              <span className="text-xs text-slate-400 font-bold">VALUE TRANSFERRED</span>
+              <span className="text-lg font-mono font-black text-mezo">
                 {details.amount}
               </span>
             </div>
           )}
 
-          {/* State Diff Card (e.g. Balance or Limit changes) */}
+          {/* State Diff Card */}
           {details.stateDiff && (
-            <div className="mb-4 p-3.5 rounded-2xl bg-surface-card border border-surface-border/70">
-              <div className="text-[11px] text-slate-400 font-medium mb-1.5">
+            <div className="mb-4 p-3.5 rounded-xl bg-[#05060A] border-2 border-black">
+              <div className="text-[11px] text-slate-400 font-bold mb-1.5">
                 {details.stateDiff.label}
               </div>
-              <div className="flex items-center justify-between text-xs font-mono">
+              <div className="flex items-center justify-between text-xs font-mono font-bold">
                 <span className="text-slate-400 line-through">{details.stateDiff.before}</span>
-                <ArrowRight className="w-3.5 h-3.5 text-mezo mx-2" />
-                <span className="text-emerald-400 font-bold">{details.stateDiff.after}</span>
+                <ArrowRight className="w-3.5 h-3.5 text-mezo stroke-[3] mx-2" />
+                <span className="text-emerald-400 font-black">{details.stateDiff.after}</span>
               </div>
             </div>
           )}
 
           {/* Revert Reason Banner */}
           {!isSuccess && details.revertReason && (
-            <div className="mb-4 p-3.5 rounded-2xl bg-red-950/40 border border-red-800/50">
-              <div className="flex items-center gap-2 text-xs font-semibold text-red-300 mb-1">
-                <ShieldCheck className="w-4 h-4 text-red-400" />
+            <div className="mb-4 p-3.5 rounded-xl bg-red-950/40 border-2 border-red-500 text-xs font-bold text-red-300">
+              <div className="flex items-center gap-2 mb-1 text-red-200">
+                <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
                 <span>On-Chain Velocity Guardrail Active</span>
               </div>
-              <p className="text-[11px] text-red-200/90 font-mono">
+              <p className="text-[11px] font-mono text-red-300">
                 {details.revertReason}
               </p>
             </div>
           )}
 
           {/* On-Chain Metrics Grid */}
-          <div className="grid grid-cols-2 gap-2 text-xs font-mono bg-black/40 border border-surface-border/60 rounded-2xl p-3.5 mb-5">
+          <div className="grid grid-cols-2 gap-2 text-xs font-mono bg-[#05060A] border-2 border-black rounded-xl p-3.5 mb-5 font-bold">
             <div>
-              <span className="block text-[10px] text-slate-500 uppercase font-sans">Finality</span>
-              <span className="text-slate-200 font-semibold flex items-center gap-1 mt-0.5">
-                <Zap className="w-3 h-3 text-mezo" />
+              <span className="block text-[10px] text-slate-400 uppercase">FINALITY</span>
+              <span className="text-slate-200 flex items-center gap-1 mt-0.5">
+                <Zap className="w-3 h-3 text-mezo fill-mezo" />
                 1.18s Block Time
               </span>
             </div>
             <div>
-              <span className="block text-[10px] text-slate-500 uppercase font-sans">Gas Token</span>
-              <span className="text-slate-200 font-semibold mt-0.5 block">0.000018 BTC</span>
+              <span className="block text-[10px] text-slate-400 uppercase">GAS TOKEN</span>
+              <span className="text-slate-200 mt-0.5 block">0.000018 BTC</span>
             </div>
-            <div className="col-span-2 pt-2 border-t border-surface-border/40">
-              <span className="block text-[10px] text-slate-500 uppercase font-sans mb-1">
-                Transaction Hash
+            <div className="col-span-2 pt-2 border-t-2 border-zinc-800">
+              <span className="block text-[10px] text-slate-400 uppercase mb-1">
+                TRANSACTION HASH
               </span>
-              <div className="flex items-center justify-between bg-surface-light/90 px-2.5 py-1.5 rounded-xl border border-surface-border text-[11px]">
-                <span className="text-slate-300 truncate max-w-[260px]">{displayTxHash}</span>
+              <div className="flex items-center justify-between bg-[#121622] px-2.5 py-1.5 rounded-lg border border-black text-[11px]">
+                <span className="text-slate-200 truncate max-w-[260px]">{displayTxHash}</span>
                 <button
                   onClick={handleCopy}
                   className="hover:text-white transition-colors ml-2 p-1"
                   title="Copy Hash"
                 >
                   {copied ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[3]" />
                   ) : (
                     <Copy className="w-3.5 h-3.5 text-slate-400" />
                   )}
@@ -210,21 +189,21 @@ export const TransactionConfirmationModal: React.FC<Props> = ({ details, onClose
               href={`${MEZO_CONFIG.explorerUrl}/tx/${displayTxHash}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 py-3 px-4 rounded-xl bg-surface-light border border-surface-border hover:border-mezo/50 text-slate-200 hover:text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all"
+              className="flex-1 py-3 px-4 rounded-xl bg-[#121622] border-2 border-black text-slate-200 hover:text-white text-xs font-black flex items-center justify-center gap-2 shadow-brutal-sm hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
             >
-              <span>Mezo Explorer</span>
+              <span>Block Explorer</span>
               <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
             </a>
 
             <button
               onClick={onClose}
-              className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition-all shadow-lg ${
+              className={`flex-1 py-3 px-4 rounded-xl text-xs font-black border-2 border-black transition-all shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none ${
                 isSuccess
-                  ? "bg-mezo hover:bg-mezo-hover text-black shadow-mezo/20"
-                  : "bg-surface-light border border-surface-border hover:bg-surface text-white"
+                  ? "bg-mezo text-black"
+                  : "bg-white text-black"
               }`}
             >
-              Continue
+              CONTINUE
             </button>
           </div>
         </motion.div>

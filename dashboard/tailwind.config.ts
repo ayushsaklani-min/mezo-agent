@@ -9,17 +9,29 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#07080E",
-        surface: "#0E111B",
-        "surface-light": "#151928",
-        "surface-card": "#101422",
-        "surface-border": "#1E2436",
+        background: "#08090D",
+        surface: "#0F1118",
+        "surface-light": "#171A24",
+        "surface-card": "#131620",
+        "surface-border": "#222634",
         mezo: {
           DEFAULT: "#F7931A",
           hover: "#E8830E",
           light: "#FFA834",
-          glow: "rgba(247, 147, 26, 0.15)",
+          glow: "rgba(247, 147, 26, 0.2)",
         },
+      },
+      boxShadow: {
+        brutal: "4px 4px 0px 0px #000000",
+        "brutal-lg": "6px 6px 0px 0px #000000",
+        "brutal-sm": "2px 2px 0px 0px #000000",
+        "brutal-mezo": "4px 4px 0px 0px #F7931A",
+        "brutal-mezo-lg": "6px 6px 0px 0px #F7931A",
+        "brutal-emerald": "4px 4px 0px 0px #10B981",
+        "brutal-red": "4px 4px 0px 0px #EF4444",
+        "brutal-purple": "4px 4px 0px 0px #A855F7",
+        "brutal-cyan": "4px 4px 0px 0px #06B6D4",
+        "brutal-white": "4px 4px 0px 0px #FFFFFF",
       },
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', "system-ui", "-apple-system", "sans-serif"],

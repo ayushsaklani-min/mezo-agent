@@ -1,0 +1,107 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#121624"/>
+      <stop offset="50%" stop-color="#090B10"/>
+      <stop offset="100%" stop-color="#040508"/>
+    </linearGradient>
+
+    <!-- Border Glow Gradient -->
+    <linearGradient id="borderGlow" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.8"/>
+      <stop offset="50%" stop-color="#F97316" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0.6"/>
+    </linearGradient>
+
+    <!-- Golden Shield Gradient -->
+    <linearGradient id="shieldGrad" x1="128" y1="96" x2="384" y2="416" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FDE047"/>
+      <stop offset="35%" stop-color="#F59E0B"/>
+      <stop offset="75%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#92400E"/>
+    </linearGradient>
+
+    <!-- Core Inner Eye Gradient -->
+    <linearGradient id="coreGrad" x1="200" y1="200" x2="312" y2="312" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="40%" stop-color="#FEF08A"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+
+    <!-- Shadow & Glow Filters -->
+    <filter id="glowFilter" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="intenseGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="24" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Squircle Base Frame -->
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#bgGrad)"/>
+  <rect x="16" y="16" width="480" height="480" rx="108" stroke="url(#borderGlow)" stroke-width="4"/>
+
+  <!-- Circuit Accent Lines -->
+  <path d="M 80 180 L 160 180 L 200 220" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" stroke-opacity="0.35"/>
+  <circle cx="80" cy="180" r="5" fill="#F59E0B" fill-opacity="0.6"/>
+
+  <path d="M 432 180 L 352 180 L 312 220" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" stroke-opacity="0.35"/>
+  <circle cx="432" cy="180" r="5" fill="#F59E0B" fill-opacity="0.6"/>
+
+  <path d="M 120 380 L 190 380 L 230 340" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" stroke-opacity="0.35"/>
+  <circle cx="120" cy="380" r="5" fill="#F59E0B" fill-opacity="0.6"/>
+
+  <path d="M 392 380 L 322 380 L 282 340" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" stroke-opacity="0.35"/>
+  <circle cx="392" cy="380" r="5" fill="#F59E0B" fill-opacity="0.6"/>
+
+  <!-- Ambient Glow Behind Shield -->
+  <circle cx="256" cy="256" r="140" fill="#F59E0B" fill-opacity="0.18" filter="url(#intenseGlow)"/>
+
+  <!-- Main Heraldic Shield (The Guardian of Treasury) -->
+  <path d="M 256 100 
+           C 336 100 376 116 384 140
+           C 384 256 348 356 256 408
+           C 164 356 128 256 128 140
+           C 136 116 176 100 256 100 Z" 
+        fill="url(#shieldGrad)" 
+        stroke="#FFF" 
+        stroke-opacity="0.4" 
+        stroke-width="3"
+        filter="url(#glowFilter)"/>
+
+  <!-- Inner Protective Plate -->
+  <path d="M 256 126
+           C 318 126 348 138 354 156
+           C 354 246 326 326 256 372
+           C 186 326 158 246 158 156
+           C 164 138 194 126 256 126 Z" 
+        fill="#0B0E17" 
+        stroke="#F59E0B" 
+        stroke-opacity="0.5" 
+        stroke-width="2.5"/>
+
+  <!-- Autonomous AI Core (Neural Circuit / Bitcoin Intersection) -->
+  <circle cx="256" cy="240" r="48" fill="#121726" stroke="#F59E0B" stroke-width="3"/>
+  <circle cx="256" cy="240" r="32" fill="url(#coreGrad)" filter="url(#glowFilter)"/>
+
+  <!-- Spark of Agency (Central Star Diamond) -->
+  <path d="M 256 218 L 263 233 L 278 240 L 263 247 L 256 262 L 249 247 L 234 240 L 249 233 Z" fill="#000000"/>
+
+  <!-- Upper Bitcoin Symbol Accent (Symmetric Nodes) -->
+  <line x1="256" y1="148" x2="256" y2="182" stroke="#F59E0B" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="256" cy="148" r="4" fill="#FDE047"/>
+
+  <!-- Lower Anchor Node -->
+  <line x1="256" y1="298" x2="256" y2="332" stroke="#F59E0B" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="256" cy="332" r="4" fill="#FDE047"/>
+
+  <!-- Satellite Autonomous Nodes -->
+  <circle cx="204" cy="240" r="5" fill="#FDE047" filter="url(#glowFilter)"/>
+  <line x1="209" y1="240" x2="224" y2="240" stroke="#F59E0B" stroke-width="2.5"/>
+
+  <circle cx="308" cy="240" r="5" fill="#FDE047" filter="url(#glowFilter)"/>
+  <line x1="288" y1="240" x2="303" y2="240" stroke="#F59E0B" stroke-width="2.5"/>
+</svg>

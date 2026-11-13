@@ -1,7 +1,7 @@
 export const MEZO_CONFIG = {
   chainId: 31611,
   chainIdHex: "0x7b7b",
-  name: "Mezo Testnet",
+  name: "Bitcoin L2 Testnet",
   rpcUrl: "https://rpc.test.mezo.org",
   localRpcUrl: "http://127.0.0.1:8545",
   explorerUrl: "https://explorer.test.mezo.org",
@@ -19,11 +19,9 @@ export const MEZO_CONFIG = {
     agentSigner: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
     agentPrivateKey: "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d",
   },
-  buildathon: {
-    event: "Build with MUSD and MEZO",
-    platform: "AKINDO",
-    track: "Access & Distribution (Agentic Tools / AI Wallets)",
-    prizePool: "$7,000 in MEZO Grants",
+  networkTier: {
+    type: "Bitcoin L2 Autonomous Layer",
+    consensus: "BTC Staking & Proof-of-Yield",
   },
 };
 
@@ -42,7 +40,7 @@ export const INITIAL_SESSION_KEYS: any[] = [];
 export const INITIAL_ENDOWMENT_VAULT = {
   principalMUSD: 5000.0,
   btcPrincipal: 0.15,
-  apy: 8.4, // 8.4% APY on Mezo Bitcoin staking & MUSD yield
+  apy: 8.4, // 8.4% APY on Bitcoin staking & MUSD yield
   accruedYieldMUSD: 42.68,
   accruedBtcYield: 0.00126,
   autoCompound: false,
@@ -92,7 +90,7 @@ export const INITIAL_A2A_INVOICES = [
     buyerAddress: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
     serviceName: "Cross-Chain Relayer Gas Hedging & Routing",
     deliverableCid: "ipfs://bafybeicm37dnqp20948fh10293h47g019284h019284hf",
-    deliverableSummary: "Relayed 250 USDC inbound payload from Base to Mezo Testnet (Chain ID 31611).",
+    deliverableSummary: "Relayed 250 USDC inbound payload from Base to Bitcoin L2 Testnet (Chain ID 31611).",
     amountMUSD: 2.2,
     timestamp: Date.now() - 600000,
     status: "ISSUED" as const,

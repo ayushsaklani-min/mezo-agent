@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,36 +6,58 @@
 
 :root {
   --foreground-rgb: 248, 250, 252;
-  --background-start-rgb: 7, 8, 14;
-  --background-end-rgb: 10, 12, 19;
+  --background-start-rgb: 8, 9, 13;
+  --background-end-rgb: 12, 14, 20;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background-color: #07080E;
+  background-color: #08090D;
   background-image: 
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(247, 147, 26, 0.12), transparent),
-    radial-gradient(circle at 100% 20%, rgba(56, 189, 248, 0.05), transparent),
-    linear-gradient(to bottom, #07080E, #0A0D16);
+    radial-gradient(ellipse 70% 40% at 50% -10%, rgba(247, 147, 26, 0.15), transparent),
+    radial-gradient(circle at 90% 15%, rgba(16, 185, 129, 0.08), transparent),
+    linear-gradient(to bottom, #08090D, #0D0F17);
   min-height: 100vh;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-/* Subtle background grid pattern */
+/* Neo-Brutalist Grid Pattern */
 .bg-grid-pattern {
   background-size: 32px 32px;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
 }
 
-/* Glow effects */
-.glow-mezo {
-  box-shadow: 0 0 35px -5px rgba(247, 147, 26, 0.25);
-}
+/* Neo-Brutalist Core Components */
+@layer components {
+  .neo-box {
+    @apply border-2 border-black bg-surface-card shadow-brutal rounded-2xl transition-all;
+  }
+  
+  .neo-box-mezo {
+    @apply border-2 border-black bg-mezo text-black shadow-brutal rounded-2xl;
+  }
 
-.glow-cyan {
-  box-shadow: 0 0 35px -5px rgba(56, 189, 248, 0.25);
+  .neo-btn {
+    @apply border-2 border-black font-extrabold shadow-brutal transition-all duration-150 select-none;
+  }
+  
+  .neo-btn:hover {
+    @apply -translate-x-0.5 -translate-y-0.5 shadow-brutal-lg;
+  }
+
+  .neo-btn:active {
+    @apply translate-x-1 translate-y-1 shadow-none;
+  }
+
+  .neo-pill {
+    @apply border-2 border-black font-mono font-bold text-xs uppercase px-3 py-1 rounded-full shadow-brutal-sm inline-flex items-center gap-1.5;
+  }
+
+  .neo-card-dark {
+    @apply border-2 border-zinc-800 bg-[#0E111A] shadow-[4px_4px_0px_0px_#000000] rounded-2xl;
+  }
 }
 
 /* Custom scrollbar */
@@ -44,11 +66,12 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #07080E;
+  background: #08090D;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1E2436;
+  background: #222634;
   border-radius: 9999px;
+  border: 1px solid #000;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #F7931A;

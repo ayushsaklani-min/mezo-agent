@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, XCircle, Clock, ExternalLink, Activity, Download, FileSpreadsheet, FileJson, Check } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, ExternalLink, Activity, FileSpreadsheet, FileJson, Check } from "lucide-react";
 import { MEZO_CONFIG } from "@/lib/constants";
 import type { ActivityLog } from "@/lib/types";
 
@@ -43,7 +43,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ logs }) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `mezoagent-audit-trail-${Date.now()}.csv`);
+    link.setAttribute("download", `bitagent-audit-trail-${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -69,7 +69,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ logs }) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `mezoagent-audit-trail-${Date.now()}.json`);
+    link.setAttribute("download", `bitagent-audit-trail-${Date.now()}.json`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -83,62 +83,58 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ logs }) => {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: 0.25 }}
-      className="p-6 sm:p-7 rounded-3xl bg-surface border border-surface-border shadow-xl relative overflow-hidden"
+      className="p-6 sm:p-7 rounded-2xl bg-[#0E121E] border-2 border-black shadow-brutal-lg relative overflow-hidden"
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-3 border-b-2 border-black font-mono">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
-              <Activity className="w-5 h-5 text-mezo" />
-              <span>Live On-Chain Activity Feed</span>
+            <h2 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-2">
+              <Activity className="w-5 h-5 text-mezo stroke-[2.5]" />
+              <span>LIVE ON-CHAIN ACTIVITY FEED</span>
             </h2>
           </div>
           <p className="text-xs text-slate-400">
-            Real-time events emitted from MezoAgentAccount contracts on Mezo Testnet
+            Real-time events emitted from BitAgentAccount contracts on Bitcoin L2 Testnet
           </p>
         </div>
 
         {/* Audit Trail Export Action Buttons */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <span className="text-xs font-mono px-3 py-1 rounded-full bg-surface-card border border-surface-border text-slate-400 font-semibold hidden md:inline">
-            {logs.length} events
+        <div className="flex items-center gap-2 self-start sm:self-auto font-mono">
+          <span className="text-xs px-2.5 py-1 rounded-md bg-[#121622] border-2 border-black text-slate-300 font-bold hidden md:inline shadow-brutal-sm">
+            {logs.length} EVENTS
           </span>
 
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-card border border-surface-border hover:border-slate-500 text-xs font-semibold text-slate-300 transition-colors shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-card border-2 border-black text-xs font-bold text-slate-200 hover:text-white shadow-brutal-sm hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
             title="Download CSV Audit Log for Accounting / Treasuries"
           >
             {downloadSuccess === "CSV" ? (
               <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[3]" />
             ) : (
-              <FileSpreadsheet className="w-3.5 h-3.5 text-mezo" />
+              <FileSpreadsheet className="w-3.5 h-3.5 text-mezo stroke-[2.5]" />
             )}
             <span>Export CSV</span>
-          </motion.button>
+          </button>
 
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={handleExportJSON}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-card border border-surface-border hover:border-slate-500 text-xs font-semibold text-slate-300 transition-colors shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-card border-2 border-black text-xs font-bold text-slate-200 hover:text-white shadow-brutal-sm hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
             title="Download JSON Audit Log for SIEM / Data Pipeline"
           >
             {downloadSuccess === "JSON" ? (
               <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[3]" />
             ) : (
-              <FileJson className="w-3.5 h-3.5 text-cyan-400" />
+              <FileJson className="w-3.5 h-3.5 text-cyan-400 stroke-[2.5]" />
             )}
             <span>Export JSON</span>
-          </motion.button>
+          </button>
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 font-mono">
         {logs.length === 0 ? (
-          <div className="text-center py-10 text-xs text-slate-500 font-medium">
+          <div className="text-center py-10 text-xs text-slate-500 font-bold border-2 border-dashed border-zinc-800 rounded-xl">
             No transactions recorded in this session.
           </div>
         ) : (
@@ -151,38 +147,38 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ logs }) => {
                 layout
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="p-4 rounded-2xl bg-surface-card border border-surface-border/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-sm"
+                className="p-4 rounded-xl bg-[#05060A] border-2 border-black flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
               >
                 <div className="flex items-center gap-3.5">
                   <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                    className={`w-9 h-9 rounded-xl border-2 border-black flex items-center justify-center shrink-0 shadow-brutal-sm ${
                       isSuccess
-                        ? "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20"
-                        : "bg-red-500/10 text-red-400 ring-1 ring-red-500/20"
+                        ? "bg-emerald-400 text-black"
+                        : "bg-red-400 text-black"
                     }`}
                   >
                     {isSuccess ? (
-                      <CheckCircle2 className="w-4 h-4 stroke-[2.2]" />
+                      <CheckCircle2 className="w-4 h-4 stroke-[3]" />
                     ) : (
-                      <XCircle className="w-4 h-4 stroke-[2.2]" />
+                      <XCircle className="w-4 h-4 stroke-[3]" />
                     )}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-white">{log.title}</span>
+                      <span className="font-black text-sm text-white">{log.title}</span>
                       {log.amount && (
-                        <span className="font-mono font-extrabold text-mezo">
+                        <span className="font-black text-mezo">
                           {log.amount}
                         </span>
                       )}
                     </div>
-                    <p className="text-slate-400 text-xs mt-0.5">{log.description}</p>
+                    <p className="text-slate-300 text-xs mt-0.5 font-bold">{log.description}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-0 border-surface-border/40">
-                  <span className="text-[11px] text-slate-500 flex items-center gap-1 font-mono">
-                    <Clock className="w-3 h-3 text-slate-600" />
+                <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-0 border-zinc-800">
+                  <span className="text-[11px] text-slate-400 flex items-center gap-1 font-mono">
+                    <Clock className="w-3 h-3 text-slate-500" />
                     {new Date(log.timestamp).toLocaleTimeString()}
                   </span>
 
@@ -191,13 +187,13 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ logs }) => {
                       href={`${MEZO_CONFIG.explorerUrl}/tx/${log.txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 font-mono text-xs text-mezo hover:underline font-semibold"
+                      className="flex items-center gap-1 font-mono text-xs text-mezo hover:underline font-bold"
                     >
                       <span>{log.txHash.slice(0, 8)}...</span>
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   ) : (
-                    <span className="text-[10px] text-red-400 font-mono font-bold px-2 py-0.5 rounded bg-red-950/40 border border-red-900/40">
+                    <span className="text-[10px] text-black font-black px-2 py-0.5 rounded-md bg-red-400 border border-black">
                       REVERTED
                     </span>
                   )}

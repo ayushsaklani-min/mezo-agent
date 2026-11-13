@@ -157,10 +157,10 @@ export const SecurityAuditModal: React.FC<SecurityAuditModalProps> = ({ isOpen, 
                 <div className="p-3 rounded-xl bg-surface-light border border-surface-border flex items-center justify-between">
                   <div>
                     <span className="block font-bold text-white text-xs">Security Contact</span>
-                    <span className="text-[11px] text-slate-400 font-mono">security@mezoagent.xyz</span>
+                    <span className="text-[11px] text-slate-400 font-mono">security@bitagent.network</span>
                   </div>
                   <a
-                    href="mailto:security@mezoagent.xyz"
+                    href="mailto:security@bitagent.network"
                     className="px-3 py-1.5 rounded-xl bg-mezo text-black text-xs font-bold shadow-sm"
                   >
                     Report Finding

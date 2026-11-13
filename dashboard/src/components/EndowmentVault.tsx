@@ -24,7 +24,6 @@ export const EndowmentVault: React.FC<EndowmentVaultProps> = ({
   vault,
   onDepositPrincipal,
   onToggleAutoCompound,
-  onDrawYield,
 }) => {
   const [liveYieldMUSD, setLiveYieldMUSD] = useState(vault.accruedYieldMUSD);
   const [isDepositOpen, setIsDepositOpen] = useState(false);
@@ -33,7 +32,6 @@ export const EndowmentVault: React.FC<EndowmentVaultProps> = ({
 
   // Real-time micro-yield ticker: accumulates fractionally every second based on 8.4% APY
   useEffect(() => {
-    // 8.4% APY on principalMUSD divided into seconds
     const yearlyYield = (vault.principalMUSD * (vault.apy / 100));
     const yieldPerSecond = yearlyYield / (365 * 24 * 3600);
 
@@ -59,16 +57,14 @@ export const EndowmentVault: React.FC<EndowmentVaultProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Banner Card: Self-Funding Concept */}
-      <div className="rounded-3xl bg-gradient-to-r from-amber-500/10 via-surface-card to-surface-card border border-amber-500/25 p-6 sm:p-7 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-[90px] pointer-events-none" />
-
+      <div className="rounded-2xl bg-[#0E121E] border-2 border-black p-6 sm:p-7 shadow-brutal-lg relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
           <div className="space-y-2 max-w-2xl">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-amber-500/20 text-mezo border border-amber-500/40">
-                <Coins className="w-5 h-5" />
+              <div className="p-2 rounded-xl bg-amber-400 text-black border-2 border-black shadow-brutal-sm">
+                <Coins className="w-5 h-5 stroke-[2.5]" />
               </div>
-              <span className="text-xs font-mono font-bold text-mezo uppercase tracking-wider">
+              <span className="text-xs font-mono font-black text-amber-400 uppercase tracking-wider">
                 DIFFERENTIATOR 1 • SELF-FUNDING ENDOWMENT
               </span>
             </div>
@@ -76,7 +72,7 @@ export const EndowmentVault: React.FC<EndowmentVaultProps> = ({
               Yield-Funded Autonomous Agents (Perpetual Endowment)
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Principal capital ($5,000 MUSD + 0.15 BTC) remains <strong>permanently locked in cold custody</strong> earning 8.4% APY on Mezo.
+              Principal capital ($5,000 MUSD + 0.15 BTC) remains <strong>permanently locked in cold custody</strong> earning 8.4% APY on Bitcoin L2.
               Agent operational session keys strictly spend from <strong>accrued Bitcoin staking yield</strong>. Zero risk to principal balance.
             </p>
           </div>
@@ -84,14 +80,14 @@ export const EndowmentVault: React.FC<EndowmentVaultProps> = ({
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => setIsDepositOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-mezo hover:bg-mezo-hover text-black text-xs font-black shadow-lg shadow-mezo/20 transition-all active:scale-95"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-mezo text-black text-xs font-black border-2 border-black shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
             >
-              <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-              <span>Add to Endowment</span>
+              <PlusCircle className="w-4 h-4 stroke-[3]" />
+              <span>ADD TO ENDOWMENT</span>
             </button>
-            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-surface-light border border-surface-border text-xs font-semibold text-slate-200">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
-              <span className="text-[11px] font-mono">Matsnet Yield Active (8.4% APY)</span>
+            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#121622] border-2 border-black text-xs font-mono font-bold text-slate-200 shadow-brutal-sm">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>8.4% APY Yield Active</span>
             </div>
           </div>
         </div>
@@ -100,119 +96,119 @@ export const EndowmentVault: React.FC<EndowmentVaultProps> = ({
       {/* Grid of Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Metric 1: Locked Cold Principal */}
-        <div className="rounded-2xl bg-surface-card border border-surface-border p-5 space-y-2 relative overflow-hidden group hover:border-slate-600 transition-colors">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>Locked Principal (Cold)</span>
-            <Lock className="w-4 h-4 text-slate-500" />
+        <div className="rounded-2xl bg-[#0E121E] border-2 border-black p-5 space-y-2 shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all">
+          <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-400">
+            <span>LOCKED PRINCIPAL (COLD)</span>
+            <Lock className="w-4 h-4 text-slate-400 stroke-[2.5]" />
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-black text-white font-mono">
               ${vault.principalMUSD.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </span>
-            <span className="text-xs font-mono text-slate-400">MUSD</span>
+            <span className="text-xs font-mono text-slate-400 font-bold">MUSD</span>
           </div>
-          <div className="flex items-center gap-2 text-[11px] font-mono text-amber-400 pt-1 border-t border-surface-border/60">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+          <div className="flex items-center gap-2 text-[11px] font-mono font-bold text-amber-400 pt-2 border-t-2 border-black">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 stroke-[2.5]" />
             <span>+ {vault.btcPrincipal} BTC Staked (Untouchable)</span>
           </div>
         </div>
 
         {/* Metric 2: Live Accrued Yield */}
-        <div className="rounded-2xl bg-surface-card border border-emerald-500/30 p-5 space-y-2 relative overflow-hidden group hover:border-emerald-500/50 transition-colors shadow-lg shadow-emerald-500/5">
-          <div className="flex items-center justify-between text-xs text-emerald-400 font-medium">
-            <span>Accrued Yield (Live Ticker)</span>
-            <TrendingUp className="w-4 h-4 text-emerald-400 animate-pulse" />
+        <div className="rounded-2xl bg-[#0E121E] border-2 border-black p-5 space-y-2 shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all">
+          <div className="flex items-center justify-between text-xs font-mono font-bold text-emerald-400">
+            <span>ACCRUED YIELD (LIVE TICKER)</span>
+            <TrendingUp className="w-4 h-4 text-emerald-400 stroke-[2.5] animate-pulse" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-emerald-300 font-mono">
+            <span className="text-2xl font-black text-emerald-400 font-mono">
               ${liveYieldMUSD.toFixed(4)}
             </span>
-            <span className="text-xs font-mono text-emerald-500 font-bold">MUSD</span>
+            <span className="text-xs font-mono text-emerald-500 font-black">MUSD</span>
           </div>
-          <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1 border-t border-surface-border/60">
+          <div className="flex items-center justify-between text-[11px] font-mono font-bold text-slate-400 pt-2 border-t-2 border-black">
             <span>Rate:</span>
-            <span className="text-emerald-400 font-bold">~${((vault.principalMUSD * 0.084) / 30).toFixed(2)}/mo</span>
+            <span className="text-emerald-400 font-black">~${((vault.principalMUSD * 0.084) / 30).toFixed(2)}/mo</span>
           </div>
         </div>
 
         {/* Metric 3: Active Spend Allowance from Yield */}
-        <div className="rounded-2xl bg-surface-card border border-surface-border p-5 space-y-2 relative overflow-hidden group hover:border-slate-600 transition-colors">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>Yield Operational Budget</span>
-            <Zap className="w-4 h-4 text-mezo" />
+        <div className="rounded-2xl bg-[#0E121E] border-2 border-black p-5 space-y-2 shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all">
+          <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-400">
+            <span>YIELD OPERATIONAL BUDGET</span>
+            <Zap className="w-4 h-4 text-amber-400 stroke-[2.5]" />
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-black text-white font-mono">
               ${availableYieldBudget.toFixed(2)}
             </span>
-            <span className="text-xs font-mono text-mezo font-bold">MUSD Free</span>
+            <span className="text-xs font-mono text-mezo font-black">MUSD Free</span>
           </div>
-          <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1 border-t border-surface-border/60">
+          <div className="flex items-center justify-between text-[11px] font-mono font-bold text-slate-400 pt-2 border-t-2 border-black">
             <span>Yield Drawn to Date:</span>
-            <span className="text-slate-300">${vault.yieldDrawnTotal.toFixed(2)}</span>
+            <span className="text-slate-200">${vault.yieldDrawnTotal.toFixed(2)}</span>
           </div>
         </div>
 
         {/* Metric 4: Auto-Compounding Mode */}
-        <div className="rounded-2xl bg-surface-card border border-surface-border p-5 space-y-2 relative overflow-hidden group hover:border-slate-600 transition-colors">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
-            <span>Surplus Yield Strategy</span>
-            <Sliders className="w-4 h-4 text-cyan-400" />
+        <div className="rounded-2xl bg-[#0E121E] border-2 border-black p-5 space-y-2 shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all">
+          <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-400">
+            <span>SURPLUS YIELD STRATEGY</span>
+            <Sliders className="w-4 h-4 text-cyan-400 stroke-[2.5]" />
           </div>
           <div className="pt-1 flex items-center justify-between">
-            <span className="text-sm font-bold text-white">
+            <span className="text-xs font-mono font-bold text-white">
               {vault.autoCompound ? "Auto-Compound" : "Stream to Agents"}
             </span>
             <button
               onClick={() => onToggleAutoCompound(!vault.autoCompound)}
-              className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
-                vault.autoCompound ? "bg-emerald-500" : "bg-slate-700"
+              className={`w-11 h-6 flex items-center rounded-full p-1 border-2 border-black transition-colors ${
+                vault.autoCompound ? "bg-emerald-400" : "bg-slate-700"
               }`}
             >
               <div
-                className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                className={`bg-black w-4 h-4 rounded-full shadow-sm transform transition-transform ${
                   vault.autoCompound ? "translate-x-5" : "translate-x-0"
                 }`}
               />
             </button>
           </div>
-          <p className="text-[11px] text-slate-400 pt-1.5 border-t border-surface-border/60">
+          <p className="text-[11px] font-mono text-slate-400 pt-2 border-t-2 border-black">
             {vault.autoCompound
-              ? "Surplus yield auto-restakes into Mezo HODL"
+              ? "Surplus yield auto-restakes into Bitcoin HODL"
               : "Surplus yield available for autonomous agents"}
           </p>
         </div>
       </div>
 
       {/* Visual Safety Architecture Comparison Card */}
-      <div className="rounded-3xl bg-surface-card border border-surface-border p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-surface-border pb-3">
+      <div className="rounded-2xl bg-[#0E121E] border-2 border-black p-6 space-y-4 shadow-brutal">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-black pb-3">
           <div className="flex items-center gap-2.5">
-            <ShieldCheck className="w-5 h-5 text-emerald-400" />
-            <h3 className="text-sm font-bold text-white">
-              Endowment Invariant: Principal Isolation Mechanics
+            <ShieldCheck className="w-5 h-5 text-emerald-400 stroke-[2.5]" />
+            <h3 className="text-sm font-black text-white font-mono">
+              ENDOWMENT INVARIANT: COLD PRINCIPAL PROTECTION
             </h3>
           </div>
-          <span className="text-xs font-mono text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-1 rounded-lg">
-            INVARIANT PRESERVED: ΔPrincipal == 0
+          <span className="text-xs font-mono text-black font-black bg-emerald-400 border-2 border-black px-2.5 py-1 rounded-md shadow-brutal-sm">
+            INVARIANT: ΔPrincipal == 0
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          <div className="p-4 rounded-2xl bg-surface-light border border-surface-border space-y-2">
-            <span className="font-bold text-slate-200 block uppercase tracking-wider text-[11px]">
-              Cold Treasury Enclave (Gnosis Safe / Owner EOA)
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+          <div className="p-4 rounded-xl bg-[#05060A] border-2 border-black space-y-2">
+            <span className="font-black text-amber-400 block uppercase tracking-wider text-[11px]">
+              Cold Treasury Enclave (Safe Multisig / Owner EOA)
             </span>
-            <p className="text-slate-400 leading-relaxed text-[11px]">
-              Principal MUSD and Bitcoin are deposited via `depositEndowment()`. The smart contract disallows any session key `execute()` call from touching the principal balance. Only the multi-sig owner can withdraw the principal after a 7-day timelock.
+            <p className="text-slate-300 leading-relaxed text-[11px]">
+              Principal MUSD and Bitcoin are deposited via `depositEndowment()`. The smart contract disallows any session key `execute()` call from touching the principal balance. Only the multi-sig owner can withdraw the principal after a timelock.
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-surface-light border border-surface-border space-y-2">
-            <span className="font-bold text-slate-200 block uppercase tracking-wider text-[11px]">
-              Agent Operational Pipeline (12-Bucket Sliding Window)
+          <div className="p-4 rounded-xl bg-[#05060A] border-2 border-black space-y-2">
+            <span className="font-black text-emerald-400 block uppercase tracking-wider text-[11px]">
+              Agent Operational Pipeline (12-Bucket Velocity Window)
             </span>
-            <p className="text-slate-400 leading-relaxed text-[11px]">
+            <p className="text-slate-300 leading-relaxed text-[11px]">
               The agent’s hourly velocity limit is bounded dynamically by:
               <br />
               <code className="text-mezo font-mono text-[10px] mt-1 block">
@@ -227,42 +223,42 @@ export const EndowmentVault: React.FC<EndowmentVaultProps> = ({
       {/* Deposit Modal */}
       <AnimatePresence>
         {isDepositOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-surface border border-surface-border rounded-3xl p-6 shadow-2xl relative space-y-5"
+              className="w-full max-w-md bg-[#0E121E] border-2 border-black rounded-2xl p-6 shadow-brutal-lg relative space-y-5"
             >
-              <div className="flex items-center justify-between pb-3 border-b border-surface-border">
+              <div className="flex items-center justify-between pb-3 border-b-2 border-black">
                 <div className="flex items-center gap-2.5">
-                  <Coins className="w-5 h-5 text-mezo" />
-                  <h3 className="text-base font-bold text-white">Deposit to Perpetual Endowment</h3>
+                  <Coins className="w-5 h-5 text-mezo stroke-[2.5]" />
+                  <h3 className="text-base font-black text-white font-mono">Deposit to Perpetual Endowment</h3>
                 </div>
                 <button
                   onClick={() => setIsDepositOpen(false)}
-                  className="text-slate-400 hover:text-white text-xs font-bold"
+                  className="text-slate-400 hover:text-white text-xs font-mono font-bold"
                 >
                   ✕
                 </button>
               </div>
 
-              <form onSubmit={handleDepositSubmit} className="space-y-4 text-xs">
+              <form onSubmit={handleDepositSubmit} className="space-y-4 text-xs font-mono">
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1.5">
+                  <label className="block text-slate-200 font-bold mb-1.5">
                     Deposit MUSD Principal (Generates 8.4% APY)
                   </label>
                   <input
                     type="number"
                     value={depositMUSD}
                     onChange={(e) => setDepositMUSD(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-surface-card border border-surface-border text-white font-mono focus:outline-none focus:border-mezo"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#05060A] border-2 border-black text-white font-mono focus:outline-none focus:border-mezo"
                     placeholder="500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1.5">
+                  <label className="block text-slate-200 font-bold mb-1.5">
                     Deposit Native Bitcoin Principal (BTC Staking)
                   </label>
                   <input
@@ -270,26 +266,26 @@ export const EndowmentVault: React.FC<EndowmentVaultProps> = ({
                     step="0.001"
                     value={depositBTC}
                     onChange={(e) => setDepositBTC(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-surface-card border border-surface-border text-white font-mono focus:outline-none focus:border-mezo"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#05060A] border-2 border-black text-white font-mono focus:outline-none focus:border-mezo"
                     placeholder="0.02"
                   />
                 </div>
 
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200">
-                  ⚡ Deposited funds are placed into Mezo Matsnet staking. All future agent executions will draw solely from this yield.
+                <div className="p-3 rounded-xl bg-amber-400/10 border-2 border-black text-[11px] text-amber-300 font-bold">
+                  ⚡ Deposited funds are placed into Bitcoin staking. All future agent executions will draw solely from this yield.
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-surface-border">
+                <div className="flex items-center justify-end gap-3 pt-3 border-t-2 border-black">
                   <button
                     type="button"
                     onClick={() => setIsDepositOpen(false)}
-                    className="px-4 py-2 rounded-xl bg-surface-card border border-surface-border text-slate-300 font-bold"
+                    className="px-4 py-2 rounded-xl bg-[#121622] border-2 border-black text-slate-300 font-bold shadow-brutal-sm"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-xl bg-mezo text-black font-extrabold hover:bg-mezo-hover shadow-lg"
+                    className="px-5 py-2 rounded-xl bg-mezo text-black font-black border-2 border-black shadow-brutal hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
                   >
                     Confirm Deposit
                   </button>

@@ -35,9 +35,9 @@ export const AlertRulesModal: React.FC<AlertRulesModalProps> = ({
       agentLabel: "Autonomous LLM Research Bot",
       attemptedAmount: "250.00 MUSD",
       hourlyLimit: "15.00 MUSD",
-      reason: "Hourly velocity cap exceeded on Mezo (0x08c379a0)",
+      reason: "Hourly velocity cap exceeded on Bitcoin L2 (0x08c379a0)",
       timestamp: new Date().toISOString(),
-      network: "Mezo Testnet (31611)",
+      network: "Bitcoin L2 Testnet (31611)",
       suggestedAction: "Smart contract prevented treasury outflow. Key remains active under sliding window.",
     };
 
